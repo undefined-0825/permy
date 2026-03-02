@@ -1,0 +1,140 @@
+# =========================================================
+# Permy project .gitignore
+# MUST: never commit chat/txt contents, generated replies, secrets
+# =========================================================
+
+# ---- Secrets / env ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+*.cer
+secrets/
+**/secrets/
+*.secrets.json
+**/*secret*.json
+**/*secrets*.json
+**/*apikey*
+**/*api_key*
+
+# ---- Chat/History exports / user-provided txt (MUST no commit) ----
+# LINE chat history txt, exports, and any raw chat content
+**/chat_history/**
+**/chat-history/**
+**/history/**
+**/exports/**
+**/*.txt
+!docs/**.txt
+# (Allow docs/*.txt if you intentionally store documentation text files)
+
+# ---- Logs / runtime ----
+*.log
+logs/
+**/logs/
+tmp/
+**/tmp/
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# ---- OS / Editor ----
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.code-workspace
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyd
+*.pyo
+*.pkl
+*.pickle
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+pip-wheel-metadata/
+dist/
+build/
+*.egg-info/
+.venv/
+venv/
+ENV/
+env/
+coverage.xml
+htmlcov/
+.tox/
+
+# ---- Node / JS / TS (if used) ----
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.next/
+out/
+dist/
+
+# ---- Flutter / Dart ----
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.flutter-plugins-dependencies
+.flutter-plugins-dependencies
+# Flutter IDE
+*.iml
+
+# ---- Android (Gradle/Android Studio) ----
+**/android/.gradle/
+**/android/local.properties
+**/android/**/build/
+**/android/**/.cxx/
+**/android/**/.idea/
+**/android/**/.classpath
+**/android/**/.project
+**/android/**/.settings/
+
+# ---- iOS (Xcode/CocoaPods) ----
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/
+**/ios/**/DerivedData/
+**/*.xcuserstate
+**/*.xcuserdata/
+**/*.moved-aside
+**/*.pbxuser
+**/*.mode1v3
+**/*.mode2v3
+**/*.perspectivev3
+
+# ---- Backend runtime artifacts (SQLite/Redis dumps etc) ----
+*.sqlite
+*.sqlite3
+*.db
+*.rdb
+dump.rdb
+
+# ---- Terraform / IaC (if used later) ----
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+
+# ---- Render / deployment local artifacts ----
+.render/
+.render-cache/
