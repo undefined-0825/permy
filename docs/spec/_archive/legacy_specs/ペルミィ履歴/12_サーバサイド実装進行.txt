@@ -1,0 +1,110 @@
+
+
+
+あなた:
+このチャットはサーバサイドの実装部分を進めていく。
+決定事項やルール、仕様はspec_serverside_impl_dev_v{N+1}.mdで管理していく。
+現在の最新はspec_serverside_impl_dev_v1.md。
+このチャットは全て最新のspecを読みこみ、認識の乖離や整合性が失われることがないように細心の注意を払ってすすめていくこと。
+特に修正内容の差分のみを出力はかならず避ける。修正前のソースが欲しい場合はファイルをリクエストしてください。
+修正したソースはチャットに出力するか、ダウンロード可能な形式で出力してください。
+
+まずはspec_serverside_impl_dev_v1を読んで次の実装から初めていく
+
+ChatGPT:
+思考時間: 9s
+了解。まず spec_serverside_impl_dev_v1.md を読み込み、以後このチャットは rule → product spec → serverside spec → serverside_impl_dev の順で矛盾が出ないように進める。
+（実装提示は 差分のみ禁止。必ず差し替え可能な完成形を出す。推測もしない。） 
+spec_rule_v4
+
+ 
+spec_serverside_dev_v3
+
+ 
+spec_serverside_impl_dev_v1
+
+ 
+spec_serverside_v2
+
+ 
+spec_v5
+
+
+いまの実装チャット（serverside_impl_dev）の開始地点
+v1 の「直近TODO」から、最初の一手は /generate の安定化が最短で全体に効きます（以後のレート制限/冪等/安全ゲート/Proメタも /generate を中心に積み上がるため）。 
+spec_serverside_impl_dev_v1
+
+ 
+spec_serverside_v2
+
+
+具体的には、serverside spec の MUST を満たしつつ、実装TODOを前倒しで“完成形”に寄せる方針：
+
+/generate 入力検証（上限 20,000 文字）：超過は 422（自動トリム/要約はしない） 
+spec_serverside_v2
+
+
+A/B/Cを必ず3件返す（役割の安定、長文寄せ） 
+spec_serverside_v2
+
+ 
+spec_v5
+
+
+日次カウントは成功時のみ加算（失敗は加算しない） 
+spec_serverside_v2
+
+
+Idempotency-Key 対応（24h、二重加算防止） 
+spec_serverside_v2
+
+
+軽量安全ゲート（明確NGはAIに送らず SAFETY_BLOCKED、代替A/B/Cを“ルールベースで”返す） 
+spec_serverside_v2
+
+ 
+spec_v5
+
+
+Pro限定メタ（♥/🔥）はProのみ（Freeには出さない） 
+spec_serverside_v2
+
+
+次の実装に入るために必要な「修正前ソース」
+推測で進めない前提なので、まず下記ファイルを貼るか、まとめてアップしてください（最小セット）。これが揃えば、こちらで /generate 関連を“差し替え用の完成形”として提示できます。
+
+1) ルーティング/エンドポイント
+app/main.py（または app/main/__init__.py 等の起点）
+
+/generate を実装しているルータ（例：app/routers/generate.py 等）
+
+require_user（認証依存の入口）
+
+2) 設定・依存注入
+app/config.py（環境変数、モデル名、REDIS_DISABLED 等）
+
+OpenAIクライアント呼び出し部（例：app/ai/*.py）
+
+3) DB/モデル（カウント・プラン・settings）
+app/models.py（または models 配下一式）
+
+usage_daily, plan_status, user_settings の参照/更新ロジック
+
+DBセッション生成（app/db.py 等）
+
+4) Redis（もし既に触っていれば）
+Redisクライアント/ラッパ（Idempotency、レート制限、セッション）
+
+こちらの次アクション（ソース受領後すぐやる）
+受け取ったコードに対して、まず /generate を“完成形”に寄せた全文を出します（関連ファイルが複数なら、ファイル単位で全文提示 or ダウンロード形式）。
+同時に、今回決まった実装方針（例：安全ゲートの返し方、再生成1回の条件、Idempotencyのキー設計など）を spec_serverside_impl_dev_v2.md に追記する前提で差分整理までこちらで用意します（※“Spec出力”指示が来たら実ファイル生成）。
+
+貼り方は、ファイルをそのまま添付が一番早い。チャット貼り付けでもOK。
+まずは上の「1)〜3)」だけでも送って。そこから /generate を一気に固めに行く。
+
+
+情報源
+
+
+
+

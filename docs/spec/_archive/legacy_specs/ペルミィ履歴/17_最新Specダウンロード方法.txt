@@ -1,0 +1,86 @@
+
+
+
+あなた:
+Specの最新バージョンをダウンロードしたい
+
+ChatGPT:
+思考時間: 10s
+了解。いまこのチャットで参照できている「最新SSOT」は以下です（ダウンロード用リンク）：
+
+運用ルール（SSOT最優先）：spec_rule.md（2026-02-28版） 
+spec_rule_v6
+
+
+プロダクトSpec（最新）：spec_v5.md 
+spec_v6
+
+
+サーバサイド設計Spec（最新）：spec_serverside_v3.md 
+spec_serverside_v3
+
+
+この3つを落とせば「最新のSpec一式」になります。
+
+
+情報源
+
+あなた:
+ルールは6が最新じゃないの？
+
+ChatGPT:
+思考時間: 22s
+その通り。ルールは v6（spec_rule_v6.md）が最新です。さっき私が古いものを「最新」と言ってしまった。すまん、訂正する。
+
+いまこの環境にある「最新バージョン」は以下：
+
+運用ルール（SSOT最優先）：spec_rule_v6.md
+Download spec_rule_v6.md
+
+プロダクトSpec（最新）：spec_v6.md
+Download spec_v6.md
+
+サーバサイドSpec（最新）：spec_serverside_v3.md
+Download spec_serverside_v3.md
+
+（参考：実装進行用の最新っぽい枝）
+
+spec_serverside_impl_dev_v2.md
+Download spec_serverside_impl_dev_v2.md
+
+spec_serverside_dev_v4.md
+Download spec_serverside_dev_v4.md
+
+「最新Spec一式をまとめて」欲しいなら、上3つ（rule / product / serverside）を落とせばOK。
+
+
+あなた:
+このプロジェクトのゴールと目的はどれに入ってる？
+
+ChatGPT:
+思考時間: 7s
+入ってるのは プロダクトSpec（spec_v{version}.md） です。
+
+具体的には spec_v6.md の 「## 1. プロダクト概要」 の中で、
+
+### 1.0 ゴール（MUST / 最上位KGI） 
+spec_v6
+
+
+### 1.1 目的（MUST / 中核課題） 
+spec_v6
+
+
+に明記されています。
+
+（spec_rule_v6.md は「運用ルールのみ」で、仕様＝ゴール/目的は spec 側に書く、という位置づけです。 
+spec_rule_v6
+
+）
+
+
+情報源
+
+
+
+
