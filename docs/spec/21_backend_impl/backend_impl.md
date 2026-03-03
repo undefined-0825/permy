@@ -1,0 +1,289 @@
+# backend_impl.md — Permy バックエンド実装Spec（FastAPI / 本文非保存 / 入口固定）
+
+**Scope:** 本ドキュメントはバックエンドの「実装」方針・構造・具体的な実装ルールを定義する。  
+API契約は `api_contract.*` を正とし、ここでは実装詳細（モジュール構成、DB/キャッシュ、ミドルウェア、運用CLI等）を定める。
+
+---
+
+## 0. 実装の大原則（MUST）
+1) **本文非保存**：入力本文・生成本文をDB/ログ/テレメトリに残さない  
+2) **入口固定**：`/api/v1/*` とスキーマ・エラーコードの意味論を壊さない  
+3) **小さく始める**：Render（Phase 1）で動く最小構成をまず作り、必要になってから分割・キュー化  
+4) **差し替え容易**：LLM/DB/キャッシュ/実行基盤を入替しやすい抽象化（インターフェース化）
+
+---
+
+## 1. 技術スタック（Phase 1 基準）
+- Python 3.12+（固定するならプロジェクト標準に合わせる）
+- FastAPI + Uvicorn
+- DB: SQLite（開発/最小）→ Postgres（運用/移行）
+- Cache/Rate limit: まずはDB or メモリ（単一インスタンス前提）→ Redis（Phase 2）
+- OpenAI SDK（LLM呼び出し）
+- Migrations: Alembic（Postgres移行を前提）
+- Observability: 構造化ログ（本文ゼロ） + Prometheus互換メトリクス（任意）
+
+※「価格/回数上限の数値」は別Specを正とする。本実装は **limit_profile** を見て判定する。
+
+---
+
+## 2. リポジトリ構成（推奨）
+```
+backend/
+  app/
+    main.py
+    api/
+      v1/
+        routes_auth.py
+        routes_settings.py
+        routes_generate.py
+        routes_migration.py
+    core/
+      config.py
+      security.py
+      errors.py
+      middleware.py
+      logging.py
+      metrics.py
+    domain/
+      plans.py
+      limits.py
+      idempotency.py
+      migration.py
+    infra/
+      db.py
+      repositories/
+        users_repo.py
+        settings_repo.py
+        usage_repo.py
+        migration_repo.py
+      llm/
+        client.py
+        prompt_builder.py
+    schemas/
+      auth.py
+      settings.py
+      generate.py
+      migration.py
+      common.py
+  tools/
+    grant_comp_user.py
+  tests/
+    test_auth.py
+    test_settings.py
+    test_generate_limits.py
+    test_migration.py
+  alembic/
+  pyproject.toml
+  Dockerfile
+  render.yaml (任意)
+```
+
+---
+
+## 3. 設定（Config）実装（MUST）
+### 3.1 環境変数
+- `ENV` : `dev|staging|prod`
+- `DATABASE_URL` : SQLite/Postgres
+- `REDIS_URL` : 任意（無ければ未使用）
+- `OPENAI_API_KEY` : LLM用（CIでは未設定または無効）
+- `OPENAI_DISABLED` : `true|false`（CIで true）
+- `LOG_LEVEL` : `INFO` など
+- `TOKEN_SECRET` : 署名用
+- `TOKEN_EXPIRES_MIN` : 任意（匿名運用）
+- `MIGRATION_CODE_TTL_MIN` : 移行コード期限（数値は別Specでもよい）
+- `RATE_LIMIT_MODE` : `memory|db|redis`
+- `REQUEST_ID_HEADER` : 例 `X-Request-Id`（任意）
+
+### 3.2 Pydantic Settings
+- `app/core/config.py` に `BaseSettings` を置き、環境変数を型付きで読む。
+- `OPENAI_DISABLED=true` の場合、LLM呼び出しは禁止（強制）。
+
+---
+
+## 4. ロギング/テレメトリ（本文ゼロ）（MUST）
+### 4.1 絶対禁止
+- request body / response body をログに出す
+- 例外スタックに本文が混入する形で dump する（例：バリデーションエラーに本文が含まれる場合に注意）
+
+### 4.2 許可（ログ）
+- `request_id`（生成）
+- endpoint / method
+- status_code
+- error_code
+- latency_ms
+- user_id（ハッシュ化/短縮も可。本文ではない）
+- plan（free/pro）や tier（feature_tier）は可（本文ではない）
+
+### 4.3 実装
+- `middleware` で request_id を採番（ヘッダがあれば採用）し、contextに格納
+- 構造化ログ（JSON）で出す（フィールド固定）
+- 例外ハンドラで `error_code` を必ず返す
+
+---
+
+## 5. エラー処理（MUST）
+- `app/core/errors.py` に `ApiError`（`http_status`, `error_code`, `message`）を定義
+- 例外ハンドラで共通フォーマットへ変換（`error_codes.*` を正とする）
+- `message` は短文。本文/断片は禁止。
+
+---
+
+## 6. 認証（Auth）実装
+### 6.1 トークン
+- `POST /auth/anonymous` で `user_id` を作成し、JWT等で token を発行
+- 署名は `TOKEN_SECRET`
+- 検証は依存注入（`Depends(get_current_user)`）
+
+### 6.2 user_id
+- ULID/UUIDなど衝突しにくいもの
+- user_id自体は本文ではないため保持可
+
+---
+
+## 7. プラン/ティア（feature_tier / billing_tier）実装（MUST）
+### 7.1 データ
+`users` に以下を保持：
+- `feature_tier`: `free|plus`
+- `billing_tier`: `free|pro_store|pro_comp`
+
+### 7.2 返却 plan（外部互換）
+- APIレスポンスの `meta.plan` は `free/pro` の2値のみ
+  - `feature_tier=free` → plan=free
+  - `feature_tier=plus` → plan=pro
+
+### 7.3 永続無料付与（pro_comp）
+- 管理画面は作らない
+- `tools/grant_comp_user.py` で `user_id` を指定し DB更新
+  - `feature_tier=plus`
+  - `billing_tier=pro_comp`
+- 公開HTTPの管理APIは増やさない（攻撃面を増やさない）
+
+---
+
+## 8. Settings（ETag/If-Match）実装
+### 8.1 ETag生成
+- `user_settings.etag` を保持（例：更新ごとにUUID、または更新時刻+hash）
+- GETで `ETag` を返し、PUTは `If-Match` 必須
+
+### 8.2 競合
+- `If-Match` が一致しない → `409 ETAG_MISMATCH`
+
+---
+
+## 9. Generate（/generate）実装（本文非保存 + 制限）
+### 9.1 入力
+- `text`（本文）を受け取るが、以下を徹底：
+  - DB保存しない
+  - ログに出さない
+  - 例外メッセージに混入させない（バリデーション含む）
+
+### 9.2 制限チェック順
+1) 認証
+2) プラン要件（Pro専用のpurpose/combo等がある場合）
+3) レート制限（429 RATE_LIMITED）
+4) 日次回数制限（429 DAILY_LIMIT_EXCEEDED）
+5) 冪等キー抑止（Idempotency-Key）
+6) LLM呼び出し（OPENAI_DISABLEDなら 503 OPENAI_DISABLED）
+
+### 9.3 日次回数カウント
+- `usage_daily (user_id, date_yyyymmdd, generate_count)` を更新
+- 上限値は別Specから設定（例：環境変数 or DBの limit_profile）
+- 実装は「原子的更新」が必要（DBトランザクションで `SELECT ... FOR UPDATE` 相当 or UPSERT+条件）
+
+### 9.4 レート制限（Phase 1）
+- `RATE_LIMIT_MODE=memory|db` を用意
+- memory: 単一インスタンス前提の簡易バケット（テスト用）
+- db: `rate_limits` テーブル or `usage_minute` 的な集計（実装コストと相談）
+- Phase 2で Redis に切替可能なインターフェースにする（`domain/limits.py`）
+
+### 9.5 冪等性（Idempotency）
+- 目的は「二重実行防止」。
+- 本文非保存のため、**生成結果本文を保存して再返却はしない**（原則）。
+- 実装案（推奨）：
+  - `idempotency_keys` に `user_id + key` を短TTLで保持し、並行/連打を拒否
+  - 成功/失敗の状態だけ保持（本文なし）
+- 競合時は `409 IDEMPOTENCY_CONFLICT`
+
+### 9.6 LLM呼び出し
+- `infra/llm/client.py` に薄いラッパを置く（差し替え容易）
+- タイムアウト/リトライ方針は固定しすぎず、設定可能にする
+- 失敗は `503 UPSTREAM_UNAVAILABLE` / `UPSTREAM_TIMEOUT`
+
+---
+
+## 10. Migration（移行コード）実装
+### 10.1 仕様（実装観点）
+- 12桁コード（表示用）
+- DBには **ハッシュ** を保存（平文保存しない）
+- 期限 `expires_at`
+- 1回限り：`used_at` をセットして再利用不可
+
+### 10.2 発行（/migration/issue）
+- 認証必須
+- 既存未使用コードを上書き/再発行するかは実装都合（推奨：再発行で旧コード無効化）
+- レート制限（MIGRATION_RATE_LIMITED）
+
+### 10.3 消費（/migration/consume）
+- 認証不要（コード+本人操作で成立させる）
+- コード検証→期限→未使用→新token発行
+- 失敗：
+  - 無効 `404 MIGRATION_CODE_INVALID`
+  - 期限切れ `410 MIGRATION_CODE_EXPIRED`
+  - 使用済み `409 MIGRATION_CODE_ALREADY_USED`
+
+---
+
+## 11. DB実装（SQLite→Postgres移行前提）
+### 11.1 Alembic
+- マイグレーションでスキーマ管理（Phase 2以降で必須）
+- Phase 1はSQLiteで始めても、なるべく同じDDLで運用する
+
+### 11.2 最小DDL（概略）
+- `users (user_id PK, feature_tier, billing_tier, created_at, updated_at)`
+- `user_settings (user_id PK/FK, settings_json, etag, updated_at)`
+- `usage_daily (user_id, date_yyyymmdd, generate_count, updated_at, PK(user_id,date))`
+- `migration_tokens (code_hash PK, source_user_id, expires_at, used_at)`
+- `idempotency_keys (user_id, key, expires_at, status, PK(user_id,key))` ※本文なし
+- （必要なら）`rate_limit_buckets (...)` ※後回し可
+
+---
+
+## 12. テスト（MUST）
+### 12.1 CIではOpenAIを叩かない
+- `OPENAI_DISABLED=true` を必須にする
+- `/generate` は 503 `OPENAI_DISABLED` を返すことをテスト
+
+### 12.2 最低限のユニット/統合テスト
+- auth: token発行/検証
+- settings: ETag一致/不一致
+- generate: 日次制限、レート制限、冪等キー競合
+- migration: 発行→消費→再利用不可、期限切れ
+
+---
+
+## 13. Docker/Render（Phase 1）
+### 13.1 Docker
+- `Dockerfile` でFastAPIを起動可能にする
+- 実行コマンド例：
+  - `uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}`
+
+### 13.2 Render
+- 環境変数をRender側で設定
+- `OPENAI_DISABLED` は環境別に設定（CI true / staging, prod false）
+- ログはJSON（本文ゼロ）
+
+---
+
+## 14. 将来の分割（Phase 2+）
+- 生成をワーカー化する場合：
+  - `POST /generate` はジョブ投入→結果ポーリング or WebSocket へ拡張（契約追加が必要）
+- ただし現行契約（同期応答）を維持するなら、まずはAPIの水平スケールで対応し、必要になったらv2で非同期APIを追加する。
+
+---
+
+## 15. 実装チェックリスト（本文ゼロ監査）
+- [ ] request/response body をログしていない
+- [ ] 例外ログに本文が混入しない（バリデーション含む）
+- [ ] DBに本文/生成文が存在しない
+- [ ] メトリクスに本文由来情報がない
+- [ ] OPENAI_DISABLED=true で外部呼び出しされない

@@ -36,19 +36,27 @@
 Copilot・AI・開発者は必ずこの順で読む。
 
 1) `docs/spec/00_world/world_concept.md`（戦略・コンセプト・世界観定義）  
-2) `docs/spec/01_rules/project_rules.md`（運用ルール/禁止事項）  
-3) `docs/spec/10_product/product_spec.md`（プロダクト仕様：価格/プラン/UX/NG/診断/生成方針）  
-4) `docs/spec/20_backend/backend_spec.md`（バックエンド設計：API/認証/データモデル/保存禁止）  
-5) `docs/spec/21_backend_impl/backend_impl.md`（バックエンド実装仕様：DTO/生成/中ゲート/メタ）  
-6) `docs/spec/30_frontend/frontend_spec.md`（フロント設計：画面/導線/文言/演出）  
-7) `docs/spec/31_frontend_impl/frontend_impl.md`（フロント実装：状態/共有受信/コピー/NG UI）  
+2) `docs/spec/00_world/ui_animations.md`（UI演出SSOT：ピンク→黒反転、固定セリフ2文、変身シークエンス）  
+3) `docs/spec/01_rules/project_rules.md`（運用ルール/禁止事項/してはいけない推論/品質ゲート）  
+4) `docs/spec/01_rules/engineering_conventions.md`（実装規約：Flutter+FastAPI、可読性、テスト同時生成、プロンプト構造化）  
+5) `docs/spec/01_rules/privacy_logging.md`（本文ゼロ：保存禁止/ログ禁止/例外時の扱い）  
+6) `docs/spec/10_product/ng_policy.md`（NG制御SSOT：STOP/REWRITE/WARN、優先順位）  
+7) `docs/spec/10_product/product_spec.md`（プロダクト仕様：価格/プラン/回数制限/入力導線/診断/生成/コンボ/followup）  
+8) `docs/spec/20_backend/backend_spec.md`（バックエンド設計：API/認証/データモデル/本文ゼロ/レート制限/コストガード）  
+9) `docs/spec/21_backend_impl/backend_impl.md`（バックエンド実装仕様：DTO/生成/中ゲート/メタ/OPENAI_DISABLED）  
+10) `docs/spec/30_frontend/frontend_spec.md`（フロント設計：画面遷移/導線/文言/演出/貼り付け欄禁止）  
+11) `docs/spec/31_frontend_impl/frontend_impl.md`（フロント実装：状態/DTO/API呼び出し/NG UI/設定同期）  
+12) `docs/spec/31_frontend_impl/native_share_wrappers.md`（Android/iOS共有受信ラッパー：.txtのみ、永続化禁止、受け渡しI/F）
 
 補助（必要時のみ）：
-- `docs/spec/40_tests/test_strategy.md`
-- `docs/spec/41_ci/ci_policy.md`
-- `docs/spec/42_deploy/deploy_strategy.md`
-- `docs/spec/01_rules/telemetry_policy.md`
-- `docs/spec/20_backend/telemetry_schema.md`
+- `docs/spec/01_rules/telemetry_policy.md`（本文ゼロの計測ポリシー：時間帯バケットUTC）
+- `docs/spec/20_backend/telemetry_schema.md`（テレメトリイベントスキーマ：hour_bucket_utc/dow_utc）
+- `docs/spec/40_tests/test_strategy.md`（テスト方針：CIはOpenAI禁止、ライブは手動・上限）
+- `docs/spec/41_ci/ci_policy.md`（CI方針：PR必須、OpenAI禁止、実行範囲）
+- `docs/spec/42_deploy/deploy_strategy.md`（現時点：自動デプロイなし）
+- `docs/spec/21_backend_impl/acceptance_tests_backend.md`（Backend受け入れテスト）
+- `docs/spec/31_frontend_impl/acceptance_tests_frontend.md`（Frontend受け入れテスト）
+- `docs/spec/40_tests/acceptance_tests.md`（総合E2E受け入れテスト）
 
 ---
 
