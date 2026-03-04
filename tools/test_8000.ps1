@@ -1,7 +1,7 @@
 ﻿#requires -Version 5.1
 param(
     [string]$BaseUrl = "http://127.0.0.1:8000",
-    [string]$Path    = "/health"
+    [string]$Path    = "/api/v1/health"
 )
 
 Set-StrictMode -Version Latest

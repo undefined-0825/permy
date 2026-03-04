@@ -44,6 +44,6 @@ def get_ai_client() -> AiClient:
     provider = getattr(settings, "ai_provider", None) or getattr(settings, "AI_PROVIDER", None)
     if provider and str(provider).lower() == "openai":
         # 循環import回避のためローカルimport
-        from app.ai_client_openai import OpenAiClient
+        from app.ai_client_openai import OpenAiChatClient as OpenAiClient
         return OpenAiClient()
     return DummyAiClient()

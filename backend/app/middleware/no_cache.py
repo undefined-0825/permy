@@ -22,4 +22,7 @@ class NoCacheMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         resp = await call_next(request)
         resp.headers.setdefault("Cache-Control", "no-store")
+        content_type = resp.headers.get("Content-Type", "")
+        if content_type.lower().startswith("application/json") and "charset=" not in content_type.lower():
+            resp.headers["Content-Type"] = "application/json; charset=utf-8"
         return resp

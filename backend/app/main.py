@@ -1,8 +1,26 @@
 from __future__ import annotations
 
+import os
+import pathlib
 import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+
+# print("=== startup probe: before settings import ===")
+# print("file =", __file__)
+# print("cwd =", os.getcwd())
+# print("OPENAI_API_KEY(before) =", os.environ.get("OPENAI_API_KEY"))
+# print("OPENAI_KEY(before) =", os.environ.get("OPENAI_KEY"))
+# print(".env exists? =", pathlib.Path(".env").exists())
+# print("backend/.env exists? =", pathlib.Path("backend/.env").exists())
+
+# from app.config import settings
+
+# print("=== startup probe: after settings import ===")
+# print("settings.openai_api_key =", settings.openai_api_key)
+# print("OPENAI_API_KEY(after) =", os.environ.get("OPENAI_API_KEY"))
+# print("OPENAI_KEY(after) =", os.environ.get("OPENAI_KEY"))
+
 
 from app.config import settings
 from app.logging_conf import configure_logging

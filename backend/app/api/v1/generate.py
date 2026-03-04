@@ -94,3 +94,44 @@ async def generate(
 
     row = await db.execute(select(UserSettings).where(UserSettings.user_id == auth.user_id))
     st = row.scalar_one_or_none()
+
+    try:
+        ai_client = get_ai_client()
+        ctx = GenerateContext(
+            true_self_type=None,
+            night_self_type=None,
+            relationship_type=None,
+            reply_length_pref=None,
+            combo_id=req.combo_id,
+            ng_tags=[],
+            ng_free_phrases=[],
+            tuning=None,
+        )
+        candidates = await ai_client.generate_abc(req.history_text, ctx)
+        daily = DailyInfo(date=jst_today_ymd(), limit=limit, used=used, remaining=max(0, limit - used))
+        return GenerateResponse(
+            request_id=rid,
+            plan=auth.plan,
+            daily=daily,
+            candidates=[
+                Candidate(label="A", text=candidates[0] if len(candidates) > 0 else ""),
+                Candidate(label="B", text=candidates[1] if len(candidates) > 1 else ""),
+                Candidate(label="C", text=candidates[2] if len(candidates) > 2 else ""),
+            ],
+            model_hint=None,
+            timestamp=dt.datetime.now(dt.timezone.utc).isoformat(),
+            meta_pro=None,
+        )
+    except Exception as e:
+        from fastapi.responses import JSONResponse
+        import traceback
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "AI応答生成中にエラーが発生しました",
+                    "detail": {"exception": str(e), "trace": traceback.format_exc()}
+                }
+            }
+        )

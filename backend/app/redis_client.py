@@ -98,15 +98,106 @@ class _MemoryPipeline:
         return out
 
 
+class _ResilientPipeline:
+    def __init__(self, owner: "_ResilientRedis"):
+        self._owner = owner
+        self._ops: list[tuple[str, tuple[Any, ...], dict[str, Any]]] = []
+
+    def incr(self, *a, **kw):
+        self._ops.append(("incr", a, kw))
+        return self
+
+    def ttl(self, *a, **kw):
+        self._ops.append(("ttl", a, kw))
+        return self
+
+    def expire(self, *a, **kw):
+        self._ops.append(("expire", a, kw))
+        return self
+
+    def delete(self, *a, **kw):
+        self._ops.append(("delete", a, kw))
+        return self
+
+    def set(self, *a, **kw):
+        self._ops.append(("set", a, kw))
+        return self
+
+    async def execute(self):
+        primary = self._owner._primary
+        if primary is not None:
+            try:
+                pipe = primary.pipeline()
+                for name, a, kw in self._ops:
+                    getattr(pipe, name)(*a, **kw)
+                return await pipe.execute()
+            except Exception:
+                self._owner._activate_fallback()
+
+        fallback_pipe = self._owner._fallback.pipeline()
+        for name, a, kw in self._ops:
+            getattr(fallback_pipe, name)(*a, **kw)
+        return await fallback_pipe.execute()
+
+
+class _ResilientRedis:
+    def __init__(self, primary: Any | None, fallback: _MemoryRedis):
+        self._primary = primary
+        self._fallback = fallback
+
+    def _activate_fallback(self) -> None:
+        self._primary = None
+
+    async def _call(self, method: str, *a, **kw):
+        if self._primary is not None:
+            try:
+                return await getattr(self._primary, method)(*a, **kw)
+            except Exception:
+                self._activate_fallback()
+        return await getattr(self._fallback, method)(*a, **kw)
+
+    async def get(self, key: str) -> Optional[str]:
+        return await self._call("get", key)
+
+    async def set(self, key: str, value: str, ex: int | None = None, nx: bool = False) -> bool:
+        return await self._call("set", key, value, ex=ex, nx=nx)
+
+    async def delete(self, key: str) -> int:
+        return await self._call("delete", key)
+
+    async def incr(self, key: str) -> int:
+        return await self._call("incr", key)
+
+    async def expire(self, key: str, seconds: int) -> bool:
+        return await self._call("expire", key, seconds)
+
+    async def ttl(self, key: str) -> int:
+        return await self._call("ttl", key)
+
+    async def exists(self, key: str) -> int:
+        return await self._call("exists", key)
+
+    async def sadd(self, key: str, member: str) -> int:
+        return await self._call("sadd", key, member)
+
+    async def smembers(self, key: str) -> set[str]:
+        return await self._call("smembers", key)
+
+    def pipeline(self):
+        return _ResilientPipeline(self)
+
+
 def _create_client():
+    fallback = _MemoryRedis()
     if os.getenv("REDIS_DISABLED", "").lower() in ("1", "true", "yes"):
-        return _MemoryRedis()
+        return fallback
     if redis is None:
-        return _MemoryRedis()
+        return fallback
     try:
-        return redis.from_url(settings.redis_url, decode_responses=True)
+        primary = redis.from_url(settings.redis_url, decode_responses=True)
+        return _ResilientRedis(primary=primary, fallback=fallback)
     except Exception:
-        return _MemoryRedis()
+        return fallback
 
 
 redis_client = _create_client()
