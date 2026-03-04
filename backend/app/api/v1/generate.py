@@ -20,10 +20,8 @@ from app.utils_time import jst_today_ymd
 
 router = APIRouter()
 
-
 def _daily_limit(plan: str) -> int:
     return settings.pro_generate_daily_limit if plan == "pro" else settings.free_generate_daily_limit
-
 
 def _to_list(v) -> list[str]:
     if v is None:
@@ -31,7 +29,6 @@ def _to_list(v) -> list[str]:
     if isinstance(v, list):
         return [str(x) for x in v]
     return [str(v)]
-
 
 def _blocked_candidates(reason: str) -> list[str]:
     a = (
@@ -42,7 +39,6 @@ def _blocked_candidates(reason: str) -> list[str]:
     b = "ごめん、その内容は対応できない…！目的だけ教えてくれたら、言い方を変えて一緒に考えるよ。"
     c = "無理のない範囲で大丈夫。今いちばん困ってるポイントだけ、短く教えて？そこから整えるね。"
     return [a, b, c]
-
 
 @router.post("/generate", response_model=GenerateResponse)
 async def generate(
@@ -98,49 +94,3 @@ async def generate(
 
     row = await db.execute(select(UserSettings).where(UserSettings.user_id == auth.user_id))
     st = row.scalar_one_or_none()
-    s = st.settings_json if (st and isinstance(st.settings_json, dict)) else {}
-
-    ctx = GenerateContext(
-        true_self_type=s.get("true_self_type"),
-        night_self_type=s.get("night_self_type"),
-        relationship_type=s.get("relationship_type"),
-        reply_length_pref=s.get("reply_length_pref"),
-        combo_id=req.combo_id,
-        ng_tags=_to_list(s.get("ng_tags")),
-        ng_free_phrases=_to_list(s.get("ng_free_phrases")),
-        tuning=req.tuning if auth.plan == "pro" else None,
-    )
-
-    texts = await get_ai_client().generate_abc(req.history_text, ctx)
-    if not isinstance(texts, list) or len(texts) != 3:
-        raise err("INTERNAL_ERROR", "生成に失敗しました", status_code=500)
-
-    usage.generate_count = int(usage.generate_count) + 1
-    usage.plan_at_time = auth.plan
-    await db.commit()
-
-    used2 = int(usage.generate_count)
-    daily = DailyInfo(date=jst_today_ymd(), limit=limit, used=used2, remaining=max(0, limit - used2))
-
-    candidates = [
-        Candidate(label="A", text=texts[0]),
-        Candidate(label="B", text=texts[1]),
-        Candidate(label="C", text=texts[2]),
-    ]
-
-    meta_pro = None
-    if auth.plan == "pro":
-        meta_pro = {
-            "like": {"value": 55, "note": "推定"},
-            "risk": {"value": 20, "note": "推定"},
-        }
-
-    return GenerateResponse(
-        request_id=rid,
-        plan=auth.plan,
-        daily=daily,
-        candidates=candidates,
-        model_hint=settings.ai_provider,
-        timestamp=dt.datetime.now(dt.timezone.utc).isoformat(),
-        meta_pro=meta_pro,
-    )

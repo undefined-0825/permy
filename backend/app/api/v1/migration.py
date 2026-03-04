@@ -14,10 +14,8 @@ from app.errors import err
 
 router = APIRouter()
 
-
 def _client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
-
 
 @router.post("/migration/start", response_model=MigrationStartResponse)
 async def migration_start(
@@ -33,7 +31,7 @@ async def migration_start(
     code = new_migration_code_12digits()
     code_hash = sha256_hex(code)
 
-    # 平文コードは保存しない：hashのみ
+    # 平文コードは保存しない:hashのみ
     # value: from_user_id|ticket_id|used(0/1)
     await redis_client.set(
         f"mig:codehash:{code_hash}",
@@ -47,7 +45,6 @@ async def migration_start(
     )
 
     return MigrationStartResponse(migration_code=code, ticket_id=ticket_id)
-
 
 @router.post("/migration/complete", response_model=MigrationCompleteResponse)
 async def migration_complete(
@@ -82,7 +79,7 @@ async def migration_complete(
     if used == "1":
         raise err("MIGRATION_CODE_USED", "移行コードは使用済みです", status_code=400)
 
-    # 1回限り：使用済み化 + code削除
+    # 1回限り:使用済み化 + code削除
     pipe = redis_client.pipeline()
     pipe.set(f"mig:codehash:{code_hash}", f"{from_user_id}|{ticket_id}|1", ex=settings.migration_code_ttl_seconds)
     pipe.delete(f"mig:tries:{code_hash}")

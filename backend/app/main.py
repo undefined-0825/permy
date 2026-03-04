@@ -9,12 +9,12 @@ from app.logging_conf import configure_logging
 from app.middleware.request_id import RequestIdMiddleware
 from app.middleware.no_cache import NoCacheMiddleware
 
-from app.routes.health import router as health_router
-from app.routes.version import router as version_router
-from app.routes.auth import router as auth_router
-from app.routes.settings import router as settings_router
-from app.routes.generate import router as generate_router
-from app.routes.migration import router as migration_router
+from app.api.v1.health import router as health_router
+from app.api.v1.version import router as version_router
+from app.api.v1.auth import router as auth_router
+from app.api.v1.settings import router as settings_router
+from app.api.v1.generate import router as generate_router
+from app.api.v1.migration import router as migration_router
 
 
 configure_logging()

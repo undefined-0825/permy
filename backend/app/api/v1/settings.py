@@ -14,7 +14,6 @@ from app.errors import err
 
 router = APIRouter()
 
-
 @router.get("/me/settings", response_model=SettingsResponse)
 async def get_settings(
     response: Response,
@@ -39,7 +38,6 @@ async def get_settings(
 
     response.headers["ETag"] = st.etag
     return SettingsResponse(settings=st.settings_json)
-
 
 @router.put("/me/settings", response_model=SettingsResponse)
 async def put_settings(

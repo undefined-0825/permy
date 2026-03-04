@@ -13,10 +13,8 @@ from app.utils import etag_for_json
 
 router = APIRouter()
 
-
 def _client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
-
 
 @router.post("/auth/anonymous", response_model=AuthAnonymousResponse)
 async def auth_anonymous(
