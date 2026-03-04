@@ -67,6 +67,11 @@ Copilot・AI・開発者は必ずこの順で読む。
 - Free：**1日3回**。
 - Pro：**1日100回**（価格改定後も維持）。
 
+#### 3.1.1 対象OSの厳格化（MUST）
+- 本プロジェクトのクライアント実装対象は **Android / iPhone（iOS） のみ**。
+- **Windows / macOS / Linux 向けのアプリ実装・コード生成・ビルド手順・設定（例：WinUI/WPF/UWP、MAUIのWindowsターゲット、Electron、.dmg/.msi、Desktop向けCI、OS別パス前提の実装）は提案・実装ともに禁止**。
+- 例外は **サーバ/CI等の開発環境の補助**（例：PowerShellやbashでのローカル起動、lint、unit test）に限る。ただし、クライアント機能の実装がDesktop向けに拡張される提案は禁止。
+
 ### 3.2 入力導線（MUST）
 - 入力は **LINE「トーク履歴送信」→ `.txt` 受領のみ**。
 - **手動貼り付け欄は実装しない**。
