@@ -22,6 +22,10 @@ app = FastAPI(
     version="0.1.0",
 )
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 # プロジェクトルート / static パス
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
