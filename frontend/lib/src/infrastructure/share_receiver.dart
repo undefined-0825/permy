@@ -3,10 +3,7 @@ import 'dart:io';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 class SharePayload {
-  SharePayload({
-    required this.text,
-    required this.fileName,
-  });
+  SharePayload({required this.text, required this.fileName});
 
   final String text;
   final String? fileName;
@@ -48,7 +45,10 @@ class ShareReceiver implements ShareInput {
       if (trimmed.isEmpty) {
         continue;
       }
-      return SharePayload(text: trimmed, fileName: path.split(Platform.pathSeparator).last);
+      return SharePayload(
+        text: trimmed,
+        fileName: path.split(Platform.pathSeparator).last,
+      );
     }
     return null;
   }

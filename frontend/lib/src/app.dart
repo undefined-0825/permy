@@ -51,7 +51,8 @@ class _AppRootState extends State<AppRoot> {
 
     if (!mounted) return;
     setState(() {
-      _needsDiagnosis = (trueType == null || trueType.isEmpty) ||
+      _needsDiagnosis =
+          (trueType == null || trueType.isEmpty) ||
           (nightType == null || nightType.isEmpty);
       _loading = false;
     });
@@ -69,9 +70,7 @@ class _AppRootState extends State<AppRoot> {
   Widget build(BuildContext context) {
     if (_loading) {
       return const Scaffold(
-        body: SafeArea(
-          child: Center(child: CircularProgressIndicator()),
-        ),
+        body: SafeArea(child: Center(child: CircularProgressIndicator())),
       );
     }
 
@@ -79,9 +78,6 @@ class _AppRootState extends State<AppRoot> {
       return DiagnosisScreen(onCompleted: _onDiagnosisCompleted);
     }
 
-    return GenerateScreen(
-      apiClient: _apiClient,
-      shareReceiver: _shareReceiver,
-    );
+    return GenerateScreen(apiClient: _apiClient, shareReceiver: _shareReceiver);
   }
 }

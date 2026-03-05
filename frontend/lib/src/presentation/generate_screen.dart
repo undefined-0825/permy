@@ -110,7 +110,9 @@ class _GenerateScreenState extends State<GenerateScreen>
               ),
               if (_daily != null) ...[
                 const SizedBox(height: 8),
-                Text('今日の残り: ${_daily!.remaining}/${_daily!.limit}（${_plan.toUpperCase()}）'),
+                Text(
+                  '今日の残り: ${_daily!.remaining}/${_daily!.limit}（${_plan.toUpperCase()}）',
+                ),
               ],
               if (_error != null) ...[
                 const SizedBox(height: 8),
@@ -139,7 +141,9 @@ class _GenerateScreenState extends State<GenerateScreen>
                             alignment: Alignment.centerLeft,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 6),
-                              child: Text('${candidate.label}: ${candidate.text}'),
+                              child: Text(
+                                '${candidate.label}: ${candidate.text}',
+                              ),
                             ),
                           ),
                         ),
@@ -235,10 +239,7 @@ class _GenerateScreenState extends State<GenerateScreen>
 }
 
 class _ShareStatusCard extends StatelessWidget {
-  const _ShareStatusCard({
-    required this.fileName,
-    required this.hasText,
-  });
+  const _ShareStatusCard({required this.fileName, required this.hasText});
 
   final String? fileName;
   final bool hasText;
@@ -256,10 +257,7 @@ class _ShareStatusCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 4),
             Text(description),
           ],
@@ -281,10 +279,7 @@ class _ErrorBanner extends StatelessWidget {
         color: Theme.of(context).colorScheme.errorContainer,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Text(message),
-      ),
+      child: Padding(padding: const EdgeInsets.all(10), child: Text(message)),
     );
   }
 }

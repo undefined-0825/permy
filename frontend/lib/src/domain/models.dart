@@ -66,11 +66,7 @@ class Candidate {
 }
 
 class DailyInfo {
-  DailyInfo({
-    required this.limit,
-    required this.used,
-    required this.remaining,
-  });
+  DailyInfo({required this.limit, required this.used, required this.remaining});
 
   final int limit;
   final int used;
@@ -115,12 +111,8 @@ class GenerateResult {
 }
 
 class SettingsSnapshot {
-  SettingsSnapshot({
-    required this.settings,
-    required this.etag,
-  });
+  SettingsSnapshot({required this.settings, required this.etag});
 
   final Map<String, dynamic> settings;
   final String etag;
 }
-

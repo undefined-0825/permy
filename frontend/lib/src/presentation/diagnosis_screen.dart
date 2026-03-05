@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 import '../domain/persona_diagnosis.dart';
 
 class DiagnosisScreen extends StatefulWidget {
-  const DiagnosisScreen({
-    required this.onCompleted,
-    super.key,
-  });
+  const DiagnosisScreen({required this.onCompleted, super.key});
 
   final Future<void> Function(List<int> answers) onCompleted;
 
@@ -15,7 +12,10 @@ class DiagnosisScreen extends StatefulWidget {
 }
 
 class _DiagnosisScreenState extends State<DiagnosisScreen> {
-  final List<int?> _answers = List<int?>.filled(diagnosisQuestions.length, null);
+  final List<int?> _answers = List<int?>.filled(
+    diagnosisQuestions.length,
+    null,
+  );
   bool _saving = false;
   String? _error;
 

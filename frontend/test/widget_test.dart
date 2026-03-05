@@ -18,7 +18,10 @@ class _FakeApiClient implements AppApiClient {
   }
 
   @override
-  Future<GenerateResult> generate({required String historyText, int comboId = 0}) async {
+  Future<GenerateResult> generate({
+    required String historyText,
+    int comboId = 0,
+  }) async {
     return GenerateResult(
       candidates: [
         Candidate(label: 'A', text: '返信案A'),

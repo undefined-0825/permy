@@ -10,10 +10,7 @@ import 'token_store.dart';
 abstract class AppApiClient {
   Future<void> bootstrapAuth();
 
-  Future<GenerateResult> generate({
-    required String historyText,
-    int comboId,
-  });
+  Future<GenerateResult> generate({required String historyText, int comboId});
 
   Future<SettingsSnapshot> getSettings();
 
@@ -81,9 +78,7 @@ class ApiClient implements AppApiClient {
       final token = await tokenStore.read();
       final response = await _httpClient.get(
         Uri.parse('$baseUrl/api/v1/me/settings'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
+        headers: {'Authorization': 'Bearer $token'},
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -123,9 +118,11 @@ class ApiClient implements AppApiClient {
         final body = _tryJson(response.body) ?? <String, dynamic>{};
         return DiagnosisResult(
           trueSelfType:
-              body['true_self_type']?.toString() ?? inferDiagnosis(answers).trueSelfType,
+              body['true_self_type']?.toString() ??
+              inferDiagnosis(answers).trueSelfType,
           nightSelfType:
-              body['night_self_type']?.toString() ?? inferDiagnosis(answers).nightSelfType,
+              body['night_self_type']?.toString() ??
+              inferDiagnosis(answers).nightSelfType,
         );
       }
 

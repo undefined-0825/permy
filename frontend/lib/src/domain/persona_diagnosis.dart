@@ -36,7 +36,10 @@ DiagnosisResult inferDiagnosis(List<int> answers) {
   }
 
   final trueScore = safe.take(5).fold<int>(0, (sum, value) => sum + value);
-  final nightScore = safe.skip(5).take(6).fold<int>(0, (sum, value) => sum + value);
+  final nightScore = safe
+      .skip(5)
+      .take(6)
+      .fold<int>(0, (sum, value) => sum + value);
 
   final trueType = trueScore >= 18
       ? 'true_stability'
@@ -50,8 +53,5 @@ DiagnosisResult inferDiagnosis(List<int> answers) {
       ? 'night_balance'
       : 'night_heal';
 
-  return DiagnosisResult(
-    trueSelfType: trueType,
-    nightSelfType: nightType,
-  );
+  return DiagnosisResult(trueSelfType: trueType, nightSelfType: nightType);
 }

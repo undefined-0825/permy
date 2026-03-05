@@ -7,10 +7,7 @@ void main() {
       httpStatus: 409,
       body: {
         'detail': {
-          'error': {
-            'code': 'ETAG_MISMATCH',
-            'message': '設定が競合しました',
-          },
+          'error': {'code': 'ETAG_MISMATCH', 'message': '設定が競合しました'},
         },
       },
     );
@@ -23,10 +20,7 @@ void main() {
   test('error_code 形式を正しく解釈する', () {
     final error = ApiError.fromBody(
       httpStatus: 429,
-      body: {
-        'error_code': 'DAILY_LIMIT_EXCEEDED',
-        'message': '本日の上限です',
-      },
+      body: {'error_code': 'DAILY_LIMIT_EXCEEDED', 'message': '本日の上限です'},
     );
 
     expect(error.errorCode, 'DAILY_LIMIT_EXCEEDED');
