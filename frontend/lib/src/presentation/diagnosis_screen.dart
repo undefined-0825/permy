@@ -29,10 +29,9 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
       backgroundColor: const Color(0xFFE8D4F8),
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFE8D4F8), Color(0xFFFCE4EC)],
+          image: DecorationImage(
+            image: AssetImage('assets/images/backgrounds/diagnosis_background.png'),
+            fit: BoxFit.cover,
           ),
         ),
         child: SafeArea(

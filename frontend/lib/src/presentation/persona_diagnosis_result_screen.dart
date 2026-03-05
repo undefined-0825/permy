@@ -29,13 +29,9 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
       extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFE8D4F8), // 淡いパープル
-              Color(0xFFFCE4EC), // 淡いピンク
-            ],
+          image: DecorationImage(
+            image: AssetImage('assets/images/backgrounds/diagnosis_background.png'),
+            fit: BoxFit.cover,
           ),
         ),
         child: SafeArea(
