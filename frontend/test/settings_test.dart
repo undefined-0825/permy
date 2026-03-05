@@ -84,9 +84,7 @@ void main() {
       final mockApi = MockApiClient();
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: SettingsScreen(apiClient: mockApi),
-        ),
+        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
       );
 
       // ローディング状態を確認
@@ -104,9 +102,7 @@ void main() {
       final mockApi = MockApiClient();
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: SettingsScreen(apiClient: mockApi),
-        ),
+        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
       );
 
       await tester.pumpAndSettle();
@@ -121,16 +117,11 @@ void main() {
 
     testWidgets('読み込みエラー時の再読込ボタン', (WidgetTester tester) async {
       final mockApi = MockApiClient(
-        settingsSnapshot: SettingsSnapshot(
-          settings: {},
-          etag: '',
-        ),
+        settingsSnapshot: SettingsSnapshot(settings: {}, etag: ''),
       );
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: SettingsScreen(apiClient: mockApi),
-        ),
+        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
       );
 
       await tester.pumpAndSettle();

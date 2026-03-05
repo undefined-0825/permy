@@ -62,9 +62,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _saving = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('設定を保存しました')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('設定を保存しました')));
     } on ApiError catch (e) {
       if (!mounted) return;
       setState(() {
@@ -74,9 +74,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       if (e.errorCode == 'ETAG_MISMATCH') {
         // 再取得を促す
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('設定が更新されました。再読込してください。')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('設定が更新されました。再読込してください。')));
         await _loadSettings();
       }
     }
@@ -96,102 +96,93 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: _loading
             ? const Center(child: CircularProgressIndicator())
             : _error != null
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('エラー: ${_error!.errorCode}'),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _loadSettings,
-                          child: const Text('再読込'),
-                        ),
-                      ],
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('エラー: ${_error!.errorCode}'),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadSettings,
+                      child: const Text('再読込'),
                     ),
-                  )
-                : Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const SectionHeader(title: 'ペルソナ'),
-                          const SizedBox(height: 12),
-                          _buildPersonaInfo(),
-                          const SizedBox(height: 32),
-                          const SectionHeader(title: 'ペルソナ再診断'),
-                          const SizedBox(height: 12),
-                          ElevatedButton(
-                            onPressed: () {
-                              // 再診断フロー（別画面）
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('再診断は別途実装予定')),
-                              );
-                            },
-                            child: const Text('再診断する'),
-                          ),
-                          const SizedBox(height: 32),
-                          const SectionHeader(title: '生成設定'),
-                          const SizedBox(height: 12),
-                          _buildComboSetting(),
-                          const SizedBox(height: 32),
-                          const SectionHeader(title: 'NG設定'),
-                          const SizedBox(height: 12),
-                          _buildNGSetting(),
-                          const SizedBox(height: 32),
-                          const SectionHeader(title: '端末移行'),
-                          const SizedBox(height: 12),
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => MigrationScreen(
-                                    apiClient: widget.apiClient,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: const Text('端末移行の設定'),
-                          ),
-                          const SizedBox(height: 32),
-                          ElevatedButton(
-                            onPressed: _saving ? null : _saveSettings,
-                            child: _saving
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text('保存'),
-                          ),
-                        ],
+                  ],
+                ),
+              )
+            : Padding(
+                padding: const EdgeInsets.all(16),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SectionHeader(title: 'ペルソナ'),
+                      const SizedBox(height: 12),
+                      _buildPersonaInfo(),
+                      const SizedBox(height: 32),
+                      const SectionHeader(title: 'ペルソナ再診断'),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: () {
+                          // 再診断フロー（別画面）
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('再診断は別途実装予定')),
+                          );
+                        },
+                        child: const Text('再診断する'),
                       ),
-                    ),
+                      const SizedBox(height: 32),
+                      const SectionHeader(title: '生成設定'),
+                      const SizedBox(height: 12),
+                      _buildComboSetting(),
+                      const SizedBox(height: 32),
+                      const SectionHeader(title: 'NG設定'),
+                      const SizedBox(height: 12),
+                      _buildNGSetting(),
+                      const SizedBox(height: 32),
+                      const SectionHeader(title: '端末移行'),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  MigrationScreen(apiClient: widget.apiClient),
+                            ),
+                          );
+                        },
+                        child: const Text('端末移行の設定'),
+                      ),
+                      const SizedBox(height: 32),
+                      ElevatedButton(
+                        onPressed: _saving ? null : _saveSettings,
+                        child: _saving
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('保存'),
+                      ),
+                    ],
                   ),
+                ),
+              ),
       ),
     );
   }
 
   Widget _buildPersonaInfo() {
-    final trueType =
-        _settings['true_self_type']?.toString() ?? '診断待機中...';
-    final nightType =
-        _settings['night_self_type']?.toString() ?? '診断待機中...';
+    final trueType = _settings['true_self_type']?.toString() ?? '診断待機中...';
+    final nightType = _settings['night_self_type']?.toString() ?? '診断待機中...';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SettingRow(
-          label: 'ホンネの属性',
-          value: trueType,
-        ),
+        _SettingRow(label: 'ホンネの属性', value: trueType),
         const SizedBox(height: 12),
-        _SettingRow(
-          label: 'ヨルノジブン属性',
-          value: nightType,
-        ),
+        _SettingRow(label: 'ヨルノジブン属性', value: nightType),
       ],
     );
   }
@@ -206,18 +197,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 8),
         SegmentedButton<int>(
           segments: const [
-            ButtonSegment(
-              value: 0,
-              label: Text('通常'),
-            ),
-            ButtonSegment(
-              value: 1,
-              label: Text('短め'),
-            ),
-            ButtonSegment(
-              value: 2,
-              label: Text('長め'),
-            ),
+            ButtonSegment(value: 0, label: Text('通常')),
+            ButtonSegment(value: 1, label: Text('短め')),
+            ButtonSegment(value: 2, label: Text('長め')),
           ],
           selected: <int>{currentCombo},
           onSelectionChanged: (Set<int> newSelection) {
@@ -229,7 +211,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildNGSetting() {
-    final forbidden = (_settings['forbidden_type_ids'] as List?)
+    final forbidden =
+        (_settings['forbidden_type_ids'] as List?)
             ?.map((e) => (e as num).toInt())
             .toList() ??
         [];
@@ -252,10 +235,7 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleMedium,
-    );
+    return Text(title, style: Theme.of(context).textTheme.titleMedium);
   }
 }
 
@@ -273,10 +253,7 @@ class _SettingRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
     );

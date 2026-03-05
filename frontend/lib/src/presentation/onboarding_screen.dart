@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onCompleted;
 
-  const OnboardingScreen({
-    super.key,
-    required this.onCompleted,
-  });
+  const OnboardingScreen({super.key, required this.onCompleted});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -106,9 +103,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: _nextStep,
-                          child: Text(
-                            _currentStep == 3 ? 'ペルミィを作る' : '次へ',
-                          ),
+                          child: Text(_currentStep == 3 ? 'ペルミィを作る' : '次へ'),
                         ),
                       ),
                     ],
@@ -133,11 +128,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.message,
-            size: 80,
-            color: Colors.pinkAccent,
-          ),
+          const Icon(Icons.message, size: 80, color: Colors.pinkAccent),
           const SizedBox(height: 24),
           const Text(
             'ペルミィへようこそ',
@@ -161,11 +152,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.share,
-            size: 80,
-            color: Colors.pinkAccent,
-          ),
+          const Icon(Icons.share, size: 80, color: Colors.pinkAccent),
           const SizedBox(height: 24),
           const Text(
             'トーク履歴を送ろう',
@@ -189,11 +176,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.lock_outline,
-            size: 80,
-            color: Colors.pinkAccent,
-          ),
+          const Icon(Icons.lock_outline, size: 80, color: Colors.pinkAccent),
           const SizedBox(height: 24),
           const Text(
             'プライバシー保護',
@@ -217,11 +200,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.star,
-            size: 80,
-            color: Colors.pinkAccent,
-          ),
+          const Icon(Icons.star, size: 80, color: Colors.pinkAccent),
           const SizedBox(height: 24),
           const Text(
             'さあ、始めよう',

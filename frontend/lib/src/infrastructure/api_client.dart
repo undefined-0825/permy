@@ -108,7 +108,10 @@ class ApiClient implements AppApiClient {
   }
 
   @override
-  Future<void> updateSettings(Map<String, dynamic> settings, String etag) async {
+  Future<void> updateSettings(
+    Map<String, dynamic> settings,
+    String etag,
+  ) async {
     await bootstrapAuth();
     return _runWithAuthRetry(() async {
       final token = await tokenStore.read();
@@ -229,9 +232,7 @@ class ApiClient implements AppApiClient {
   Future<MigrationConsumeResult> consumeMigrationCode(String code) async {
     final response = await _httpClient.post(
       Uri.parse('$baseUrl/api/v1/migration/consume'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'migration_code': code}),
     );
 

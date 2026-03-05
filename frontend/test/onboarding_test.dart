@@ -75,11 +75,7 @@ void main() {
 
     testWidgets('戻るボタンで前のステップに戻れる', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: OnboardingScreen(
-            onCompleted: () {},
-          ),
-        ),
+        MaterialApp(home: OnboardingScreen(onCompleted: () {})),
       );
 
       // ステップ1→2へ進む
@@ -97,11 +93,7 @@ void main() {
 
     testWidgets('インジケーターが正しく表示される', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: OnboardingScreen(
-            onCompleted: () {},
-          ),
-        ),
+        MaterialApp(home: OnboardingScreen(onCompleted: () {})),
       );
 
       // ステップ1：ペルミィへようこそのテキスト確認

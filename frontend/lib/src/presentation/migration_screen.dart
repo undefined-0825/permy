@@ -55,9 +55,9 @@ class _MigrationScreenState extends State<MigrationScreen> {
   Future<void> _handleConsumeMigration() async {
     final code = _codeInputController.text.trim();
     if (code.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('12桁コードを入力してください')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('12桁コードを入力してください')));
       return;
     }
 
@@ -71,9 +71,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('端末情報を引き継ぎました（ユーザーID: ${result.userId}）'),
-        ),
+        SnackBar(content: Text('端末情報を引き継ぎました（ユーザーID: ${result.userId}）')),
       );
 
       // 画面を戻る
@@ -95,25 +93,25 @@ class _MigrationScreenState extends State<MigrationScreen> {
       } else if (e.errorCode == 'RATE_LIMITED') {
         message = '試行回数が多すぎます。しばらく待ってからお試しください。';
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
   void _copyCodeToClipboard() {
     Clipboard.setData(ClipboardData(text: _migrationCode)).then((_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('コードをコピーしました')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('コードをコピーしました')));
     });
   }
 
   void _shareCode() {
     // OS 共有（実装例）
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('共有機能は後日実装予定')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('共有機能は後日実装予定')));
   }
 
   @override
@@ -150,10 +148,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),
-        const Text(
-          'このアプリのアカウント情報を別の端末に移行できます。',
-          textAlign: TextAlign.center,
-        ),
+        const Text('このアプリのアカウント情報を別の端末に移行できます。', textAlign: TextAlign.center),
         const SizedBox(height: 32),
         ElevatedButton(
           onPressed: _loading ? null : _handleIssueMigration,
