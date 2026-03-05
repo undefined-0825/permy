@@ -8,7 +8,7 @@ from sqlalchemy import select
 from app.db import get_db
 from app.schemas import GenerateRequest, GenerateResponse, Candidate, DailyInfo
 from app.security import get_auth_context, AuthContext
-from app.config import settings
+from app.config import settings as config_settings
 from app.ratelimit import fixed_window_limit
 from app.errors import err
 from app.safety_gate import check as safety_check
@@ -17,11 +17,12 @@ from app.models import UserSettings
 from app.services.usage import get_or_create_usage
 from app.services.idempotency import acquire
 from app.utils_time import jst_today_ymd
+from app.followup_helper import check_missing_setting
 
 router = APIRouter()
 
 def _daily_limit(plan: str) -> int:
-    return settings.pro_generate_daily_limit if plan == "pro" else settings.free_generate_daily_limit
+    return config_settings.pro_generate_daily_limit if plan == "pro" else config_settings.free_generate_daily_limit
 
 def _to_list(v) -> list[str]:
     if v is None:
@@ -50,16 +51,16 @@ async def generate(
 ):
     rid = getattr(request.state, "request_id", None) or ""
 
-    if len(req.history_text) > settings.generate_max_chars:
-        raise err("VALIDATION_FAILED", "入力が長すぎます", {"max_chars": settings.generate_max_chars}, status_code=422)
+    if len(req.history_text) > config_settings.generate_max_chars:
+        raise err("VALIDATION_FAILED", "入力が長すぎます", {"max_chars": config_settings.generate_max_chars}, status_code=422)
 
     if auth.plan != "pro" and req.combo_id not in (0, 1):
         raise err("PLAN_REQUIRED", "有料版のみ対応しています", {"combo_id": req.combo_id}, status_code=403)
 
     await fixed_window_limit(
         f"rl:generate:user:{auth.user_id}:1m",
-        settings.rl_generate_minute_limit,
-        settings.rl_generate_minute_window_seconds,
+        config_settings.rl_generate_minute_limit,
+        config_settings.rl_generate_minute_window_seconds,
     )
 
     if idempotency_key:
@@ -72,6 +73,14 @@ async def generate(
     used = int(usage.generate_count)
     if used >= limit:
         raise err("DAILY_LIMIT_REACHED", "本日の上限に達しました", {"limit": limit, "used": used}, status_code=429)
+
+    # Settings取得（followup判定とNG判定に使用）
+    row = await db.execute(select(UserSettings).where(UserSettings.user_id == auth.user_id))
+    st = row.scalar_one_or_none()
+    settings = st.settings_json if st else {}
+
+    # Followup判定（設定不足チェック）
+    followup = check_missing_setting(settings)
 
     why = safety_check(req.history_text)
     if why:
@@ -87,13 +96,11 @@ async def generate(
             plan=auth.plan,
             daily=daily,
             candidates=candidates,
+            followup=followup,  # NGゲートでブロックされてもfollowup返す
             model_hint="blocked",
             timestamp=dt.datetime.now(dt.timezone.utc).isoformat(),
             meta_pro=None,
         )
-
-    row = await db.execute(select(UserSettings).where(UserSettings.user_id == auth.user_id))
-    st = row.scalar_one_or_none()
 
     try:
         ai_client = get_ai_client()
@@ -118,6 +125,7 @@ async def generate(
                 Candidate(label="B", text=candidates[1] if len(candidates) > 1 else ""),
                 Candidate(label="C", text=candidates[2] if len(candidates) > 2 else ""),
             ],
+            followup=followup,  # 不足があればfollowupを返す
             model_hint=None,
             timestamp=dt.datetime.now(dt.timezone.utc).isoformat(),
             meta_pro=None,

@@ -33,6 +33,7 @@ from app.api.v1.auth import router as auth_router
 from app.api.v1.settings import router as settings_router
 from app.api.v1.generate import router as generate_router
 from app.api.v1.migration import router as migration_router
+from app.api.v1.telemetry import router as telemetry_router
 
 
 configure_logging()
@@ -50,6 +51,7 @@ app.include_router(auth_router, prefix="/api/v1")
 app.include_router(settings_router, prefix="/api/v1")
 app.include_router(generate_router, prefix="/api/v1")
 app.include_router(migration_router, prefix="/api/v1")
+app.include_router(telemetry_router, prefix="/api/v1")
 
 # legacy compatibility for prototype endpoints
 @app.post("/api/talk/assist", response_model=None)

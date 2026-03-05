@@ -281,6 +281,65 @@ backend/
 
 ---
 
+## 15. Development Workflow（効率化・品質保証）
+
+### 15.1 変数名規則
+- **設定オブジェクトの統一**
+  - `from app.config import settings as config_settings` で統一
+  - ローカル変数名（`settings = st.settings_json` など）と明確に区別
+  - 同一スコープ内で `settings` という複数の意味の変数を混在させない
+
+### 15.2 関数実装チェックリスト（Acceptance Criteria）
+すべての関数実装は以下をチェック：
+- [ ] すべての条件分岐で **明示的な return 文** を記述（末尾の暗黙 `None` return を避ける）
+- [ ] グローバル変数と local 変数の名前競合がないか確認
+- [ ] Pylance の「unbound local variable」警告がないか確認
+- [ ] 関数の戻り値型が関数シグネチャと一致しているか確認
+
+### 15.3 テスト実行フロー
+開発中のテスト実行は必ずこの順序に従う：
+
+```
+[Step 1] コード修正
+
+[Step 2] ロジック正当性確認（サーバー起動なし）
+  → from fastapi.testclient import TestClient
+  → TestClient(app) でローカルテスト
+
+[Step 3] サーバー再起動（ユーザー手動）
+  ⚠️ Agent からサーバー再起動を依頼したが反映されない場合は、
+     ユーザーが手動でターミナルで Ctrl+C → 再起動を完了するまで待機
+
+[Step 4] HTTP リクエストでテスト（サーバー起動後）
+  → PowerShell テストスクリプトで API テスト実行
+  → 200/4xx/5xx の結果確認
+```
+
+### 15.4 サーバー再起動は手動必須（制約）
+- Agent からサーバーをバックグラウンド起動できるが、**確実な再起動制御はできない**
+- コード修正後の HTTP テスト実行前には、**必ずユーザーがターミナルで手動に再起動** する必要がある
+- 推奨再起動方法：
+  ```powershell
+  # ターミナルで実行
+  cd c:\dev\permy
+  .\start_fastapi.ps1
+  # または明示的に
+  # cd c:\dev\permy\backend && python -m app.main
+  ```
+
+### 15.5 エラーハンドリング（開発環境 vs 本番環境）
+- **開発環境**（localhost, ENVIRONMENT=dev）
+  - 例外 traceback を JSON レスポンスに含める
+  - デバッグに必要な詳細情報を返す
+  
+- **本番環境**（staging, prod）
+  - エラー詳細を非表示
+  - ユーザーに見せる最小限のメッセージのみ
+  - 内部 traceback はサーバーログに記録（本文なし）
+
+
+---
+
 ## 15. 実装チェックリスト（本文ゼロ監査）
 - [ ] request/response body をログしていない
 - [ ] 例外ログに本文が混入しない（バリデーション含む）

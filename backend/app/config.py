@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     migration_lock_ttl_seconds: int = 60 * 60
     idempotency_ttl_seconds: int = 24 * 3600
 
+    # Telemetry
+    telemetry_hash_secret: str = "changeme_telemetry_hash_secret"
+
     generate_max_chars: int = 20000
 
     rl_auth_ip_limit: int = 10

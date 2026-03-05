@@ -11,5 +11,12 @@ for p in db_files:
     try:
         rows = con.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;").fetchall()
         print("tables:", [r[0] for r in rows])
+        
+        # Show users table columns詳細
+        if "users" in [r[0] for r in rows]:
+            print("\nusers table columns:")
+            cols = con.execute("PRAGMA table_info(users);").fetchall()
+            for col in cols:
+                print(f"  {col[1]} ({col[2]})")
     finally:
         con.close()

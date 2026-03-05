@@ -17,7 +17,13 @@ from app.errors import err
 @dataclass(frozen=True)
 class AuthContext:
     user_id: str
-    plan: str
+    feature_tier: str
+    billing_tier: str
+
+    @property
+    def plan(self) -> str:
+        """外部互換のためのplan値（free/pro）"""
+        return "pro" if self.feature_tier == "plus" else "free"
 
 
 def _bearer_token(auth_header: str | None) -> str | None:
@@ -71,8 +77,15 @@ async def get_auth_context(
     if not user:
         raise err("AUTH_INVALID", "認証が無効です", status_code=401)
 
-    pr = await db.execute(select(PlanStatus).where(PlanStatus.user_id == user_id))
-    ps = pr.scalar_one_or_none()
-    plan = ps.plan if ps else "free"
+    # 後方互換：feature_tierがない（旧DB）場合はPlanStatusからフォールバック
+    feature_tier = user.feature_tier if hasattr(user, 'feature_tier') and user.feature_tier else None
+    billing_tier = user.billing_tier if hasattr(user, 'billing_tier') and user.billing_tier else None
 
-    return AuthContext(user_id=user_id, plan=plan)
+    if not feature_tier:
+        pr = await db.execute(select(PlanStatus).where(PlanStatus.user_id == user_id))
+        ps = pr.scalar_one_or_none()
+        old_plan = ps.plan if ps else "free"
+        feature_tier = "plus" if old_plan == "pro" else "free"
+        billing_tier = "pro_store" if old_plan == "pro" else "free"
+
+    return AuthContext(user_id=user_id, feature_tier=feature_tier, billing_tier=billing_tier)

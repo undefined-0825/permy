@@ -31,7 +31,11 @@ async def auth_anonymous(
     db.add(user)
     await db.flush()
 
-    # plan_status SSOT
+    # feature_tier/billing_tier初期化（SSOT）
+    user.feature_tier = "free"
+    user.billing_tier = "free"
+
+    # plan_status（後方互換のため残す）
     db.add(PlanStatus(user_id=user.user_id, plan="free"))
 
     # 初期settings（未知フィールド許容のため JSONそのまま）
