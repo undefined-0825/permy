@@ -22,25 +22,42 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
   @override
   Widget build(BuildContext context) {
     final question = diagnosisQuestions[_currentQuestionIndex];
-    final progress = '${_currentQuestionIndex + 1}/${diagnosisQuestions.length}';
+    final progress =
+        '${_currentQuestionIndex + 1}/${diagnosisQuestions.length}';
 
     return Scaffold(
+      backgroundColor: const Color(0xFFE8D4F8),
       body: Container(
         decoration: const BoxDecoration(
-          // 背景画像
-          image: DecorationImage(
-            image: AssetImage('assets/images/backgrounds/diagnosis_background.png'),
-            fit: BoxFit.cover,
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFE8D4F8), Color(0xFFFCE4EC)],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              // 上部：ペルミィアイコン + 進捗表示
+              // 上部：戻るボタン + ペルミィアイコン + 進捗表示
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                 child: Row(
                   children: [
+                    // 戻るボタン（最初のページでなければ表示）
+                    if (_currentQuestionIndex > 0)
+                      SizedBox(
+                        width: 36,
+                        height: 36,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(Icons.arrow_back, size: 20),
+                          onPressed: () =>
+                              setState(() => _currentQuestionIndex--),
+                        ),
+                      )
+                    else
+                      const SizedBox(width: 36),
+                    const SizedBox(width: 12),
                     // プレースホルダーアイコン（後で黒猫画像に差し替え）
                     Container(
                       width: 48,
@@ -99,6 +116,11 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                             setState(() {
                               _answers[question.id] = choice.id;
                             });
+                            // 選択肢を選んだら自動で次へ進む
+                            Future.delayed(
+                              const Duration(milliseconds: 300),
+                              _handleNext,
+                            );
                           },
                         );
                       }),
@@ -110,53 +132,56 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
               // エラー表示
               if (_error != null)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    _error!,
-                    style: const TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-
-              // 下部：次へボタン
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _canProceed && !_saving ? _handleNext : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFB3C1),
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor: Colors.grey.shade300,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(28),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      Text(
+                        _error!,
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      elevation: 0,
-                    ),
-                    child: _saving
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: !_saving ? _handleNext : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFB3C1),
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: Colors.grey.shade300,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(28),
                             ),
-                          )
-                        : Text(
-                            _isLastQuestion ? 'この内容で進む' : '次へ',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            elevation: 0,
                           ),
+                          child: _saving
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : const Text(
+                                  'もう一度',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
+              if (_error == null) const SizedBox(height: 16),
             ],
           ),
         ),
@@ -164,9 +189,11 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
     );
   }
 
-  bool get _canProceed => _answers.containsKey(diagnosisQuestions[_currentQuestionIndex].id);
+  bool get _canProceed =>
+      _answers.containsKey(diagnosisQuestions[_currentQuestionIndex].id);
 
-  bool get _isLastQuestion => _currentQuestionIndex == diagnosisQuestions.length - 1;
+  bool get _isLastQuestion =>
+      _currentQuestionIndex == diagnosisQuestions.length - 1;
 
   void _handleNext() {
     if (_isLastQuestion) {

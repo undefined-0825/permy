@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../domain/persona_type_helper.dart';
+
 class PersonaDiagnosisResultScreen extends StatelessWidget {
   const PersonaDiagnosisResultScreen({
     required this.trueType,
@@ -52,7 +54,7 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 _PersonaTypeCard(
-                  typeName: trueType,
+                  typeName: getTrueSelfTypeName(trueType),
                   description: _getTrueTypeDescription(trueType),
                 ),
                 const SizedBox(height: 32),
@@ -66,7 +68,7 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 _PersonaTypeCard(
-                  typeName: nightType,
+                  typeName: getNightSelfTypeName(nightType),
                   description: _getNightTypeDescription(nightType),
                 ),
                 const SizedBox(height: 32),

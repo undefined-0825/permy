@@ -45,7 +45,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _apiClient = ApiClient(
-      baseUrl: 'http://localhost:8000',
+      baseUrl: 'http://10.0.2.2:8000',
       tokenStore: const SecureTokenStore(),
     );
     _telemetryQueue = TelemetryQueue(apiClient: _apiClient);

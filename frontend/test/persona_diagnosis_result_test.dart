@@ -16,7 +16,7 @@ void main() {
       );
 
       expect(find.text('普段の自分'), findsOneWidget);
-      expect(find.text('Stability'), findsOneWidget);
+      expect(find.text('安定重視タイプ'), findsOneWidget);
       expect(find.text('夜の私'), findsOneWidget);
     });
 
@@ -30,7 +30,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Heal'), findsOneWidget);
+      expect(find.text('癒しタイプ'), findsOneWidget);
     });
 
     testWidgets('スタイルスコアが表示される', (WidgetTester tester) async {

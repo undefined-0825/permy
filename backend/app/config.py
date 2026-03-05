@@ -23,9 +23,9 @@ class Settings(BaseSettings):
 
     generate_max_chars: int = 20000
 
-    rl_auth_ip_limit: int = 10
+    rl_auth_ip_limit: int = 100  # 開発中は制限緩和
     rl_auth_ip_window_seconds: int = 600
-    rl_auth_df_limit: int = 3
+    rl_auth_df_limit: int = 30  # 開発中は制限緩和
     rl_auth_df_window_seconds: int = 600
 
     rl_generate_minute_limit: int = 5

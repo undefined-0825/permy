@@ -119,109 +119,126 @@ class _GenerateScreenState extends State<GenerateScreen>
         ),
         child: SafeArea(
           child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Text('ぼくはきみの分身・・・'),
-                      const Text('ぼくに任せて・・・'),
-                      const SizedBox(height: 12),
-                      _ShareStatusCard(
-                        fileName: _sharedFileName,
-                        hasText: _sharedText?.isNotEmpty ?? false,
-                      ),
-                      const SizedBox(height: 12),
-                      _ComboSelector(
-                        selectedCombo: _comboId,
-                        isPro: _plan == 'pro',
-                        onChanged: (int value) {
-                          setState(() {
-                            _comboId = value;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: canGenerate ? _onGeneratePressed : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFFB3C1),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(28),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text('ぼくはきみの分身・・・'),
+                        const Text('ぼくに任せて・・・'),
+                        const SizedBox(height: 12),
+                        _ShareStatusCard(
+                          fileName: _sharedFileName,
+                          hasText: _sharedText?.isNotEmpty ?? false,
+                        ),
+                        const SizedBox(height: 12),
+                        _ComboSelector(
+                          selectedCombo: _comboId,
+                          isPro: _plan == 'pro',
+                          onChanged: (int value) {
+                            final isPro = value >= 2; // combo 2-5 は Pro のみ
+                            if (isPro && _plan == 'free') {
+                              // Pro 限定オプション選択時は購買画面へ遷移
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (context) => const Scaffold(
+                                    body: Center(
+                                      child: Text('Pro プランへの購買ページ（準備中）'),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            } else {
+                              setState(() {
+                                _comboId = value;
+                              });
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: canGenerate ? _onGeneratePressed : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFFB3C1),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(28),
+                              ),
+                              elevation: 0,
                             ),
-                            elevation: 0,
+                            child: _loading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : const Text('ぼくが返信案を考えるよ'),
                           ),
-                          child: _loading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                  ),
-                                )
-                              : const Text('返信案を作る'),
                         ),
-                      ),
-                      if (_daily != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          '今日の残り: ${_daily!.remaining}/${_daily!.limit}（${_plan.toUpperCase()}）',
-                        ),
-                      ],
-                      if (_plan == 'pro' && _metaPro != null) ...[
-                        const SizedBox(height: 8),
-                        Text('推定メーター: $_metaPro%'),
-                      ],
-                      if (_error != null) ...[
-                        const SizedBox(height: 8),
-                        _ErrorBanner(message: _errorMessage(_error!)),
-                      ],
-                      const SizedBox(height: 12),
-                      ...List.generate(_candidates.length, (index) {
-                        final candidate = _candidates[index];
-                        final isCopied = _copiedLabel == candidate.label;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 400),
-                            decoration: BoxDecoration(
-                              color: isCopied
-                                  ? Theme.of(
-                                      context,
-                                    ).colorScheme.primaryContainer
-                                  : Theme.of(context).colorScheme.surface,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: OutlinedButton(
-                              onPressed: () => _copyCandidate(candidate),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 6,
-                                  ),
-                                  child: Text(
-                                    '${candidate.label}: ${candidate.text}',
+                        if (_daily != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            '今日の残り: ${_daily!.remaining}/${_daily!.limit}（${_plan.toUpperCase()}）',
+                          ),
+                        ],
+                        if (_plan == 'pro' && _metaPro != null) ...[
+                          const SizedBox(height: 8),
+                          Text('推定メーター: $_metaPro%'),
+                        ],
+                        if (_error != null) ...[
+                          const SizedBox(height: 8),
+                          _ErrorBanner(message: _errorMessage(_error!)),
+                        ],
+                        const SizedBox(height: 12),
+                        ...List.generate(_candidates.length, (index) {
+                          final candidate = _candidates[index];
+                          final isCopied = _copiedLabel == candidate.label;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 400),
+                              decoration: BoxDecoration(
+                                color: isCopied
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.primaryContainer
+                                    : Theme.of(context).colorScheme.surface,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: OutlinedButton(
+                                onPressed: () => _copyCandidate(candidate),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 6,
+                                    ),
+                                    child: Text(
+                                      '${candidate.label}: ${candidate.text}',
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      }),
-                    ],
+                          );
+                        }),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -472,50 +489,37 @@ class _ComboSelector extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('生成方針', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            ...List.generate(combos.length, (index) {
-              final (label, isProOnly) = combos[index];
-              final isLocked = isProOnly && !isPro;
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Radio<int>(
-                      value: index,
-                      groupValue: selectedCombo,
-                      onChanged: isLocked
-                          ? null
-                          : (int? value) {
-                              if (value != null) {
-                                onChanged(value);
-                              }
-                            },
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: DropdownButton<int>(
+                value: selectedCombo,
+                isExpanded: true,
+                items: List.generate(combos.length, (index) {
+                  final (label, isProOnly) = combos[index];
+                  final isLocked = isProOnly && !isPro;
+                  return DropdownMenuItem<int>(
+                    value: index,
+                    enabled: !isLocked,
+                    child: Text(
+                      label,
+                      style: isLocked
+                          ? TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            )
+                          : null,
                     ),
-                    Expanded(
-                      child: Text(
-                        label,
-                        style: isLocked
-                            ? TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              )
-                            : null,
-                      ),
-                    ),
-                    if (isProOnly)
-                      Chip(
-                        label: const Text('Pro'),
-                        visualDensity: VisualDensity.compact,
-                        backgroundColor: Theme.of(
-                          context,
-                        ).colorScheme.primaryContainer,
-                      ),
-                  ],
-                ),
-              );
-            }),
+                  );
+                }),
+                onChanged: (int? value) {
+                  if (value != null) {
+                    onChanged(value);
+                  }
+                },
+              ),
+            ),
           ],
         ),
       ),

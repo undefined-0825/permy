@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../domain/persona_diagnosis.dart';
+import '../domain/persona_type_helper.dart';
 import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
 import 'about_privacy_screen.dart';
@@ -277,20 +278,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildPersonaInfo() {
-    final trueType = _settings['true_self_type']?.toString() ?? '診断待機中...';
-    final nightType = _settings['night_self_type']?.toString() ?? '診断待機中...';
+    final trueTypeValue = _settings['true_self_type']?.toString() ?? '診断待機中...';
+    final nightTypeValue = _settings['night_self_type']?.toString() ?? '診断待機中...';
+    
+    final trueTypeDisplay = trueTypeValue == '診断待機中...'
+        ? trueTypeValue
+        : getTrueSelfTypeName(trueTypeValue);
+    final nightTypeDisplay = nightTypeValue == '診断待機中...'
+        ? nightTypeValue
+        : getNightSelfTypeName(nightTypeValue);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         GestureDetector(
-          onTap: trueType != '診断待機中...' && nightType != '診断待機中...'
+          onTap: trueTypeValue != '診断待機中...' && nightTypeValue != '診断待機中...'
               ? () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => PersonaDiagnosisResultScreen(
-                        trueType: trueType,
-                        nightType: nightType,
+                        trueType: trueTypeValue,
+                        nightType: nightTypeValue,
                         assertiveness:
                             (_settings['style_assertiveness'] as num?)
                                 ?.toInt() ??
@@ -308,16 +316,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              color: trueType != '診断待機中...' ? Colors.blue.shade50 : null,
+              color: trueTypeValue != '診断待機中...' ? Colors.blue.shade50 : null,
             ),
             padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _SettingRow(label: '普段の属性', value: trueType),
+                _SettingRow(label: '普段の属性', value: trueTypeDisplay),
                 const SizedBox(height: 12),
-                _SettingRow(label: '夜の属性', value: nightType),
-                if (trueType != '診断待機中...')
+                _SettingRow(label: '夜の属性', value: nightTypeDisplay),
+                if (trueTypeValue != '診断待機中...')
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(

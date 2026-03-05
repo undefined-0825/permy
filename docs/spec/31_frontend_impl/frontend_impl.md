@@ -568,3 +568,113 @@ await apiClient.post('/api/v1/telemetry/events', {
 - `/api/v1` 契約に整合（header/ETag/Idempotency/エラー分岐）
 - Safe Area崩れなし（主要端末）
 - コピー体験が明確（0.4秒フィードバック）
+---
+
+## 14. 開発・実行手順（MUST / Development Guide）
+### 14.1 エミュレータ起動（初回または停止状態時）
+```bash
+# 1. 利用可能なエミュレータを確認
+flutter emulators
+
+# 2. エミュレータを起動（バックグラウンド）
+flutter emulators --launch <emulator_id>
+
+# 注意：起動完了を待つため、最低 45〜60秒待機してから flutter devices で確認
+Start-Sleep -Seconds 60  # PowerShell例
+```
+
+### 14.2 Flutter run（アプリ実行 / 重要）
+```bash
+# 【必ず実行】1. frontend フォルダに移動
+Set-Location c:\dev\permy\frontend
+# または
+cd c:\dev\permy\frontend
+
+# 【必ず確認】2. pubspec.yaml が存在することとカレントディレクトリを確認
+Get-Location
+Test-Path pubspec.yaml
+
+# 【実行】3. エミュレータに実行
+flutter run -d emulator-5554
+
+# 代替案：複数デバイスがある場合
+flutter devices  # 接続デバイスを確認
+flutter run -d <device_id>
+```
+
+### 14.3 よくあるエラーと対処（MUST）
+
+#### ❌ Error: No pubspec.yaml file found
+```
+This command should be run from the root of your Flutter project.
+```
+**原因**: `frontend` ディレクトリ内にいない（`backend` や `c:\dev\permy` にいる）  
+**対処**:
+```bash
+Set-Location c:\dev\permy\frontend
+cd c:\dev\permy\frontend
+```
+
+#### ❌ Device not found / エミュレータが認識されない
+```
+No emulators were detected. You can create one using 'flutter emulators --create'
+```
+**原因**: エミュレータが起動していない、またはPATHが通っていない  
+**対処**:
+```bash
+# 1. 現在のエミュレータ状況を確認
+flutter emulators
+
+# 2. バックグラウンドで起動（必ず60秒待機）
+flutter emulators --launch Medium_Phone_API_36.1
+Start-Sleep -Seconds 60
+
+# 3. デバイス再確認（タイムアウト20秒で明示的に待機）
+flutter devices --device-timeout 20
+```
+
+#### ❌ flutter run が終了する（Exit Code: 1）
+Flutterビルドが失敗している（詳細ログ確認が必要）  
+**対処**:
+```bash
+# キャッシュをクリアして再実行
+flutter clean
+
+# デバイス再確認
+flutter devices --device-timeout 20
+
+# ビルド再実行（ログ出力）
+flutter run -d emulator-5554 --verbose
+```
+
+#### ❌ `Could not find device or driver connected`
+**原因**: cd コマンドでディレクトリ移動していない（PowerShell の `Set-Location` と `cd` の使い分けが混在）  
+**対処**:
+- **推奨**: `Set-Location` を使用（PowerShell標準）
+  ```powershell
+  Set-Location c:\dev\permy\frontend
+  ```
+- **代替**: `cd` + フルパスを使用
+  ```powershell
+  cd 'c:\dev\permy\frontend'  # パスに空白があれば quotes で囲む
+  ```
+
+### 14.4 手順チェックリスト（毎回実行前に確認 / MUST）
+```
+□ flutter emulators --launch <id> を実行し、60秒待機した
+□ Set-Location c:\dev\permy\frontend を実行
+□ Get-Location で `c:\dev\permy\frontend` が出力される
+□ Test-Path pubspec.yaml で True が出力される
+□ flutter devices で `emulator-5554` が表示される（--device-timeout 20）
+□ 以上確認後、flutter run -d emulator-5554 を実行
+```
+
+### 14.5 開発中の Hot Reload / Hot Restart
+```bash
+# 実行中、コンソールで以下キーを入力可能
+r     # Hot Reload（状態保持、コード変更反映）
+R     # Hot Restart（状態リセット、コード変更反映）
+q     # アプリ終了
+```
+
+---

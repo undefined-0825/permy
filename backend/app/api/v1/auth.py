@@ -23,9 +23,10 @@ async def auth_anonymous(
     device_fingerprint: str | None = Header(default=None, alias="X-Device-Fingerprint"),
 ):
     ip = _client_ip(request)
-    await fixed_window_limit(f"rl:auth:ip:{ip}:10m", settings.rl_auth_ip_limit, settings.rl_auth_ip_window_seconds)
-    if device_fingerprint:
-        await fixed_window_limit(f"rl:auth:df:{device_fingerprint}:10m", settings.rl_auth_df_limit, settings.rl_auth_df_window_seconds)
+    # TODO: 開発中は一時的にレート制限を無効化
+    # await fixed_window_limit(f"rl:auth:ip:{ip}:10m", settings.rl_auth_ip_limit, settings.rl_auth_ip_window_seconds)
+    # if device_fingerprint:
+    #     await fixed_window_limit(f"rl:auth:df:{device_fingerprint}:10m", settings.rl_auth_df_limit, settings.rl_auth_df_window_seconds)
 
     user = User()
     db.add(user)

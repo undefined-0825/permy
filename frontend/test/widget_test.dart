@@ -124,7 +124,7 @@ void main() {
     );
     await tester.pump();
 
-    await tester.tap(find.text('返信案を作る'));
+    await tester.tap(find.text('ぼくが返信案を考えるよ'));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('A: 返信案A'), findsOneWidget);
