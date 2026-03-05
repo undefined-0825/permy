@@ -126,10 +126,7 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
 }
 
 class _PersonaTypeCard extends StatelessWidget {
-  const _PersonaTypeCard({
-    required this.typeName,
-    required this.description,
-  });
+  const _PersonaTypeCard({required this.typeName, required this.description});
 
   final String typeName;
   final String description;
@@ -154,10 +151,7 @@ class _PersonaTypeCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Text(
-            description,
-            style: const TextStyle(fontSize: 14, height: 1.6),
-          ),
+          Text(description, style: const TextStyle(fontSize: 14, height: 1.6)),
         ],
       ),
     );
@@ -177,10 +171,7 @@ class _StyleScoreRow extends StatelessWidget {
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label),
-            Text('${(score).toStringAsFixed(0)}/100'),
-          ],
+          children: [Text(label), Text('${(score).toStringAsFixed(0)}/100')],
         ),
         const SizedBox(height: 8),
         ClipRRect(
@@ -189,9 +180,7 @@ class _StyleScoreRow extends StatelessWidget {
             value: score / 100,
             minHeight: 8,
             backgroundColor: Colors.grey.shade200,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              _getScoreColor(score),
-            ),
+            valueColor: AlwaysStoppedAnimation<Color>(_getScoreColor(score)),
           ),
         ),
       ],

@@ -204,12 +204,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         trueType: trueType,
                         nightType: nightType,
                         assertiveness:
-                            (_settings['style_assertiveness'] as num?)?.toInt() ??
-                                50,
+                            (_settings['style_assertiveness'] as num?)
+                                ?.toInt() ??
+                            50,
                         warmth:
                             (_settings['style_warmth'] as num?)?.toInt() ?? 50,
-                        riskGuard: (_settings['style_risk_guard'] as num?)
-                                ?.toInt() ??
+                        riskGuard:
+                            (_settings['style_risk_guard'] as num?)?.toInt() ??
                             50,
                       ),
                     ),
