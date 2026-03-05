@@ -237,6 +237,61 @@
 
 ---
 
+### TC-FE-13 Settings → 再診断導線
+**Given**
+- Settings 画面が表示されている
+- 既にペルソナが診断済み
+
+**When**
+- 「ペルソナ再診断」セクションの「再診断する」ボタンをタップ
+
+**Then**
+- DiagnosisScreen（7問）が表示される
+- ユーザーが全問回答して完了
+- 自動的に Settings に戻る
+- 「再診断を反映しました」SnackBar が表示される
+- ペルソナ属性値が新しい診断結果で更新されている
+
+---
+
+### TC-FE-14 Settings → 診断結果詳細表示（PersonaDiagnosisResultScreen）
+**Given**
+- Settings 画面が表示されている
+- ペルソナが診断済み（「普段の属性」「夜の属性」に値がある）
+
+**When**
+- ペルソナ情報エリア（背景が淡青のカード）をタップ
+
+**Then**
+- PersonaDiagnosisResultScreen が表示される
+- 以下が表示される：
+  1) 「普段の自分」セクション：True Self タイプと説明文
+  2) 「夜の私」セクション：Night Self タイプと説明文
+  3) 「スタイルスコア」セクション：主張度/温かみ/リスク回避（LinearProgressIndicator付き）
+- 画面をスクロールして全内容が見える
+- BackボタンまたはAppBar戻るで Settings に復帰
+
+---
+
+### TC-FE-15 Settings → 端末移行・About 遷移確認
+**Given**
+- Settings 画面が表示されている
+
+**When**
+- 「端末移行」セクションの「端末移行の設定」ボタンをタップ
+
+**Then**
+- MigrationScreen が表示される
+
+**When**
+- Settings に戻って「もっと知る」セクションの「このアプリについて」をタップ
+
+**Then**
+- AboutPrivacyScreen が表示される
+- プライバシー説明、連絡先情報が表示される
+
+---
+
 ## 6. 目視チェック（MUST）
 - iPhoneのSafe Area（ノッチ/ホームインジケータ）と被らない
 - Androidのナビバー/キーボードと被らない
@@ -246,11 +301,11 @@
 
 ## 6.1 画面遷移の回帰チェック（追加運用 / MUST）
 - 画面遷移は「実装済み」だけで完了扱いにしない。
-- 各導線に対してウィジェットテストを追加し、最低でも以下を毎回確認する。
-  - Settings → 再診断
-  - Settings → 端末移行
-  - Settings → About/Privacy
-  - Settings → 診断結果詳細
+- 各導線に対してウィジェットテストを追加し、最低でも以下を毎回確認する（対応 TC：TC-FE-13〜TC-FE-15）：
+  - Settings → 再診断（TC-FE-13）
+  - Settings → 端末移行（TC-FE-15）
+  - Settings → About/Privacy（TC-FE-15）
+  - Settings → 診断結果詳細（TC-FE-14）
 - `SingleChildScrollView` 配下のボタン検証は、可視化 (`scrollUntilVisible`) を前提手順にする。
 - 同一ラベルが複数ある画面は、`findsOneWidget` に固定せず `Key` または画面種別 (`find.byType`) で検証する。
 
@@ -263,8 +318,10 @@
 ---
 
 ## 7. 合格条件（MUST）
-- TC-FE-01〜TC-FE-12 がすべて満たされる
+- TC-FE-01〜TC-FE-15 がすべて満たされる
 - 本文ゼロ（保存/ログ/テレメトリ）の制約を破っていない
+- Settings の再診断 → 自動リロード → SnackBar が正常に機能している
+- PersonaDiagnosisResultScreen が読み取り専用で表示される
 
 ---
 

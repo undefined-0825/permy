@@ -27,7 +27,7 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'ホンネの私（True Self）',
+                '普段の自分',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
@@ -37,7 +37,7 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               const Text(
-                'ヨルノジブン（Night Self）',
+                '夜の私',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),

@@ -202,10 +202,68 @@ ios/
   - タップでClipboardへコピー
   - 0.4秒のハイライトフィードバック
 
+### 7.3.1 Persona Diagnosis Result Screen（新規画面）
+- **目的**：診断されたペルソナを詳細表示。Settings から タップエントリーポイント
+- **表示内容**（読み取り専用）：
+  1) 普段の自分：True Self（5タイプ：Stability/Independence/Approval/Realism/Romance）
+  2) 夜の私：Night Self（5タイプ：VisitPush/Heal/LittleDevil/BigClient/Balance）
+  3) スタイルスコア（主張度/温かみ/リスク回避）：0-100の LinearProgressIndicator
+- **各タイプの説明文**：固定テキスト（詳細は後述）
+- **保存**：なし（読み取り専用、スクロール可）
+- **遷移**：Settings から「ペルソナ欄」をタップで表示、BackボタンまたはAppBar戻るで Settings に復帰
+
 ### 7.4 Settings
-- GET `/me/settings` → ETag保持
-- PUT `/me/settings`（If-Match必須）
-- 409 `ETAG_MISMATCH`：再取得導線
+- **GET `/me/settings`** → ETag 保持、初期化時に呼び出し
+- **PUT `/me/settings`**（If-Match必須）
+- **409 `ETAG_MISMATCH`**：再取得 → ユーザーへ「設定が更新されました。再読込してください。」表示 → 自動リロード
+
+#### 7.4.1 Settings 画面の UI 構成
+**セクション別**：
+1) **ペルソナ**：
+   - 行1：「普段の属性」= `true_self_type` 値
+   - 行2：「夜の属性」= `night_self_type` 値
+   - 背景色：診断済み時は淡青 `Colors.blue.shade50`（否、診断待機表示）
+   - 動作：タップで PersonaDiagnosisResultScreen へ遷移（診断済み時のみ）
+
+2) **ペルソナ再診断**：
+   - ボタン：「再診断する」
+   - 遷移：DiagnosisScreen（7問固定、全類型への回答）
+   - 完了後：自動リロード + SnackBar「再診断を反映しました」
+
+3) **生成設定**：
+   - SegmentedButton「生成戦術」：
+     - 0=「通常」（combo_id: 0 / デフォルト）
+     - 1=「短め」（combo_id: 1）
+     - 2=「長め」（combo_id: 2）
+   - `combo_id` を settings で管理
+
+4) **NG設定**：
+   - テキスト表示：「禁止ワード・表現を設定してください。実装は後日予定です。」
+   - 現在の禁止設定表示（`forbidden_type_ids`）
+   - 実装時に `ng_tags` / `ng_free_phrases` フォーム追加予定
+
+5) **端末移行**：
+   - ボタン：「端末移行の設定」
+   - 遷移：MigrationScreen
+
+6) **もっと知る**：
+   - ボタン：「このアプリについて」
+   - 遷移：AboutPrivacyScreen
+
+7) **保存**：
+   - ボタン：「保存」
+   - 動作：PUT `/me/settings` を発火、成功時「設定を保存しました」SnackBar
+   - 失敗時：エラーに応じて再取得または復帰導線
+
+#### 7.4.2 再診断フロー（詳細）
+1. Settings 画面の「再診断する」ボタンをタップ
+2. DiagnosisScreen（7問）が MaterialPageRoute で push される
+3. ユーザーが全問回答 → `onCompleted` callback 発火
+4. callback 内で `completeDiagnosis(answers)` API 呼び出し（POST /me/diagnosis）
+5. 返却された診断結果を settings に反映させ、pop(true) で Settings に戻る
+6. Settings state が `updated == true` を検知して `_loadSettings()` リロード実行
+7. リロード完了後「再診断を反映しました」SnackBar 表示
+8. 画面表示が新しいペルソナ値で即座に更新される
 
 ### 7.5 Migration
 - issue：コード表示＋共有（コードは本文ではない）
@@ -215,6 +273,30 @@ ios/
 ### 7.6 About/Privacy
 - 本文非保存/送信はユーザー の説明（固定文言は別Spec）
 - 連絡先（必要なら）
+
+### 7.7 固定UI文言（MUST）
+**PersonaDiagnosisResultScreen**
+- AppBar 標題：「あなたのペルソナ」
+- セクション標題：
+  - 「普段の自分」（True Self セクション）
+  - 「夜の私」（Night Self セクション）
+  - 「スタイルスコア」
+- 各スコア行ラベル：「主張度」「温かみ」「リスク回避」
+- 説明文：「これらのペルソナは、あなたの返信スタイルを決める大事な指標。ときどき見返して、「今のぼくはこう考えてるんだ」って確認してみてね。」
+
+**True Self（5タイプ）説明文**
+- Stability：「バランスを大事にする。無理のない生活を心がけ、まずは安定から。」
+- Independence：「自分のペースを守る。誰かに縛られず、自分の判断を信じる。」
+- Approval：「人の評価を大事にする。信頼を集めることが喜び。その分相手との距離が近い。」
+- Realism：「現実的に考える。長期的な得を見える人。堅実さが武器。」
+- Romance：「感情を大事にする。気持ちが満たされることが優先。その直感は案外正しい。」
+
+**Night Self（5タイプ）説明文**
+- VisitPush：「次のお約束を大事にする。関係を続けることが目標。その誠実さが信頼を呼ぶ。」
+- Heal：「相手を癒したい。そっと寄り添うのが得意。その優しさが人を呼ぶ。」
+- LittleDevil：「駆け引きを楽しむ。軽やかなテンポが自分らしい。その遊び心が魅力。」
+- BigClient：「大事な人を見極める。重点的に寄せることを選ぶ。その戦略眼が効く。」
+- Balance：「全体のバランスを見る。状況に合わせて柔軟に対応。その臨機応変さが強み。」
 
 ---
 

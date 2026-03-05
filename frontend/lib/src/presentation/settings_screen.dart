@@ -244,9 +244,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _SettingRow(label: 'ホンネの属性', value: trueType),
+                _SettingRow(label: '普段の属性', value: trueType),
                 const SizedBox(height: 12),
-                _SettingRow(label: 'ヨルノジブン属性', value: nightType),
+                _SettingRow(label: '夜の属性', value: nightType),
                 if (trueType != '診断待機中...')
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
@@ -263,7 +263,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        _SettingRow(label: 'ヨルノジブン属性', value: nightType),
+        _SettingRow(label: '夜の属性', value: nightType),
       ],
     );
   }
