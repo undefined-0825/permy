@@ -6,6 +6,7 @@ import 'package:sample_app/src/infrastructure/api_client.dart';
 import 'package:sample_app/src/presentation/about_privacy_screen.dart';
 import 'package:sample_app/src/presentation/diagnosis_screen.dart';
 import 'package:sample_app/src/presentation/migration_screen.dart';
+import 'package:sample_app/src/presentation/onboarding_screen.dart';
 import 'package:sample_app/src/presentation/persona_diagnosis_result_screen.dart';
 import 'package:sample_app/src/presentation/settings_screen.dart';
 
@@ -183,6 +184,23 @@ void main() {
 
       expect(find.byType(AboutPrivacyScreen), findsOneWidget);
       expect(find.text('このアプリについて'), findsWidgets);
+    });
+
+    testWidgets('再チュートリアルボタンで Onboarding 画面へ遷移できる', (WidgetTester tester) async {
+      final mockApi = MockApiClient();
+
+      await tester.pumpWidget(
+        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+      );
+
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(find.text('チュートリアルをもう一度確認する'), 200);
+      await tester.tap(find.text('チュートリアルをもう一度確認する'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(OnboardingScreen), findsOneWidget);
+      expect(find.text('スキップ'), findsOneWidget);
     });
 
     testWidgets('ペルソナ欄タップで診断結果画面へ遷移できる', (WidgetTester tester) async {

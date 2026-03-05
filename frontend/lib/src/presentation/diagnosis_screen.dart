@@ -30,8 +30,11 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/backgrounds/diagnosis_background.png'),
+            image: AssetImage(
+              'assets/images/backgrounds/diagnosis_background.png',
+            ),
             fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(Color(0x66FFFFFF), BlendMode.lighten),
           ),
         ),
         child: SafeArea(

@@ -49,6 +49,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           image: DecorationImage(
             image: AssetImage('assets/images/backgrounds/diagnosis_background.png'),
             fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Color(0x66FFFFFF),
+              BlendMode.lighten,
+            ),
           ),
         ),
         child: SafeArea(
@@ -86,7 +90,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             shape: BoxShape.circle,
                             color: index == _currentStep
                                 ? Colors.black
-                                : Colors.grey.shade300,
+                                : Colors.black54,
                           ),
                         ),
                       ),
@@ -146,7 +150,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 16),
           const Text(
             'ぼくはきみの分身。\nLINEのトーク履歴から、\nぴったりな返信を作るよ。',
-            style: TextStyle(fontSize: 16),
+            style: TextStyle(fontSize: 16, color: Colors.black87),
             textAlign: TextAlign.center,
           ),
         ],
@@ -170,7 +174,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 16),
           const Text(
             'LINEで、会話を長押し。\n『トーク履歴を送信』を選ぶ。\nテキストファイルでぼくに送ってね。',
-            style: TextStyle(fontSize: 16),
+            style: TextStyle(fontSize: 16, color: Colors.black87),
             textAlign: TextAlign.center,
           ),
         ],
@@ -194,7 +198,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 16),
           const Text(
             'トークの本文は保存されません。\n生成した返信案だけ、\nあなたがコピーして送ります。\n完全にあなたが操作。',
-            style: TextStyle(fontSize: 16),
+            style: TextStyle(fontSize: 16, color: Colors.black87),
             textAlign: TextAlign.center,
           ),
         ],
@@ -218,7 +222,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 16),
           const Text(
             'ぼくに任せて。\nあなただけの返信をつくる。\nさあ、変身しよう。',
-            style: TextStyle(fontSize: 16),
+            style: TextStyle(fontSize: 16, color: Colors.black87),
             textAlign: TextAlign.center,
           ),
         ],

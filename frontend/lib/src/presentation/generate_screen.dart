@@ -112,8 +112,11 @@ class _GenerateScreenState extends State<GenerateScreen>
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/backgrounds/diagnosis_background.png'),
+            image: AssetImage(
+              'assets/images/backgrounds/diagnosis_background.png',
+            ),
             fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(Color(0x66FFFFFF), BlendMode.lighten),
           ),
         ),
         child: SafeArea(
@@ -127,8 +130,14 @@ class _GenerateScreenState extends State<GenerateScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text('ぼくはきみの分身・・・'),
-                        const Text('ぼくに任せて・・・'),
+                        const Text(
+                          'ぼくはきみの分身・・・',
+                          style: TextStyle(color: Colors.black87),
+                        ),
+                        const Text(
+                          'ぼくに任せて・・・',
+                          style: TextStyle(color: Colors.black87),
+                        ),
                         const SizedBox(height: 12),
                         _ShareStatusCard(
                           fileName: _sharedFileName,
@@ -166,6 +175,8 @@ class _GenerateScreenState extends State<GenerateScreen>
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFB3C1),
                               foregroundColor: Colors.white,
+                              disabledBackgroundColor: const Color(0xFFE6DCE8),
+                              disabledForegroundColor: Colors.black54,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(28),
                               ),
@@ -189,11 +200,15 @@ class _GenerateScreenState extends State<GenerateScreen>
                           const SizedBox(height: 8),
                           Text(
                             '今日の残り: ${_daily!.remaining}/${_daily!.limit}（${_plan.toUpperCase()}）',
+                            style: const TextStyle(color: Colors.black87),
                           ),
                         ],
                         if (_plan == 'pro' && _metaPro != null) ...[
                           const SizedBox(height: 8),
-                          Text('推定メーター: $_metaPro%'),
+                          Text(
+                            '推定メーター: $_metaPro%',
+                            style: const TextStyle(color: Colors.black87),
+                          ),
                         ],
                         if (_error != null) ...[
                           const SizedBox(height: 8),

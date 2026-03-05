@@ -7,6 +7,7 @@ import '../infrastructure/api_client.dart';
 import 'about_privacy_screen.dart';
 import 'diagnosis_screen.dart';
 import 'migration_screen.dart';
+import 'onboarding_screen.dart';
 import 'persona_diagnosis_result_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -128,6 +129,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           image: DecorationImage(
             image: AssetImage('assets/images/backgrounds/diagnosis_background.png'),
             fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Color(0x66FFFFFF),
+              BlendMode.lighten,
+            ),
           ),
         ),
         child: SafeArea(
@@ -216,6 +221,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             elevation: 0,
                           ),
                           child: const Text('端末移行の設定'),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      const SectionHeader(title: 'チュートリアル'),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (onboardingContext) => OnboardingScreen(
+                                  onCompleted: () {
+                                    if (!onboardingContext.mounted) return;
+                                    Navigator.of(onboardingContext).pop();
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFB3C1),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(28),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: const Text('チュートリアルをもう一度確認する'),
                         ),
                       ),
                       const SizedBox(height: 32),
@@ -364,7 +398,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 8),
         const Text(
           'Pro版ではさらに 4種類の方針が選択できます',
-          style: TextStyle(fontSize: 12, color: Colors.grey),
+          style: TextStyle(fontSize: 12, color: Colors.black87),
         ),
       ],
     );
@@ -412,8 +446,14 @@ class _SettingRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(label, style: const TextStyle(color: Colors.black87)),
+          Text(
+            value,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
         ],
       ),
     );

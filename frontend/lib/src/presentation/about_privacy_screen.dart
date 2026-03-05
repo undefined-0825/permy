@@ -12,6 +12,10 @@ class AboutPrivacyScreen extends StatelessWidget {
           image: DecorationImage(
             image: AssetImage('assets/images/backgrounds/diagnosis_background.png'),
             fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Color(0x66FFFFFF),
+              BlendMode.lighten,
+            ),
           ),
         ),
         child: SafeArea(
@@ -90,7 +94,8 @@ class AboutPrivacyScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
+                  color: Colors.white.withOpacity(0.9),
+                  border: Border.all(color: Colors.black12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 padding: const EdgeInsets.all(12),
@@ -124,7 +129,7 @@ class AboutPrivacyScreen extends StatelessWidget {
               Center(
                 child: Text(
                   'Version 1.0.0',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  style: const TextStyle(color: Colors.black87, fontSize: 12),
                 ),
               ),
               const SizedBox(height: 16),

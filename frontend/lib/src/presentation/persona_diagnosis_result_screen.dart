@@ -32,6 +32,10 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
           image: DecorationImage(
             image: AssetImage('assets/images/backgrounds/diagnosis_background.png'),
             fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Color(0x66FFFFFF),
+              BlendMode.lighten,
+            ),
           ),
         ),
         child: SafeArea(
@@ -86,7 +90,12 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
                 const Text(
                   'これらのペルソナは、あなたの返信スタイルを決める大事な指標。'
                   'ときどき見返して、「今のぼくはこう考えてるんだ」って確認してみてね。',
-                  style: TextStyle(fontSize: 13, height: 1.6, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.6,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -162,7 +171,8 @@ class _PersonaTypeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        color: Colors.white.withOpacity(0.9),
+        border: Border.all(color: Colors.black12),
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
