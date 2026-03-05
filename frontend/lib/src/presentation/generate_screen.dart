@@ -434,12 +434,12 @@ class _ComboSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const combos = [
-      ('モード0', false),
-      ('モード1', false),
-      ('モード2', true),
-      ('モード3', true),
-      ('モード4', true),
-      ('モード5', true),
+      ('次回来店の約束', false), // 0: Free
+      ('休眠復活', false), // 1: Free
+      ('新規客の集客', true), // 2: Pro
+      ('火消し（大事な対応）', true), // 3: Pro
+      ('同伴誘導', true), // 4: Pro
+      ('落とす（恋愛寄せ）', true), // 5: Pro
     ];
 
     return Card(

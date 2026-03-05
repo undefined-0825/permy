@@ -274,18 +274,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text('生成戦術'),
+        const Text('生成方針'),
         const SizedBox(height: 8),
         SegmentedButton<int>(
           segments: const [
-            ButtonSegment(value: 0, label: Text('通常')),
-            ButtonSegment(value: 1, label: Text('短め')),
-            ButtonSegment(value: 2, label: Text('長め')),
+            ButtonSegment(value: 0, label: Text('来店約束')),
+            ButtonSegment(value: 1, label: Text('休眠復活')),
           ],
           selected: <int>{currentCombo},
           onSelectionChanged: (Set<int> newSelection) {
             _updateSetting('combo_id', newSelection.first);
           },
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Pro版ではさらに 4種類の方針が選択できます',
+          style: TextStyle(fontSize: 12, color: Colors.grey),
         ),
       ],
     );
