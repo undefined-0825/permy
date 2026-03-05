@@ -91,6 +91,12 @@ class _GenerateScreenState extends State<GenerateScreen>
 
     return Scaffold(
       appBar: AppBar(
+        leading: Image.asset(
+          'assets/images/icons/permy_icon.png',
+          width: 24,
+          height: 24,
+          fit: BoxFit.contain,
+        ),
         title: const Text('Permy'),
         backgroundColor: Colors.transparent,
         elevation: 0,

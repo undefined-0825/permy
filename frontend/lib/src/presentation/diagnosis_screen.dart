@@ -60,19 +60,12 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                     else
                       const SizedBox(width: 36),
                     const SizedBox(width: 12),
-                    // プレースホルダーアイコン（後で黒猫画像に差し替え）
-                    Container(
+                    // ペルミィアイコン
+                    Image.asset(
+                      'assets/images/icons/permy_icon.png',
                       width: 48,
                       height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.black87,
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: const Icon(
-                        Icons.pets,
-                        color: Colors.white,
-                        size: 28,
-                      ),
+                      fit: BoxFit.contain,
                     ),
                     const SizedBox(width: 12),
                     // 進捗表示

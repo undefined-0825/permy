@@ -64,6 +64,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/backgrounds/
+    - assets/images/icons/
     - assets/images/personas/true_self/
     - assets/images/personas/night_self/
 

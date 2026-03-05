@@ -119,6 +119,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: Image.asset(
+          'assets/images/icons/permy_icon.png',
+          width: 24,
+          height: 24,
+          fit: BoxFit.contain,
+        ),
         title: const Text('設定'),
         backgroundColor: Colors.transparent,
         elevation: 0,
