@@ -3,7 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:sample_app/src/domain/models.dart';
 import 'package:sample_app/src/infrastructure/api_client.dart';
+import 'package:sample_app/src/presentation/about_privacy_screen.dart';
 import 'package:sample_app/src/presentation/diagnosis_screen.dart';
+import 'package:sample_app/src/presentation/migration_screen.dart';
+import 'package:sample_app/src/presentation/persona_diagnosis_result_screen.dart';
 import 'package:sample_app/src/presentation/settings_screen.dart';
 
 // Mock API Client
@@ -145,6 +148,56 @@ void main() {
 
       expect(find.byType(DiagnosisScreen), findsOneWidget);
       expect(find.text('ペルソナ診断'), findsOneWidget);
+    });
+
+    testWidgets('端末移行ボタンで Migration 画面へ遷移できる', (WidgetTester tester) async {
+      final mockApi = MockApiClient();
+
+      await tester.pumpWidget(
+        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+      );
+
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(find.text('端末移行の設定'), 200);
+      await tester.tap(find.text('端末移行の設定'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MigrationScreen), findsOneWidget);
+      expect(find.text('端末移行'), findsOneWidget);
+    });
+
+    testWidgets('このアプリについてボタンで About 画面へ遷移できる', (WidgetTester tester) async {
+      final mockApi = MockApiClient();
+
+      await tester.pumpWidget(
+        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+      );
+
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(find.text('このアプリについて'), 200);
+      await tester.tap(find.text('このアプリについて'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AboutPrivacyScreen), findsOneWidget);
+      expect(find.text('このアプリについて'), findsWidgets);
+    });
+
+    testWidgets('ペルソナ欄タップで診断結果画面へ遷移できる', (WidgetTester tester) async {
+      final mockApi = MockApiClient();
+
+      await tester.pumpWidget(
+        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+      );
+
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('type_A'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PersonaDiagnosisResultScreen), findsOneWidget);
+      expect(find.text('あなたのペルソナ'), findsOneWidget);
     });
   });
 }
