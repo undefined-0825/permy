@@ -8,6 +8,7 @@ import '../domain/telemetry_event.dart';
 import '../infrastructure/api_client.dart';
 import '../infrastructure/share_receiver.dart';
 import '../infrastructure/telemetry_queue.dart';
+import 'settings_screen.dart';
 
 class GenerateScreen extends StatefulWidget {
   const GenerateScreen({
@@ -89,7 +90,22 @@ class _GenerateScreenState extends State<GenerateScreen>
     final canGenerate = !_loading && (_sharedText?.trim().isNotEmpty ?? false);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Permy')),
+      appBar: AppBar(
+        title: const Text('Permy'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) =>
+                      SettingsScreen(apiClient: widget.apiClient),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),

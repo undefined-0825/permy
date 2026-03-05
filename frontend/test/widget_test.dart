@@ -21,6 +21,12 @@ class _FakeApiClient implements AppApiClient {
   }
 
   @override
+  Future<void> updateSettings(
+    Map<String, dynamic> settings,
+    String etag,
+  ) async {}
+
+  @override
   Future<GenerateResult> generate({
     required String historyText,
     int comboId = 0,

@@ -14,6 +14,8 @@ abstract class AppApiClient {
 
   Future<SettingsSnapshot> getSettings();
 
+  Future<void> updateSettings(Map<String, dynamic> settings, String etag);
+
   Future<void> completeDiagnosis(List<DiagnosisAnswer> answers);
 
   Future<void> postTelemetryEvents(List<Map<String, dynamic>> events);
@@ -102,6 +104,32 @@ class ApiClient implements AppApiClient {
   }
 
   @override
+  Future<void> updateSettings(Map<String, dynamic> settings, String etag) async {
+    await bootstrapAuth();
+    return _runWithAuthRetry(() async {
+      final token = await tokenStore.read();
+      final response = await _httpClient.put(
+        Uri.parse('$baseUrl/api/v1/me/settings'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+          'If-Match': etag,
+        },
+        body: jsonEncode({'settings': settings}),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return;
+      }
+
+      throw ApiError.fromBody(
+        httpStatus: response.statusCode,
+        body: _tryJson(response.body),
+      );
+    });
+  }
+
+  @override
   Future<void> completeDiagnosis(List<DiagnosisAnswer> answers) async {
     await bootstrapAuth();
 
@@ -164,27 +192,7 @@ class ApiClient implements AppApiClient {
       ..['style_warmth'] = diagnosis.styleWarmth
       ..['style_risk_guard'] = diagnosis.styleRiskGuard;
 
-    await _runWithAuthRetry(() async {
-      final token = await tokenStore.read();
-      final response = await _httpClient.put(
-        Uri.parse('$baseUrl/api/v1/me/settings'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-          'If-Match': current.etag,
-        },
-        body: jsonEncode({'settings': updated}),
-      );
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return;
-      }
-
-      throw ApiError.fromBody(
-        httpStatus: response.statusCode,
-        body: _tryJson(response.body),
-      );
-    });
+    await updateSettings(updated, current.etag);
   }
 
   @override
