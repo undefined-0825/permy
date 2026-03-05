@@ -104,6 +104,11 @@ ios/
 ---
 
 ## 4. API クライアント（/api/v1）
+### 4.0 API 契約
+- Base Path: `/api/v1`（`api_contract.md` を正）
+- **OpenAPI 3.1.0 仕様**: `docs/api/openapi.json`（コード生成に利用可）
+- エラーコードは `error_codes.md` に従う
+
 ### 4.1 Base URL
 - `API_BASE_URL` は差し替え可能（flavor/env）
 - `/api/v1` を固定
@@ -206,13 +211,103 @@ ios/
 
 ---
 
-## 8. セキュアストレージ
+## 8. Followup（聞き返し）実装（MUST）
+### 8.1 ポリシー
+- `GenerateResponse.followup` が返された場合、A/B/C の下に質問UIを表示
+- 質問は1つだけ（不足1点に絞る）
+- A/B/C は仮で出した上で、不足1点を聞く（離脱防止）
+
+### 8.2 UI表示
+- `followup.question` を表示（例：「お客様との関係を教えてね」）
+- `followup.choices` を選択肢として表示（1〜3個のボタン）
+- ユーザーが選択肢をタップ
+
+### 8.3 選択後の処理
+1. 選択した `choice.id` を `followup.key` に応じて settings に反映
+   - `relationship_type` → `settings.relationship_type = choice.id`
+   - `reply_length_pref` → `settings.reply_length_pref = choice.id`
+   - など
+2. `PUT /me/settings` で更新（ETag/If-Match 必須）
+3. 設定更新成功後、生成ボタンを再度有効化
+4. ユーザーが再生成ボタンをタップで再度 `/generate` 呼び出し
+
+### 8.4 許可リスト（MUST）
+- `relationship_type`
+- `reply_length_pref`
+- `ng_tags`
+- `ng_free_phrases`
+
+詳細は `product_spec.md` セクション 9 参照。
+
+---
+
+## 9. Telemetry（テレメトリ）実装（MUST）
+### 9.1 ポリシー
+- 本文/生成文は送信しない（privacy-first）
+- イベントは `POST /api/v1/telemetry/events` へバッチ送信（1〜100イベント）
+- サーバ側で `user_id_hash`（HMAC-SHA256）、`server_time_utc`、`hour_bucket_utc`、`dow_utc` を自動付与
+
+### 9.2 イベントタイプ（5種）
+1. **generate_requested**: 生成リクエスト開始時
+   - `daily_used`, `daily_remaining`, `has_ng_setting`, `persona_version`
+2. **generate_succeeded**: 生成成功時
+   - `latency_ms`, `ng_gate_triggered`, `followup_returned`
+3. **generate_failed**: 生成失敗時
+   - `latency_ms` (optional), `error_code`
+4. **candidate_copied**: 候補コピー時
+   - `candidate_id`: "A" | "B" | "C"
+5. **app_opened**: アプリ起動時（任意）
+
+### 9.3 送信タイミング
+- イベント発生時にローカルキューに追加
+- 以下のタイミングでバッチ送信：
+  - キューが10イベント溜まったら
+  - アプリがバックグラウンドに行く前
+  - 最大100イベントまで一度に送信
+
+### 9.4 実装例
+```dart
+class TelemetryEvent {
+  final String eventName;
+  final String appVersion;
+  final String os;
+  final String deviceClass;
+  final Map<String, dynamic>? eventData;
+}
+
+// 送信
+await apiClient.post('/api/v1/telemetry/events', {
+  'events': [
+    {
+      'event_name': 'generate_requested',
+      'app_version': '1.0.0',
+      'os': 'android',
+      'device_class': 'phone',
+      'daily_used': 1,
+      'daily_remaining': 2,
+      'has_ng_setting': true,
+      'persona_version': 2,
+    }
+  ]
+});
+```
+
+### 9.5 エラー処理
+- Telemetry 送信失敗は **ユーザー体験を妨げない**
+- 失敗したイベントは再送キューに保持（最大100件、古いものから破棄）
+- 次回送信時にリトライ
+
+詳細は `telemetry_schema.md` 参照。
+
+---
+
+## 10. セキュアストレージ
 - tokenのみを Secure Storage に保存
 - onboarding完了フラグ等、本文でない軽微データは SharedPreferences可
 
 ---
 
-## 9. ロギング（本文ゼロ）
+## 11. ロギング（本文ゼロ）
 - ログに出してよい：
   - endpoint, status, error_code, latency, request_id
 - ログに出してはいけない：
@@ -220,20 +315,20 @@ ios/
 
 ---
 
-## 10. テスト
-### 10.1 ユニット
+## 12. テスト
+### 12.1 ユニット
 - ApiError正規化（error_codeごとの分岐）
 - Settings ETag処理
 - Idempotency-Key付与（/generate）
 
-### 10.2 結合（手動中心）
+### 12.2 結合（手動中心）
 - 共有受信（Android/iOS） → Generateへ自動遷移
 - 生成 → A/B/C → コピー → 0.4秒フィードバック
 - エラー（429/503/403/409）を意図的に発生させて復帰導線確認
 
 ---
 
-## 11. 受け入れ基準（実装）
+## 13. 受け入れ基準（実装）
 - 共有受信以外の本文入力導線がない（貼り付け欄なし）
 - 本文が端末に残らない（ファイル/DB/ログなし）
 - `/api/v1` 契約に整合（header/ETag/Idempotency/エラー分岐）

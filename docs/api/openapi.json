@@ -1,0 +1,1096 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Permy API",
+    "description": "接客返信文生成API（本文非保存・privacy-first）",
+    "contact": {
+      "name": "Permy Support"
+    },
+    "license": {
+      "name": "Private"
+    },
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/version": {
+      "get": {
+        "summary": "Version",
+        "operationId": "version_api_v1_version_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/anonymous": {
+      "post": {
+        "summary": "Auth Anonymous",
+        "operationId": "auth_anonymous_api_v1_auth_anonymous_post",
+        "parameters": [
+          {
+            "name": "X-Device-Fingerprint",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthAnonymousResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/settings": {
+      "get": {
+        "summary": "Get Settings",
+        "operationId": "get_settings_api_v1_me_settings_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Put Settings",
+        "operationId": "put_settings_api_v1_me_settings_put",
+        "parameters": [
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/generate": {
+      "post": {
+        "summary": "Generate",
+        "operationId": "generate_api_v1_generate_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/migration/start": {
+      "post": {
+        "summary": "Migration Start",
+        "operationId": "migration_start_api_v1_migration_start_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MigrationStartResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/migration/complete": {
+      "post": {
+        "summary": "Migration Complete",
+        "operationId": "migration_complete_api_v1_migration_complete_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MigrationCompleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MigrationCompleteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/telemetry/events": {
+      "post": {
+        "summary": "Post Telemetry Events",
+        "description": "Telemetryイベントを受信して保存（本文ゼロ厳守）\n\n- サーバでserver_time_utc, hour_bucket_utc, dow_utc, user_id_hashを付与\n- 会話本文/生成本文は絶対に含めない\n- event_data には各イベント固有のフィールドをJSON保存",
+        "operationId": "post_telemetry_events_api_v1_telemetry_events_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TelemetryEventRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryEventResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/talk/assist": {
+      "post": {
+        "summary": "Legacy Talk Assist",
+        "description": "temporary alias for old prototype route, redirects to /api/v1/generate",
+        "operationId": "legacy_talk_assist_api_talk_assist_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AppOpenedEvent": {
+        "properties": {
+          "event_name": {
+            "type": "string",
+            "const": "app_opened",
+            "title": "Event Name",
+            "default": "app_opened"
+          },
+          "app_version": {
+            "type": "string",
+            "title": "App Version"
+          },
+          "os": {
+            "type": "string",
+            "enum": [
+              "android",
+              "ios"
+            ],
+            "title": "Os"
+          },
+          "device_class": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "tablet",
+              "unknown"
+            ],
+            "title": "Device Class",
+            "default": "unknown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app_version",
+          "os"
+        ],
+        "title": "AppOpenedEvent"
+      },
+      "AuthAnonymousResponse": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "access_token"
+        ],
+        "title": "AuthAnonymousResponse"
+      },
+      "Candidate": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "text"
+        ],
+        "title": "Candidate"
+      },
+      "CandidateCopiedEvent": {
+        "properties": {
+          "event_name": {
+            "type": "string",
+            "const": "candidate_copied",
+            "title": "Event Name",
+            "default": "candidate_copied"
+          },
+          "app_version": {
+            "type": "string",
+            "title": "App Version"
+          },
+          "os": {
+            "type": "string",
+            "enum": [
+              "android",
+              "ios"
+            ],
+            "title": "Os"
+          },
+          "device_class": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "tablet",
+              "unknown"
+            ],
+            "title": "Device Class",
+            "default": "unknown"
+          },
+          "candidate_id": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C"
+            ],
+            "title": "Candidate Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app_version",
+          "os",
+          "candidate_id"
+        ],
+        "title": "CandidateCopiedEvent"
+      },
+      "DailyInfo": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "used": {
+            "type": "integer",
+            "title": "Used"
+          },
+          "remaining": {
+            "type": "integer",
+            "title": "Remaining"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "limit",
+          "used",
+          "remaining"
+        ],
+        "title": "DailyInfo"
+      },
+      "Followup": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "relationship_type",
+              "reply_length_pref",
+              "ng_tags",
+              "ng_free_phrases"
+            ],
+            "title": "Key"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "choices": {
+            "items": {
+              "$ref": "#/components/schemas/FollowupChoice"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Choices"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "question",
+          "choices"
+        ],
+        "title": "Followup",
+        "description": "入力不足時の聞き返し（0または1件）"
+      },
+      "FollowupChoice": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "FollowupChoice",
+        "description": "Followup選択肢"
+      },
+      "GenerateFailedEvent": {
+        "properties": {
+          "event_name": {
+            "type": "string",
+            "const": "generate_failed",
+            "title": "Event Name",
+            "default": "generate_failed"
+          },
+          "app_version": {
+            "type": "string",
+            "title": "App Version"
+          },
+          "os": {
+            "type": "string",
+            "enum": [
+              "android",
+              "ios"
+            ],
+            "title": "Os"
+          },
+          "device_class": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "tablet",
+              "unknown"
+            ],
+            "title": "Device Class",
+            "default": "unknown"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "error_code": {
+            "type": "string",
+            "title": "Error Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app_version",
+          "os",
+          "error_code"
+        ],
+        "title": "GenerateFailedEvent"
+      },
+      "GenerateRequest": {
+        "properties": {
+          "history_text": {
+            "type": "string",
+            "title": "History Text",
+            "description": "トーク履歴の原文（本文保存なし）"
+          },
+          "combo_id": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 0.0,
+            "title": "Combo Id"
+          },
+          "tuning": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tuning"
+          }
+        },
+        "type": "object",
+        "required": [
+          "history_text",
+          "combo_id"
+        ],
+        "title": "GenerateRequest"
+      },
+      "GenerateRequestedEvent": {
+        "properties": {
+          "event_name": {
+            "type": "string",
+            "const": "generate_requested",
+            "title": "Event Name",
+            "default": "generate_requested"
+          },
+          "app_version": {
+            "type": "string",
+            "title": "App Version"
+          },
+          "os": {
+            "type": "string",
+            "enum": [
+              "android",
+              "ios"
+            ],
+            "title": "Os"
+          },
+          "device_class": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "tablet",
+              "unknown"
+            ],
+            "title": "Device Class",
+            "default": "unknown"
+          },
+          "daily_used": {
+            "type": "integer",
+            "title": "Daily Used"
+          },
+          "daily_remaining": {
+            "type": "integer",
+            "title": "Daily Remaining"
+          },
+          "has_ng_setting": {
+            "type": "boolean",
+            "title": "Has Ng Setting"
+          },
+          "persona_version": {
+            "type": "integer",
+            "title": "Persona Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app_version",
+          "os",
+          "daily_used",
+          "daily_remaining",
+          "has_ng_setting",
+          "persona_version"
+        ],
+        "title": "GenerateRequestedEvent"
+      },
+      "GenerateResponse": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "plan": {
+            "type": "string",
+            "title": "Plan"
+          },
+          "daily": {
+            "$ref": "#/components/schemas/DailyInfo"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/Candidate"
+            },
+            "type": "array",
+            "title": "Candidates"
+          },
+          "followup": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Followup"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "model_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Hint"
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timestamp"
+          },
+          "meta_pro": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta Pro"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_id",
+          "plan",
+          "daily",
+          "candidates"
+        ],
+        "title": "GenerateResponse"
+      },
+      "GenerateSucceededEvent": {
+        "properties": {
+          "event_name": {
+            "type": "string",
+            "const": "generate_succeeded",
+            "title": "Event Name",
+            "default": "generate_succeeded"
+          },
+          "app_version": {
+            "type": "string",
+            "title": "App Version"
+          },
+          "os": {
+            "type": "string",
+            "enum": [
+              "android",
+              "ios"
+            ],
+            "title": "Os"
+          },
+          "device_class": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "tablet",
+              "unknown"
+            ],
+            "title": "Device Class",
+            "default": "unknown"
+          },
+          "latency_ms": {
+            "type": "integer",
+            "title": "Latency Ms"
+          },
+          "ng_gate_triggered": {
+            "type": "boolean",
+            "title": "Ng Gate Triggered"
+          },
+          "followup_returned": {
+            "type": "boolean",
+            "title": "Followup Returned"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app_version",
+          "os",
+          "latency_ms",
+          "ng_gate_triggered",
+          "followup_returned"
+        ],
+        "title": "GenerateSucceededEvent"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MigrationCompleteRequest": {
+        "properties": {
+          "migration_code": {
+            "type": "string",
+            "title": "Migration Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "migration_code"
+        ],
+        "title": "MigrationCompleteRequest"
+      },
+      "MigrationCompleteResponse": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "access_token"
+        ],
+        "title": "MigrationCompleteResponse"
+      },
+      "MigrationStartResponse": {
+        "properties": {
+          "migration_code": {
+            "type": "string",
+            "title": "Migration Code"
+          },
+          "ticket_id": {
+            "type": "string",
+            "title": "Ticket Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "migration_code",
+          "ticket_id"
+        ],
+        "title": "MigrationStartResponse"
+      },
+      "SettingsResponse": {
+        "properties": {
+          "settings": {
+            "type": "object",
+            "title": "Settings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "settings"
+        ],
+        "title": "SettingsResponse"
+      },
+      "SettingsUpdateRequest": {
+        "properties": {
+          "settings": {
+            "type": "object",
+            "title": "Settings"
+          }
+        },
+        "type": "object",
+        "title": "SettingsUpdateRequest"
+      },
+      "TelemetryEventRequest": {
+        "properties": {
+          "events": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/GenerateRequestedEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/GenerateSucceededEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/GenerateFailedEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/CandidateCopiedEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/AppOpenedEvent"
+                }
+              ]
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "events"
+        ],
+        "title": "TelemetryEventRequest",
+        "description": "POST /api/v1/telemetry/events のリクエスト"
+      },
+      "TelemetryEventResponse": {
+        "properties": {
+          "received": {
+            "type": "integer",
+            "title": "Received"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "received"
+        ],
+        "title": "TelemetryEventResponse",
+        "description": "POST /api/v1/telemetry/events のレスポンス"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

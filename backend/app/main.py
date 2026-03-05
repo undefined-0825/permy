@@ -39,7 +39,20 @@ from app.api.v1.telemetry import router as telemetry_router
 configure_logging()
 log = logging.getLogger(__name__)
 
-app = FastAPI(title=settings.app_name)
+app = FastAPI(
+    title="Permy API",
+    description="接客返信文生成API（本文非保存・privacy-first）",
+    version="1.0.0",
+    openapi_url="/api/v1/openapi.json",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    contact={
+        "name": "Permy Support",
+    },
+    license_info={
+        "name": "Private",
+    },
+)
 
 app.add_middleware(RequestIdMiddleware)
 app.add_middleware(NoCacheMiddleware)

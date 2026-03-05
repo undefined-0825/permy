@@ -346,3 +346,94 @@ backend/
 - [ ] DBに本文/生成文が存在しない
 - [ ] メトリクスに本文由来情報がない
 - [ ] OPENAI_DISABLED=true で外部呼び出しされない
+
+---
+
+## 16. 実装状況（Implementation Status）
+
+**最終更新**: 2026-03-05
+
+### 16.1 完了済み機能（✅）
+
+#### Core APIs
+- ✅ **匿名認証** (`POST /api/v1/auth/anonymous`)
+  - JWT トークン発行
+  - user_id 生成
+  
+- ✅ **ユーザー設定** (`GET/PUT /api/v1/me/settings`)
+  - ETag による楽観的ロック
+  - settings_json (診断結果、NG設定等) 管理
+  
+- ✅ **返信文生成** (`POST /api/v1/generate`)
+  - OpenAI API 連携
+  - A/B/C 候補生成
+  - NG ゲート（safety_gate）
+  - 日次制限・レート制限
+  - Idempotency-Key 対応
+  - **Followup 機能**（優先順位付き聞き返し）
+  
+- ✅ **データ移行** (`POST /api/v1/migration/issue`, `POST /api/v1/migration/consume`)
+  - 12桁移行コード発行
+  - ハッシュ化保存（平文なし）
+  - 期限・使用済みチェック
+
+- ✅ **Telemetry API** (`POST /api/v1/telemetry/events`)
+  - 5種イベント（generate_requested, generate_succeeded, generate_failed, candidate_copied, app_opened）
+  - バッチ送信対応（1-100 イベント）
+  - UTC 時間バケット（hour_bucket_utc 0..23, dow_utc 0..6）
+  - HMAC-SHA256 による user_id ハッシュ（復元不可能、privacy-first）
+
+#### Tier System
+- ✅ **Feature Tier / Billing Tier 分離**
+  - feature_tier: `free` / `plus`（機能レベル）
+  - billing_tier: `free` / `pro_store` / `pro_comp`（課金状態）
+  - AuthContext で tier 情報管理
+  - Pro_comp（永続無料）サポート
+
+#### Management Tools
+- ✅ **Pro_comp 権限付与ツール** (`backend/tools/grant_comp_user.py`)
+  - CLI で user_id 指定して pro_comp 付与/解除/確認
+
+#### Documentation & Tooling
+- ✅ **OpenAPI Specification 自動生成**
+  - FastAPI から OpenAPI 3.1.0 スキーマ出力
+  - エクスポートツール (`backend/tools/export_openapi.py`)
+  - 静的ファイル (`docs/api/openapi.json`)
+  - Swagger UI: `/docs`, ReDoc: `/redoc`
+
+- ✅ **Development Workflow ガイドライン** (section 15)
+  - 変数名規則
+  - 関数実装チェックリスト
+  - テスト実行フロー
+  - サーバー再起動の制約明記
+
+### 16.2 テスト状況
+
+#### PowerShell テストスクリプト（全て合格 ✅）
+- ✅ `tools/manual_api_test.ps1`: コア API テスト（6/6 合格）
+- ✅ `tools/test_telemetry.ps1`: Telemetry API テスト（5 イベント検証）
+- ✅ `tools/test_followup.ps1`: Followup 機能テスト（優先順位確認）
+- ✅ `tools/test_pro_comp.ps1`: Pro_comp tier 機能テスト
+
+### 16.3 未実装・残作業（🔜）
+
+#### Phase 1 完了目標
+- 🔜 本文ゼロ最終監査（ログ・DB・例外メッセージ）
+- 🔜 Alembic マイグレーション設定（Phase 2 での PostgreSQL 移行準備）
+- 🔜 本番環境設定（環境変数、Render デプロイ準備）
+- 🔜 全 acceptance test クリア（backend_impl, frontend_impl）
+
+#### Phase 2 以降
+- Redis 対応（レート制限）
+- PostgreSQL 移行
+- WebSocket 対応（生成進捗通知）
+
+### 16.4 進捗率
+
+- **Phase 1 実装進捗**: ~95%
+- **Core API**: 100% 完了
+- **Telemetry**: 100% 完了
+- **Followup**: 100% 完了
+- **Documentation**: 100% 完了
+- **残作業**: 本番デプロイ準備、最終監査
+

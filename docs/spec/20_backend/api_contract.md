@@ -57,11 +57,19 @@
 - 機能判定はバックエンド内部では `feature_tier` を持つが、外部互換のため `plan` は2値で返す。
 - `feature_tier=plus`（課金Pro + 永続無料付与）はすべて `plan="pro"` として返す。
 
-### 1.2 ETag
+### 1.2 Followup（聞き返し）
+- `Followup` オブジェクト（nullable）
+  - `key`: `"relationship_type" | "reply_length_pref" | "ng_tags" | "ng_free_phrases"`
+  - `question`: string
+  - `choices`: array of `{id: string, label: string}` (1..3個)
+- 設定不足があれば返し、なければ `null`
+- A/B/C は仮で出した上で、不足1点を聞く（離脱防止）
+
+### 1.3 ETag
 - `GET /me/settings` は `ETag` を返す。
 - `PUT /me/settings` は `If-Match` を必須とし、競合時は `409 ETAG_MISMATCH`。
 
-### 1.3 Idempotency-Key
+### 1.4 Idempotency-Key
 - `POST /generate` は `Idempotency-Key` を必須とする。
 - 目的は「二重実行の抑止」。本文非保存のため、同一レスポンス本文の再現は必須要件にしない（抑止優先）。
 
@@ -170,33 +178,53 @@ Headers:
 Body:
 ```json
 {
-  "text": "string (LINE txt content)",
-  "settings": {
-    "forbidden_type_ids": [1, 2, 3],
-    "purpose_id": 1,
-    "combo_id": 0
-  }
+  "history_text": "string (LINE txt content)",
+  "combo_id": 0,
+  "tuning": null
 }
 ```
 
 **Notes**
-- `text` は入力本文。サーバは保存しない（ログにも残さない）。
-- `settings` は省略可能とするかは実装都合で決めて良いが、契約としては送れるものとする。
+- `history_text` は入力本文。サーバは保存しない（ログにも残さない）。
+- `combo_id`: 0..5（コンボID、Proは2以上利用可能）
+- `tuning`: Proのみ利用可能（nullable）
 
 ### Response 200
 ```json
 {
-  "candidates": {
-    "A": "string",
-    "B": "string",
-    "C": "string"
+  "request_id": "string",
+  "plan": "free",
+  "daily": {
+    "date": "2026-03-05",
+    "limit": 3,
+    "used": 1,
+    "remaining": 2
   },
-  "meta": {
-    "plan": "free",
-    "request_id": "optional"
-  }
+  "candidates": [
+    {"label": "A", "text": "返信案A"},
+    {"label": "B", "text": "返信案B"},
+    {"label": "C", "text": "返信案C"}
+  ],
+  "followup": {
+    "key": "relationship_type",
+    "question": "お客様との関係を教えてね",
+    "choices": [
+      {"id": "new", "label": "新規（初めて）"},
+      {"id": "regular", "label": "常連（何度も来てる）"},
+      {"id": "big_client", "label": "太客（大切なお客様）"}
+    ]
+  },
+  "model_hint": "gpt-4o-mini",
+  "timestamp": "2026-03-05T01:30:00+00:00",
+  "meta_pro": null
 }
 ```
+
+**Response フィールド説明**
+- `followup`: 設定不足があれば返す（nullable）。なければ `null`
+- `daily`: 日次制限情報（limit/used/remaining）
+- `model_hint`: 使用モデルのヒント（nullable）
+- `meta_pro`: Pro専用情報（Freeでは常に `null`）
 
 ### Errors
 - `400 VALIDATION_ERROR`
@@ -263,6 +291,64 @@ Body:
 - `409 MIGRATION_CODE_ALREADY_USED`
 - `410 MIGRATION_CODE_EXPIRED`
 - `429 RATE_LIMITED`
+- `500 INTERNAL_ERROR`
+
+---
+
+## 2.7 POST /telemetry/events
+クライアントから複数のテレメトリイベントをバッチ送信する。
+
+### Request
+Headers:
+- `Authorization: Bearer <token>`
+
+Body:
+```json
+{
+  "events": [
+    {
+      "event_name": "generate_requested",
+      "app_version": "1.0.0",
+      "os": "android",
+      "device_class": "phone",
+      "daily_used": 1,
+      "daily_remaining": 2,
+      "has_ng_setting": true,
+      "persona_version": 2
+    }
+  ]
+}
+```
+
+**Notes**
+- `events`: 1..100 イベントをバッチ送信可能
+- 本文/生成文は含めない（privacy-first）
+- サーバ側で `user_id_hash`（HMAC-SHA256）、`server_time_utc`、`hour_bucket_utc`（0..23）、`dow_utc`（0..6）を自動付与
+
+### イベントタイプ（5種）
+1. **generate_requested**: 生成リクエスト開始
+   - `daily_used`, `daily_remaining`, `has_ng_setting`, `persona_version`
+2. **generate_succeeded**: 生成成功
+   - `latency_ms`, `ng_gate_triggered`, `followup_returned`
+3. **generate_failed**: 生成失敗
+   - `latency_ms` (optional), `error_code`
+4. **candidate_copied**: 候補コピー
+   - `candidate_id`: "A" | "B" | "C"
+5. **app_opened**: アプリ起動
+
+詳細スキーマは `telemetry_schema.md` 参照。
+
+### Response 200
+```json
+{
+  "received": 1,
+  "request_id": "optional"
+}
+```
+
+### Errors
+- `400 VALIDATION_ERROR`
+- `401 AUTH_INVALID`
 - `500 INTERNAL_ERROR`
 
 ---
