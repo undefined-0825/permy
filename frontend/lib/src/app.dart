@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'domain/persona_diagnosis.dart';
 import 'domain/telemetry_event.dart';
@@ -8,6 +9,7 @@ import 'infrastructure/telemetry_queue.dart';
 import 'infrastructure/token_store.dart';
 import 'presentation/diagnosis_screen.dart';
 import 'presentation/generate_screen.dart';
+import 'presentation/onboarding_screen.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -35,6 +37,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   final ShareReceiver _shareReceiver = const ShareReceiver();
 
   bool _loading = true;
+  bool _needsOnboarding = false;
   bool _needsDiagnosis = false;
 
   @override
@@ -77,16 +80,31 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
       ),
     );
 
+    // 初回フラグをチェック
+    final prefs = await SharedPreferences.getInstance();
+    final hasCompletedOnboarding =
+        prefs.getBool('has_completed_onboarding') ?? false;
+
     final settings = await _apiClient.getSettings();
     final trueType = settings.settings['true_self_type']?.toString();
     final nightType = settings.settings['night_self_type']?.toString();
 
     if (!mounted) return;
     setState(() {
+      _needsOnboarding = !hasCompletedOnboarding;
       _needsDiagnosis =
           (trueType == null || trueType.isEmpty) ||
           (nightType == null || nightType.isEmpty);
       _loading = false;
+    });
+  }
+
+  Future<void> _onOnboardingCompleted() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_completed_onboarding', true);
+    if (!mounted) return;
+    setState(() {
+      _needsOnboarding = false;
     });
   }
 
@@ -104,6 +122,10 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
       return const Scaffold(
         body: SafeArea(child: Center(child: CircularProgressIndicator())),
       );
+    }
+
+    if (_needsOnboarding) {
+      return OnboardingScreen(onCompleted: _onOnboardingCompleted);
     }
 
     if (_needsDiagnosis) {
