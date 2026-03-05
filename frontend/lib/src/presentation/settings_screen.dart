@@ -4,6 +4,7 @@ import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
 import 'about_privacy_screen.dart';
 import 'migration_screen.dart';
+import 'persona_diagnosis_result_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({required this.apiClient, super.key});
@@ -194,7 +195,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SettingRow(label: 'ホンネの属性', value: trueType),
+        GestureDetector(
+          onTap: trueType != '診断待機中...' && nightType != '診断待機中...'
+              ? () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => PersonaDiagnosisResultScreen(
+                        trueType: trueType,
+                        nightType: nightType,
+                        assertiveness:
+                            (_settings['style_assertiveness'] as num?)?.toInt() ??
+                                50,
+                        warmth:
+                            (_settings['style_warmth'] as num?)?.toInt() ?? 50,
+                        riskGuard: (_settings['style_risk_guard'] as num?)
+                                ?.toInt() ??
+                            50,
+                      ),
+                    ),
+                  );
+                }
+              : null,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: trueType != '診断待機中...' ? Colors.blue.shade50 : null,
+            ),
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _SettingRow(label: 'ホンネの属性', value: trueType),
+                const SizedBox(height: 12),
+                _SettingRow(label: 'ヨルノジブン属性', value: nightType),
+                if (trueType != '診断待機中...')
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'タップして詳しく見る →',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue.shade600,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
         const SizedBox(height: 12),
         _SettingRow(label: 'ヨルノジブン属性', value: nightType),
       ],

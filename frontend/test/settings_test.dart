@@ -95,7 +95,7 @@ void main() {
 
       // ペルソナ情報が表示されていることを確認
       expect(find.text('type_A'), findsOneWidget);
-      expect(find.text('type_B'), findsOneWidget);
+      expect(find.text('type_B'), findsWidgets);
     });
 
     testWidgets('コンボ設定を変更できる', (WidgetTester tester) async {

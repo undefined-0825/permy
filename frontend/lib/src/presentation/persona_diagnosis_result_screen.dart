@@ -1,0 +1,210 @@
+import 'package:flutter/material.dart';
+
+class PersonaDiagnosisResultScreen extends StatelessWidget {
+  const PersonaDiagnosisResultScreen({
+    required this.trueType,
+    required this.nightType,
+    this.assertiveness = 50,
+    this.warmth = 50,
+    this.riskGuard = 50,
+    super.key,
+  });
+
+  final String trueType;
+  final String nightType;
+  final int assertiveness;
+  final int warmth;
+  final int riskGuard;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('あなたのペルソナ')),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'ホンネの私（True Self）',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              _PersonaTypeCard(
+                typeName: trueType,
+                description: _getTrueTypeDescription(trueType),
+              ),
+              const SizedBox(height: 32),
+              const Text(
+                'ヨルノジブン（Night Self）',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              _PersonaTypeCard(
+                typeName: nightType,
+                description: _getNightTypeDescription(nightType),
+              ),
+              const SizedBox(height: 32),
+              const Text(
+                'スタイルスコア',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              _StyleScoreRow(label: '主張度', score: assertiveness),
+              const SizedBox(height: 12),
+              _StyleScoreRow(label: '温かみ', score: warmth),
+              const SizedBox(height: 12),
+              _StyleScoreRow(label: 'リスク回避', score: riskGuard),
+              const SizedBox(height: 32),
+              const Text(
+                'これらのペルソナは、あなたの返信スタイルを決める大事な指標。'
+                'ときどき見返して、「今のぼくはこう考えてるんだ」って確認してみてね。',
+                style: TextStyle(fontSize: 13, height: 1.6, color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getTrueTypeDescription(String type) {
+    switch (type) {
+      case 'Stability':
+        return 'バランスを大事にする。'
+            '無理のない生活を心がけ、'
+            'まずは安定から。';
+      case 'Independence':
+        return '自分のペースを守る。'
+            '誰かに縛られず、'
+            '自分の判断を信じる。';
+      case 'Approval':
+        return '人の評価を大事にする。'
+            '信頼を集めることが喜び。'
+            'その分相手との距離が近い。';
+      case 'Realism':
+        return '現実的に考える。'
+            '長期的な得を見える人。'
+            '堅実さが武器。';
+      case 'Romance':
+        return '感情を大事にする。'
+            '気持ちが満たされることが優先。'
+            'その直感は案外正しい。';
+      default:
+        return 'ペルソナ種別が不明です。';
+    }
+  }
+
+  String _getNightTypeDescription(String type) {
+    switch (type) {
+      case 'VisitPush':
+        return '次のお約束を大事にする。'
+            '関係を続けることが目標。'
+            'その誠実さが信頼を呼ぶ。';
+      case 'Heal':
+        return '相手を癒したい。'
+            'そっと寄り添うのが得意。'
+            'その優しさが人を呼ぶ。';
+      case 'LittleDevil':
+        return '駆け引きを楽しむ。'
+            '軽やかなテンポが自分らしい。'
+            'その遊び心が魅力。';
+      case 'BigClient':
+        return '大事な人を見極める。'
+            '重点的に寄せることを選ぶ。'
+            'その戦略眼が効く。';
+      case 'Balance':
+        return '全体のバランスを見る。'
+            '状況に合わせて柔軟に対応。'
+            'その臨機応変さが強み。';
+      default:
+        return 'ペルソナ種別が不明です。';
+    }
+  }
+}
+
+class _PersonaTypeCard extends StatelessWidget {
+  const _PersonaTypeCard({
+    required this.typeName,
+    required this.description,
+  });
+
+  final String typeName;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            typeName,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            description,
+            style: const TextStyle(fontSize: 14, height: 1.6),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StyleScoreRow extends StatelessWidget {
+  const _StyleScoreRow({required this.label, required this.score});
+
+  final String label;
+  final int score;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label),
+            Text('${(score).toStringAsFixed(0)}/100'),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: score / 100,
+            minHeight: 8,
+            backgroundColor: Colors.grey.shade200,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              _getScoreColor(score),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Color _getScoreColor(int score) {
+    if (score < 30) {
+      return Colors.orange;
+    } else if (score < 70) {
+      return Colors.blue;
+    } else {
+      return Colors.green;
+    }
+  }
+}
