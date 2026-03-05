@@ -117,11 +117,25 @@ class _MigrationScreenState extends State<MigrationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('端末移行')),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: _buildContent(),
+      appBar: AppBar(
+        title: const Text('端末移行'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFE8D4F8), Color(0xFFFCE4EC)],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: _buildContent(),
+          ),
         ),
       ),
     );
@@ -144,21 +158,39 @@ class _MigrationScreenState extends State<MigrationScreen> {
       children: [
         const Text(
           '端末を移行しますか？',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),
         const Text('このアプリのアカウント情報を別の端末に移行できます。', textAlign: TextAlign.center),
         const SizedBox(height: 32),
-        ElevatedButton(
-          onPressed: _loading ? null : _handleIssueMigration,
-          child: _loading
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('この端末から移行コードを発行'),
+        SizedBox(
+          height: 56,
+          child: ElevatedButton(
+            onPressed: _loading ? null : _handleIssueMigration,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFFB3C1),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
+              elevation: 0,
+            ),
+            child: _loading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Text('この端末から移行コードを発行'),
+          ),
         ),
         const SizedBox(height: 16),
         OutlinedButton(
@@ -194,7 +226,11 @@ class _MigrationScreenState extends State<MigrationScreen> {
         children: [
           const Text(
             '移行コードが発行されました',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -229,10 +265,21 @@ class _MigrationScreenState extends State<MigrationScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.content_copy),
-            onPressed: _copyCodeToClipboard,
-            label: const Text('コードをコピー'),
+          SizedBox(
+            height: 56,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.content_copy),
+              onPressed: _copyCodeToClipboard,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFFB3C1),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                elevation: 0,
+              ),
+              label: const Text('コードをコピー'),
+            ),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
@@ -272,7 +319,11 @@ class _MigrationScreenState extends State<MigrationScreen> {
         children: [
           const Text(
             '移行コードを入力',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -296,15 +347,29 @@ class _MigrationScreenState extends State<MigrationScreen> {
             style: const TextStyle(fontSize: 20, letterSpacing: 1),
           ),
           const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _loading ? null : _handleConsumeMigration,
-            child: _loading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('アカウントを引き継ぐ'),
+          SizedBox(
+            height: 56,
+            child: ElevatedButton(
+              onPressed: _loading ? null : _handleConsumeMigration,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFFB3C1),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                elevation: 0,
+              ),
+              child: _loading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text('アカウントを引き継ぐ'),
+            ),
           ),
           const SizedBox(height: 12),
           OutlinedButton(

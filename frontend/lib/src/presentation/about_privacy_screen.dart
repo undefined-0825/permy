@@ -6,18 +6,35 @@ class AboutPrivacyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('このアプリについて')),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Permyについて
-              const Text(
-                'Permyについて',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+      appBar: AppBar(
+        title: const Text('このアプリについて'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFE8D4F8), Color(0xFFFCE4EC)],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Permyについて
+                const Text(
+                  'Permyについて',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
               const SizedBox(height: 12),
               const Text(
                 'Permyはあなたの分身、黒猫のぼく。'
@@ -30,7 +47,11 @@ class AboutPrivacyScreen extends StatelessWidget {
               // プライバシーとセキュリティ
               const Text(
                 'プライバシーとセキュリティ',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(height: 12),
               const Text(
@@ -73,7 +94,11 @@ class AboutPrivacyScreen extends StatelessWidget {
               // 連絡先
               const Text(
                 'お問い合わせ',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(height: 12),
               const Text(
