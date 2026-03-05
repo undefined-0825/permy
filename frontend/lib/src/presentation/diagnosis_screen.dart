@@ -27,20 +27,11 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          // グラデーション背景
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFE8D4F8), // 淡いパープル
-              Color(0xFFFCE4EC), // 淡いピンク
-            ],
+          // 背景画像
+          image: DecorationImage(
+            image: AssetImage('assets/images/backgrounds/diagnosis_background.png'),
+            fit: BoxFit.cover,
           ),
-          // TODO: 背景画像を追加予定
-          // image: DecorationImage(
-          //   image: AssetImage('assets/images/backgrounds/diagnosis_background.png'),
-          //   fit: BoxFit.cover,
-          // ),
         ),
         child: SafeArea(
           child: Column(
