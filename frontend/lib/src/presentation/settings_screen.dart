@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../domain/persona_diagnosis.dart';
 import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
 import 'about_privacy_screen.dart';
+import 'diagnosis_screen.dart';
 import 'migration_screen.dart';
 import 'persona_diagnosis_result_screen.dart';
 
@@ -90,6 +92,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
+  Future<void> _startRediagnosis() async {
+    final updated = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (diagnosisContext) => DiagnosisScreen(
+          onCompleted: (List<DiagnosisAnswer> answers) async {
+            await widget.apiClient.completeDiagnosis(answers);
+            if (!diagnosisContext.mounted) return;
+            Navigator.of(diagnosisContext).pop(true);
+          },
+        ),
+      ),
+    );
+
+    if (!mounted || updated != true) return;
+    await _loadSettings();
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('再診断を反映しました')));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -124,12 +147,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const SectionHeader(title: 'ペルソナ再診断'),
                       const SizedBox(height: 12),
                       ElevatedButton(
-                        onPressed: () {
-                          // 再診断フロー（別画面）
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('再診断は別途実装予定')),
-                          );
-                        },
+                        onPressed: _startRediagnosis,
                         child: const Text('再診断する'),
                       ),
                       const SizedBox(height: 32),

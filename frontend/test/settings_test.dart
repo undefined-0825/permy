@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:sample_app/src/domain/models.dart';
 import 'package:sample_app/src/infrastructure/api_client.dart';
+import 'package:sample_app/src/presentation/diagnosis_screen.dart';
 import 'package:sample_app/src/presentation/settings_screen.dart';
 
 // Mock API Client
@@ -69,7 +70,7 @@ class MockApiClient implements AppApiClient {
 
   @override
   Future<void> completeDiagnosis(List answers) async {
-    throw UnimplementedError();
+    return;
   }
 
   @override
@@ -128,6 +129,22 @@ void main() {
 
       // ペルソナ情報が表示されていることを確認
       expect(find.text('診断待機中...'), findsWidgets);
+    });
+
+    testWidgets('再診断ボタンで診断画面へ遷移できる', (WidgetTester tester) async {
+      final mockApi = MockApiClient();
+
+      await tester.pumpWidget(
+        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+      );
+
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('再診断する'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DiagnosisScreen), findsOneWidget);
+      expect(find.text('ペルソナ診断'), findsOneWidget);
     });
   });
 }
