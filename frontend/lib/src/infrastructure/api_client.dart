@@ -15,6 +15,8 @@ abstract class AppApiClient {
   Future<SettingsSnapshot> getSettings();
 
   Future<void> completeDiagnosis(List<DiagnosisAnswer> answers);
+
+  Future<void> postTelemetryEvents(List<Map<String, dynamic>> events);
 }
 
 class ApiClient implements AppApiClient {
@@ -172,6 +174,31 @@ class ApiClient implements AppApiClient {
           'If-Match': current.etag,
         },
         body: jsonEncode({'settings': updated}),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return;
+      }
+
+      throw ApiError.fromBody(
+        httpStatus: response.statusCode,
+        body: _tryJson(response.body),
+      );
+    });
+  }
+
+  @override
+  Future<void> postTelemetryEvents(List<Map<String, dynamic>> events) async {
+    await bootstrapAuth();
+    return _runWithAuthRetry(() async {
+      final token = await tokenStore.read();
+      final response = await _httpClient.post(
+        Uri.parse('$baseUrl/api/v1/telemetry/events'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'events': events}),
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {

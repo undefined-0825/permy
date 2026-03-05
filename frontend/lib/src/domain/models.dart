@@ -82,16 +82,64 @@ class DailyInfo {
   }
 }
 
+class FollowupChoice {
+  FollowupChoice({required this.id, required this.label});
+
+  final String id;
+  final String label;
+
+  factory FollowupChoice.fromJson(Map<String, dynamic> json) {
+    return FollowupChoice(
+      id: json['id']?.toString() ?? '',
+      label: json['label']?.toString() ?? '',
+    );
+  }
+}
+
+class FollowupInfo {
+  FollowupInfo({
+    required this.key,
+    required this.question,
+    required this.choices,
+  });
+
+  final String key;
+  final String question;
+  final List<FollowupChoice> choices;
+
+  factory FollowupInfo.fromJson(Map<String, dynamic> json) {
+    final choicesRaw = json['choices'];
+    final choices = choicesRaw is List
+        ? choicesRaw
+              .whereType<Map<String, dynamic>>()
+              .map(FollowupChoice.fromJson)
+              .toList()
+        : <FollowupChoice>[];
+
+    return FollowupInfo(
+      key: json['key']?.toString() ?? '',
+      question: json['question']?.toString() ?? '',
+      choices: choices,
+    );
+  }
+}
+
 class GenerateResult {
   GenerateResult({
     required this.candidates,
     required this.plan,
     required this.daily,
+    this.followup,
+    this.modelHint,
+    this.metaPro,
   });
 
   final List<Candidate> candidates;
   final String plan;
   final DailyInfo daily;
+  final FollowupInfo? followup;
+  final String? modelHint;
+  final int? metaPro; // Proのみ：推定メーター（0..100）
 
   factory GenerateResult.fromJson(Map<String, dynamic> json) {
     final candidatesRaw = json['candidates'];
@@ -102,10 +150,21 @@ class GenerateResult {
               .toList()
         : <Candidate>[];
 
+    final followupRaw = json['followup'];
+    final followup = followupRaw is Map<String, dynamic>
+        ? FollowupInfo.fromJson(followupRaw)
+        : null;
+
+    final metaProRaw = json['meta']?['pro'];
+    final metaPro = metaProRaw is num ? metaProRaw.toInt() : null;
+
     return GenerateResult(
       candidates: candidates,
       plan: json['plan']?.toString() ?? 'free',
       daily: DailyInfo.fromJson(json['daily'] as Map<String, dynamic>?),
+      followup: followup,
+      modelHint: json['model_hint']?.toString(),
+      metaPro: metaPro,
     );
   }
 }

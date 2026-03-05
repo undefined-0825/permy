@@ -4,18 +4,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../domain/models.dart';
+import '../domain/telemetry_event.dart';
 import '../infrastructure/api_client.dart';
 import '../infrastructure/share_receiver.dart';
+import '../infrastructure/telemetry_queue.dart';
 
 class GenerateScreen extends StatefulWidget {
   const GenerateScreen({
     required this.apiClient,
     required this.shareReceiver,
+    required this.telemetryQueue,
     super.key,
   });
 
   final AppApiClient apiClient;
   final ShareInput shareReceiver;
+  final TelemetryQueue telemetryQueue;
 
   @override
   State<GenerateScreen> createState() => _GenerateScreenState();
@@ -31,6 +35,8 @@ class _GenerateScreenState extends State<GenerateScreen>
   List<Candidate> _candidates = <Candidate>[];
   DailyInfo? _daily;
   String _plan = 'free';
+  int? _metaPro;
+  int _comboId = 0;
   String? _copiedLabel;
 
   @override
@@ -90,66 +96,90 @@ class _GenerateScreenState extends State<GenerateScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('ぼくはきみの分身・・・'),
-              const Text('ぼくに任せて・・・'),
-              const SizedBox(height: 12),
-              _ShareStatusCard(
-                fileName: _sharedFileName,
-                hasText: _sharedText?.isNotEmpty ?? false,
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: canGenerate ? _onGeneratePressed : null,
-                child: _loading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('返信案を作る'),
-              ),
-              if (_daily != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  '今日の残り: ${_daily!.remaining}/${_daily!.limit}（${_plan.toUpperCase()}）',
-                ),
-              ],
-              if (_error != null) ...[
-                const SizedBox(height: 8),
-                _ErrorBanner(message: _errorMessage(_error!)),
-              ],
-              const SizedBox(height: 12),
               Expanded(
-                child: ListView.builder(
-                  itemCount: _candidates.length,
-                  itemBuilder: (context, index) {
-                    final candidate = _candidates[index];
-                    final isCopied = _copiedLabel == candidate.label;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 400),
-                        decoration: BoxDecoration(
-                          color: isCopied
-                              ? Theme.of(context).colorScheme.primaryContainer
-                              : Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.circular(12),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text('ぼくはきみの分身・・・'),
+                      const Text('ぼくに任せて・・・'),
+                      const SizedBox(height: 12),
+                      _ShareStatusCard(
+                        fileName: _sharedFileName,
+                        hasText: _sharedText?.isNotEmpty ?? false,
+                      ),
+                      const SizedBox(height: 12),
+                      _ComboSelector(
+                        selectedCombo: _comboId,
+                        isPro: _plan == 'pro',
+                        onChanged: (int value) {
+                          setState(() {
+                            _comboId = value;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: canGenerate ? _onGeneratePressed : null,
+                        child: _loading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('返信案を作る'),
+                      ),
+                      if (_daily != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          '今日の残り: ${_daily!.remaining}/${_daily!.limit}（${_plan.toUpperCase()}）',
                         ),
-                        child: OutlinedButton(
-                          onPressed: () => _copyCandidate(candidate),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 6),
-                              child: Text(
-                                '${candidate.label}: ${candidate.text}',
+                      ],
+                      if (_plan == 'pro' && _metaPro != null) ...[
+                        const SizedBox(height: 8),
+                        Text('推定メーター: $_metaPro%'),
+                      ],
+                      if (_error != null) ...[
+                        const SizedBox(height: 8),
+                        _ErrorBanner(message: _errorMessage(_error!)),
+                      ],
+                      const SizedBox(height: 12),
+                      ...List.generate(_candidates.length, (index) {
+                        final candidate = _candidates[index];
+                        final isCopied = _copiedLabel == candidate.label;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 400),
+                            decoration: BoxDecoration(
+                              color: isCopied
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.primaryContainer
+                                  : Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: OutlinedButton(
+                              onPressed: () => _copyCandidate(candidate),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 6,
+                                  ),
+                                  child: Text(
+                                    '${candidate.label}: ${candidate.text}',
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                    );
-                  },
+                        );
+                      }),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -163,21 +193,77 @@ class _GenerateScreenState extends State<GenerateScreen>
     final text = _sharedText?.trim();
     if (text == null || text.isEmpty) return;
 
+    // Pro専用コンボ（2,3,4,5）をFreeで選択した場合
+    if (_plan == 'free' && _comboId >= 2) {
+      _showUpsellDialog();
+      return;
+    }
+
     setState(() {
       _loading = true;
       _error = null;
       _candidates = <Candidate>[];
     });
 
+    final startTime = DateTime.now();
+
+    // generate_requested イベント送信
+    // TODO: 設定から has_ng_setting を取得（diagnose後の設定確認が必要）
+    widget.telemetryQueue.enqueue(
+      GenerateRequestedEvent(
+        appVersion: '1.0.0',
+        os: 'android',
+        dailyUsed: _daily?.used ?? 0,
+        dailyRemaining: _daily?.remaining ?? 3,
+        hasNgSetting: false, // ペルソナ診断後に設定が存在するか
+        personaVersion: 3,
+      ),
+    );
+
     try {
-      final result = await widget.apiClient.generate(historyText: text);
+      final result = await widget.apiClient.generate(
+        historyText: text,
+        comboId: _comboId,
+      );
+      final latencyMs = DateTime.now().difference(startTime).inMilliseconds;
+
       if (!mounted) return;
       setState(() {
         _candidates = result.candidates;
         _daily = result.daily;
         _plan = result.plan;
+        _metaPro = result.metaPro;
       });
+
+      // generate_succeeded イベント送信
+      widget.telemetryQueue.enqueue(
+        GenerateSucceededEvent(
+          appVersion: '1.0.0',
+          os: 'android',
+          latencyMs: latencyMs,
+          ngGateTriggered: result.modelHint == 'blocked',
+          followupReturned: result.followup != null,
+        ),
+      );
+
+      // followup がある場合はダイアログ表示
+      if (result.followup != null) {
+        if (!mounted) return;
+        _showFollowupDialog(result.followup!);
+      }
     } on ApiError catch (error) {
+      final latencyMs = DateTime.now().difference(startTime).inMilliseconds;
+
+      // generate_failed イベント送信
+      widget.telemetryQueue.enqueue(
+        GenerateFailedEvent(
+          appVersion: '1.0.0',
+          os: 'android',
+          latencyMs: latencyMs,
+          errorCode: error.errorCode,
+        ),
+      );
+
       if (!mounted) return;
       setState(() {
         _error = error;
@@ -192,6 +278,16 @@ class _GenerateScreenState extends State<GenerateScreen>
 
   Future<void> _copyCandidate(Candidate candidate) async {
     await Clipboard.setData(ClipboardData(text: candidate.text));
+
+    // candidate_copied イベント送信
+    widget.telemetryQueue.enqueue(
+      CandidateCopiedEvent(
+        appVersion: '1.0.0',
+        os: 'android',
+        candidateId: candidate.label,
+      ),
+    );
+
     if (!mounted) return;
 
     setState(() {
@@ -230,11 +326,52 @@ class _GenerateScreenState extends State<GenerateScreen>
     }
   }
 
+  void _showUpsellDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('有料版のみ'),
+          content: const Text('このモードはProで使える機能だよ。'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('了解'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _shareSubscription?.cancel();
     super.dispose();
+  }
+
+  void _showFollowupDialog(FollowupInfo followup) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('情報補足'),
+          content: Text(followup.question),
+          actions: followup.choices
+              .map(
+                (choice) => TextButton(
+                  onPressed: () {
+                    // TODO: 選択値をサーバへ保存（PUT /me/settings）
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(choice.label),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
   }
 }
 
@@ -260,6 +397,86 @@ class _ShareStatusCard extends StatelessWidget {
             Text(title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 4),
             Text(description),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ComboSelector extends StatelessWidget {
+  const _ComboSelector({
+    required this.selectedCombo,
+    required this.isPro,
+    required this.onChanged,
+  });
+
+  final int selectedCombo;
+  final bool isPro;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    const combos = [
+      ('モード0', false),
+      ('モード1', false),
+      ('モード2', true),
+      ('モード3', true),
+      ('モード4', true),
+      ('モード5', true),
+    ];
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('生成方針', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            ...List.generate(combos.length, (index) {
+              final (label, isProOnly) = combos[index];
+              final isLocked = isProOnly && !isPro;
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Radio<int>(
+                      value: index,
+                      groupValue: selectedCombo,
+                      onChanged: isLocked
+                          ? null
+                          : (int? value) {
+                              if (value != null) {
+                                onChanged(value);
+                              }
+                            },
+                    ),
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: isLocked
+                            ? TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              )
+                            : null,
+                      ),
+                    ),
+                    if (isProOnly)
+                      Chip(
+                        label: const Text('Pro'),
+                        visualDensity: VisualDensity.compact,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer,
+                      ),
+                  ],
+                ),
+              );
+            }),
           ],
         ),
       ),
