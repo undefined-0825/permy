@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
+import 'about_privacy_screen.dart';
 import 'migration_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -151,6 +152,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           );
                         },
                         child: const Text('端末移行の設定'),
+                      ),
+                      const SizedBox(height: 32),
+                      const SectionHeader(title: 'もっと知る'),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const AboutPrivacyScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text('このアプリについて'),
                       ),
                       const SizedBox(height: 32),
                       ElevatedButton(
