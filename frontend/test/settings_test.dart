@@ -147,7 +147,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(DiagnosisScreen), findsOneWidget);
-      expect(find.text('ペルソナ診断'), findsOneWidget);
+      // 新UI: 進捗表示を確認
+      expect(find.textContaining('/'), findsOneWidget);
     });
 
     testWidgets('端末移行ボタンで Migration 画面へ遷移できる', (WidgetTester tester) async {

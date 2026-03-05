@@ -192,6 +192,39 @@ ios/
 - 取得結果を `PUT /me/settings`（If-Match必須）で保存
 - 途中離脱時は旧設定を維持
 
+#### 7.2.1.1 Diagnosis Screen UI（デザインリニューアル版）
+**背景**：
+- 淡いピンク/パープルグラデーション画像 (`assets/images/backgrounds/diagnosis_background.png`)
+- BoxDecoration with DecorationImage, fit: BoxFit.cover
+
+**上部レイアウト**（SafeArea内）：
+- 左上：ペルミィ黒猫アイコン（48x48、後で画像差し替え可、プレースホルダーは黒丸+Icon(Icons.pets)）
+- 進捗表示：「N/7」形式（例：1/7, 2/7, ...）、fontSize 18、fontWeight bold
+
+**質問表示**：
+- 1問ずつ表示（ページング形式）
+- 質問文：中央寄せ、fontSize 20、fontWeight bold、height 1.5
+
+**選択肢カード**：
+- Container + InkWell、borderRadius 12、padding 16
+- 背景：白（opacity 0.9）、選択時はピンクボーダー（3px、#FF69B4）
+- レイアウト：Row（画像プレースホルダー 80x80 + テキスト + チェックマーク）
+- 画像プレースホルダー：淡ピンク背景 + Icons.image_outlined（後でキャラクター画像差し替え可）
+- 選択時：右端に check_circle アイコン（ピンク、size 28）
+
+**次へボタン**：
+- 下部固定、幅full、高さ56、borderRadius 28
+- 背景色：#FFB3C1（ピンク）、テキスト色：白、fontSize 16、fontWeight bold
+- ラベル：「次へ」（最終問は「この内容で進む」）
+- 未選択時は無効化（グレー背景）
+
+**エラー表示**：
+- ボタン上部、赤文字、中央寄せ
+
+**重要**：
+- 背景画像、ペルミィアイコン、選択肢キャラクター画像は段階的実装
+- 現在はプレースホルダーで実装、後で画像差し替え可能な構造
+
 ### 7.3 Generate（メイン）
 - sharedText state（メモリのみ）
 - settings state（GET/PUT同期）
