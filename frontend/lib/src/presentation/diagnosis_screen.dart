@@ -45,20 +45,22 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                 child: Row(
                   children: [
-                    // 戻るボタン（最初のページでなければ表示）
-                    if (_currentQuestionIndex > 0)
-                      SizedBox(
-                        width: 36,
-                        height: 36,
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          icon: const Icon(Icons.arrow_back, size: 20),
-                          onPressed: () =>
-                              setState(() => _currentQuestionIndex--),
-                        ),
-                      )
-                    else
-                      const SizedBox(width: 36),
+                    // 戻るボタン（最初のページなら画面を閉じる、それ以外は前の質問へ）
+                    SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.arrow_back, size: 20),
+                        onPressed: () {
+                          if (_currentQuestionIndex > 0) {
+                            setState(() => _currentQuestionIndex--);
+                          } else {
+                            Navigator.of(context).pop();
+                          }
+                        },
+                      ),
+                    ),
                     const SizedBox(width: 12),
                     // ペルミィアイコン
                     Image.asset(

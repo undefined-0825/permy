@@ -7,13 +7,19 @@ class AboutPrivacyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Image.asset(
-          'assets/images/icons/permy_icon.png',
-          width: 24,
-          height: 24,
-          fit: BoxFit.contain,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/images/icons/permy_icon.png',
+              width: 24,
+              height: 24,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(width: 8),
+            const Text('このアプリについて'),
+          ],
         ),
-        title: const Text('このアプリについて'),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
