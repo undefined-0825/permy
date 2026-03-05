@@ -111,12 +111,12 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // 「短め」ボタンをタップ
-      await tester.tap(find.text('短め'));
+      // 「休眠復活」ボタンをタップ
+      await tester.tap(find.text('休眠復活'));
       await tester.pumpAndSettle();
 
       // ボタンが存在することを確認（選択状態は Material Design で表示）
-      expect(find.text('短め'), findsOneWidget);
+      expect(find.text('休眠復活'), findsOneWidget);
     });
 
     testWidgets('読み込みエラー時の再読込ボタン', (WidgetTester tester) async {
