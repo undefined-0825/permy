@@ -9,6 +9,11 @@ from app.config import settings
 class GenerateContext:
     true_self_type: str | None
     night_self_type: str | None
+    persona_goal_primary: str | None
+    persona_goal_secondary: str | None
+    style_assertiveness: int | None
+    style_warmth: int | None
+    style_risk_guard: int | None
     relationship_type: str | None
     reply_length_pref: str | None
     combo_id: int

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sample_app/src/domain/models.dart';
+import 'package:sample_app/src/domain/persona_diagnosis.dart';
 import 'package:sample_app/src/infrastructure/api_client.dart';
 import 'package:sample_app/src/infrastructure/share_receiver.dart';
 import 'package:sample_app/src/presentation/generate_screen.dart';
@@ -10,7 +11,7 @@ class _FakeApiClient implements AppApiClient {
   Future<void> bootstrapAuth() async {}
 
   @override
-  Future<void> completeDiagnosis(List<int> answers) async {}
+  Future<void> completeDiagnosis(List<DiagnosisAnswer> answers) async {}
 
   @override
   Future<SettingsSnapshot> getSettings() async {

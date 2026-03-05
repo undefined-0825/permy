@@ -206,6 +206,62 @@
         }
       }
     },
+    "/api/v1/me/diagnosis": {
+      "post": {
+        "summary": "Evaluate Diagnosis",
+        "operationId": "evaluate_diagnosis_api_v1_me_diagnosis_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiagnosisRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiagnosisResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/generate": {
       "post": {
         "summary": "Generate",
@@ -589,6 +645,123 @@
         ],
         "title": "DailyInfo"
       },
+      "DiagnosisAnswer": {
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "title": "Question Id"
+          },
+          "choice_id": {
+            "type": "string",
+            "title": "Choice Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question_id",
+          "choice_id"
+        ],
+        "title": "DiagnosisAnswer"
+      },
+      "DiagnosisRequest": {
+        "properties": {
+          "answers": {
+            "items": {
+              "$ref": "#/components/schemas/DiagnosisAnswer"
+            },
+            "type": "array",
+            "maxItems": 7,
+            "minItems": 7,
+            "title": "Answers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "answers"
+        ],
+        "title": "DiagnosisRequest"
+      },
+      "DiagnosisResponse": {
+        "properties": {
+          "persona_version": {
+            "type": "integer",
+            "title": "Persona Version"
+          },
+          "true_self_type": {
+            "type": "string",
+            "enum": [
+              "Stability",
+              "Independence",
+              "Approval",
+              "Realism",
+              "Romance"
+            ],
+            "title": "True Self Type"
+          },
+          "night_self_type": {
+            "type": "string",
+            "enum": [
+              "VisitPush",
+              "Heal",
+              "LittleDevil",
+              "BigClient",
+              "Balance"
+            ],
+            "title": "Night Self Type"
+          },
+          "persona_goal_primary": {
+            "type": "string",
+            "enum": [
+              "next_visit",
+              "relationship_keep",
+              "long_term_growth",
+              "firefighting",
+              "special_distance"
+            ],
+            "title": "Persona Goal Primary"
+          },
+          "persona_goal_secondary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Persona Goal Secondary"
+          },
+          "style_assertiveness": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Style Assertiveness"
+          },
+          "style_warmth": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Style Warmth"
+          },
+          "style_risk_guard": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Style Risk Guard"
+          }
+        },
+        "type": "object",
+        "required": [
+          "persona_version",
+          "true_self_type",
+          "night_self_type",
+          "persona_goal_primary",
+          "style_assertiveness",
+          "style_warmth",
+          "style_risk_guard"
+        ],
+        "title": "DiagnosisResponse"
+      },
       "Followup": {
         "properties": {
           "key": {
@@ -713,6 +886,7 @@
           "tuning": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -842,6 +1016,7 @@
           "meta_pro": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -978,6 +1153,7 @@
       "SettingsResponse": {
         "properties": {
           "settings": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Settings"
           }
@@ -991,6 +1167,7 @@
       "SettingsUpdateRequest": {
         "properties": {
           "settings": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Settings"
           }
@@ -1081,6 +1258,13 @@
           "type": {
             "type": "string",
             "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
           }
         },
         "type": "object",

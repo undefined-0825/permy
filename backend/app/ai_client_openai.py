@@ -92,6 +92,16 @@ class OpenAiChatClient(AiClient):
             profile.append(f"本来の自分: {ctx.true_self_type}")
         if ctx.night_self_type:
             profile.append(f"夜の自分: {ctx.night_self_type}")
+        if ctx.persona_goal_primary:
+            profile.append(f"主目的: {ctx.persona_goal_primary}")
+        if ctx.persona_goal_secondary:
+            profile.append(f"副目的: {ctx.persona_goal_secondary}")
+        if ctx.style_assertiveness is not None:
+            profile.append(f"押しの強さ(0-100): {ctx.style_assertiveness}")
+        if ctx.style_warmth is not None:
+            profile.append(f"あたたかさ(0-100): {ctx.style_warmth}")
+        if ctx.style_risk_guard is not None:
+            profile.append(f"安全寄せ(0-100): {ctx.style_risk_guard}")
         if ctx.reply_length_pref:
             profile.append(f"長さ: {ctx.reply_length_pref}")
         profile.append(f"コンボID: {ctx.combo_id}")

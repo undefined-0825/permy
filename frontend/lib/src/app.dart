@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'domain/persona_diagnosis.dart';
 import 'infrastructure/api_client.dart';
 import 'infrastructure/share_receiver.dart';
 import 'infrastructure/token_store.dart';
@@ -58,7 +59,7 @@ class _AppRootState extends State<AppRoot> {
     });
   }
 
-  Future<void> _onDiagnosisCompleted(List<int> answers) async {
+  Future<void> _onDiagnosisCompleted(List<DiagnosisAnswer> answers) async {
     await _apiClient.completeDiagnosis(answers);
     if (!mounted) return;
     setState(() {

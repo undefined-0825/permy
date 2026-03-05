@@ -14,7 +14,7 @@ abstract class AppApiClient {
 
   Future<SettingsSnapshot> getSettings();
 
-  Future<void> completeDiagnosis(List<int> answers);
+  Future<void> completeDiagnosis(List<DiagnosisAnswer> answers);
 }
 
 class ApiClient implements AppApiClient {
@@ -100,7 +100,7 @@ class ApiClient implements AppApiClient {
   }
 
   @override
-  Future<void> completeDiagnosis(List<int> answers) async {
+  Future<void> completeDiagnosis(List<DiagnosisAnswer> answers) async {
     await bootstrapAuth();
 
     final diagnosis = await _runWithAuthRetry(() async {
@@ -111,18 +111,31 @@ class ApiClient implements AppApiClient {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({'answers': answers}),
+        body: jsonEncode({
+          'answers': answers.map((answer) => answer.toJson()).toList(),
+        }),
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final body = _tryJson(response.body) ?? <String, dynamic>{};
+        final fallback = inferDiagnosis(answers);
         return DiagnosisResult(
           trueSelfType:
-              body['true_self_type']?.toString() ??
-              inferDiagnosis(answers).trueSelfType,
+              body['true_self_type']?.toString() ?? fallback.trueSelfType,
           nightSelfType:
-              body['night_self_type']?.toString() ??
-              inferDiagnosis(answers).nightSelfType,
+              body['night_self_type']?.toString() ?? fallback.nightSelfType,
+          personaGoalPrimary:
+              body['persona_goal_primary']?.toString() ??
+              fallback.personaGoalPrimary,
+          personaGoalSecondary: body['persona_goal_secondary']?.toString(),
+          styleAssertiveness:
+              (body['style_assertiveness'] as num?)?.toInt() ??
+              fallback.styleAssertiveness,
+          styleWarmth:
+              (body['style_warmth'] as num?)?.toInt() ?? fallback.styleWarmth,
+          styleRiskGuard:
+              (body['style_risk_guard'] as num?)?.toInt() ??
+              fallback.styleRiskGuard,
         );
       }
 
@@ -140,9 +153,14 @@ class ApiClient implements AppApiClient {
     final updated = Map<String, dynamic>.from(current.settings)
       ..['settings_schema_version'] =
           (current.settings['settings_schema_version'] as num?)?.toInt() ?? 1
-      ..['persona_version'] = 2
+      ..['persona_version'] = 3
       ..['true_self_type'] = diagnosis.trueSelfType
-      ..['night_self_type'] = diagnosis.nightSelfType;
+      ..['night_self_type'] = diagnosis.nightSelfType
+      ..['persona_goal_primary'] = diagnosis.personaGoalPrimary
+      ..['persona_goal_secondary'] = diagnosis.personaGoalSecondary
+      ..['style_assertiveness'] = diagnosis.styleAssertiveness
+      ..['style_warmth'] = diagnosis.styleWarmth
+      ..['style_risk_guard'] = diagnosis.styleRiskGuard;
 
     await _runWithAuthRetry(() async {
       final token = await tokenStore.read();

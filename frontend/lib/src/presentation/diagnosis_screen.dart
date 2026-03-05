@@ -5,21 +5,18 @@ import '../domain/persona_diagnosis.dart';
 class DiagnosisScreen extends StatefulWidget {
   const DiagnosisScreen({required this.onCompleted, super.key});
 
-  final Future<void> Function(List<int> answers) onCompleted;
+  final Future<void> Function(List<DiagnosisAnswer> answers) onCompleted;
 
   @override
   State<DiagnosisScreen> createState() => _DiagnosisScreenState();
 }
 
 class _DiagnosisScreenState extends State<DiagnosisScreen> {
-  final List<int?> _answers = List<int?>.filled(
-    diagnosisQuestions.length,
-    null,
-  );
+  final Map<String, String> _answers = <String, String>{};
   bool _saving = false;
   String? _error;
 
-  bool get _ready => _answers.every((answer) => answer != null);
+  bool get _ready => _answers.length == diagnosisQuestions.length;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +29,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
               padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text('ぼくと11問だけ、きみのペースで答えてね'),
+                child: Text('ぼくと7問だけ、きみのペースで答えてね'),
               ),
             ),
             Expanded(
@@ -43,10 +40,10 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                   return _QuestionCard(
                     index: index,
                     question: question,
-                    value: _answers[index],
+                    value: _answers[question.id],
                     onChanged: (value) {
                       setState(() {
-                        _answers[index] = value;
+                        _answers[question.id] = value;
                       });
                     },
                   );
@@ -84,7 +81,14 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
   }
 
   Future<void> _submit() async {
-    final answers = _answers.map((value) => value ?? 3).toList();
+    final answers = diagnosisQuestions
+        .map(
+          (question) => DiagnosisAnswer(
+            questionId: question.id,
+            choiceId: _answers[question.id]!,
+          ),
+        )
+        .toList();
     setState(() {
       _saving = true;
       _error = null;
@@ -116,8 +120,8 @@ class _QuestionCard extends StatelessWidget {
 
   final int index;
   final DiagnosisQuestion question;
-  final int? value;
-  final ValueChanged<int> onChanged;
+  final String? value;
+  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -132,14 +136,16 @@ class _QuestionCard extends StatelessWidget {
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
-              children: List<Widget>.generate(5, (optionIndex) {
-                final score = optionIndex + 1;
-                return ChoiceChip(
-                  label: Text(score.toString()),
-                  selected: value == score,
-                  onSelected: (_) => onChanged(score),
-                );
-              }),
+              runSpacing: 8,
+              children: question.choices
+                  .map(
+                    (choice) => ChoiceChip(
+                      label: Text(choice.label),
+                      selected: value == choice.id,
+                      onSelected: (_) => onChanged(choice.id),
+                    ),
+                  )
+                  .toList(),
             ),
           ],
         ),

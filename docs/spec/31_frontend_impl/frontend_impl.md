@@ -185,6 +185,13 @@ ios/
 - プライバシー短文コピー（固定文言は別Spec）
 - 完了でGenerateへ
 
+### 7.2.1 Persona Diagnosis（導入時）
+- 初回導入は **7問固定**（True 2問 + Night 5問）
+- 設問ID/重み/判定は `docs/spec/10_product/persona_scoring_spec.md` を正とする
+- 回答完了後に `POST /me/diagnosis` を呼び、判定結果と派生パラメータを取得
+- 取得結果を `PUT /me/settings`（If-Match必須）で保存
+- 途中離脱時は旧設定を維持
+
 ### 7.3 Generate（メイン）
 - sharedText state（メモリのみ）
 - settings state（GET/PUT同期）
@@ -238,6 +245,17 @@ ios/
 - `ng_free_phrases`
 
 詳細は `product_spec.md` セクション 9 参照。
+
+---
+
+## 8.5 診断派生パラメータ（生成連携 / MUST）
+- 以下キーは `settings` 同期対象として扱う
+  - `persona_goal_primary`
+  - `persona_goal_secondary`
+  - `style_assertiveness`
+  - `style_warmth`
+  - `style_risk_guard`
+- `/generate` 前に `GET /me/settings` 済みであることを保証する
 
 ---
 

@@ -105,14 +105,19 @@ async def generate(
     try:
         ai_client = get_ai_client()
         ctx = GenerateContext(
-            true_self_type=None,
-            night_self_type=None,
-            relationship_type=None,
-            reply_length_pref=None,
+            true_self_type=settings.get("true_self_type"),
+            night_self_type=settings.get("night_self_type"),
+            persona_goal_primary=settings.get("persona_goal_primary"),
+            persona_goal_secondary=settings.get("persona_goal_secondary"),
+            style_assertiveness=int(settings.get("style_assertiveness", 0)) if settings.get("style_assertiveness") is not None else None,
+            style_warmth=int(settings.get("style_warmth", 0)) if settings.get("style_warmth") is not None else None,
+            style_risk_guard=int(settings.get("style_risk_guard", 0)) if settings.get("style_risk_guard") is not None else None,
+            relationship_type=settings.get("relationship_type"),
+            reply_length_pref=settings.get("reply_length_pref"),
             combo_id=req.combo_id,
-            ng_tags=[],
-            ng_free_phrases=[],
-            tuning=None,
+            ng_tags=_to_list(settings.get("ng_tags")),
+            ng_free_phrases=_to_list(settings.get("ng_free_phrases")),
+            tuning=req.tuning,
         )
         candidates = await ai_client.generate_abc(req.history_text, ctx)
         daily = DailyInfo(date=jst_today_ymd(), limit=limit, used=used, remaining=max(0, limit - used))

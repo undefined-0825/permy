@@ -122,6 +122,7 @@ enum class NightSelfType {
 ### 5.3 診断結果の保持（MUST）
 - 診断結果は **1セットのみ**保持。再診断で上書きする。
 - 保存先SSOT：`/api/v1/me/settings` の `settings_json`（端末ローカルに本文/診断結果を永続保存しない）。
+- 設問・重み・判定アルゴリズムは `persona_scoring_spec.md` を正とする。
 
 ### 5.4 診断結果画像（SSOT / MUST）
 - 画像はアプリ同梱。サーバは画像を扱わない。
@@ -150,6 +151,11 @@ NightSelf:
 - `persona_version: int`
 - `true_self_type: TrueSelfType`（文字列）
 - `night_self_type: NightSelfType`（文字列）
+- `persona_goal_primary: string`（診断から算出）
+- `persona_goal_secondary: string | null`（診断から算出）
+- `style_assertiveness: int`（0..100）
+- `style_warmth: int`（0..100）
+- `style_risk_guard: int`（0..100）
 - `relationship_type: string`（後述）
 - `reply_length_pref: string`（short|standard|long）
 - `ng_tags: string[]`（後述）

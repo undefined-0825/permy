@@ -21,6 +21,32 @@ class SettingsUpdateRequest(BaseModel):
     settings: dict = Field(default_factory=dict)
 
 
+class DiagnosisAnswer(BaseModel):
+    question_id: str
+    choice_id: str
+
+
+class DiagnosisRequest(BaseModel):
+    answers: list[DiagnosisAnswer] = Field(..., min_length=7, max_length=7)
+
+
+class DiagnosisResponse(BaseModel):
+    persona_version: int
+    true_self_type: Literal["Stability", "Independence", "Approval", "Realism", "Romance"]
+    night_self_type: Literal["VisitPush", "Heal", "LittleDevil", "BigClient", "Balance"]
+    persona_goal_primary: Literal[
+        "next_visit",
+        "relationship_keep",
+        "long_term_growth",
+        "firefighting",
+        "special_distance",
+    ]
+    persona_goal_secondary: str | None = None
+    style_assertiveness: int = Field(..., ge=0, le=100)
+    style_warmth: int = Field(..., ge=0, le=100)
+    style_risk_guard: int = Field(..., ge=0, le=100)
+
+
 class GenerateRequest(BaseModel):
     history_text: str = Field(..., description="トーク履歴の原文（本文保存なし）")
     combo_id: int = Field(..., ge=0, le=5)

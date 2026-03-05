@@ -167,6 +167,49 @@ Body:
 
 ---
 
+## 2.3.1 POST /me/diagnosis
+診断回答（7問）を受け取り、タイプ判定と生成用パラメータを返す。
+
+### Request
+Headers:
+- `Authorization: Bearer <token>`
+
+Body:
+```json
+{
+  "answers": [
+    {"question_id": "true_priority", "choice_id": "life_balance"},
+    {"question_id": "true_decision_axis", "choice_id": "low_stress"},
+    {"question_id": "night_goal_primary", "choice_id": "next_visit"},
+    {"question_id": "night_temperature", "choice_id": "adaptive"},
+    {"question_id": "night_game_tolerance", "choice_id": "light_game"},
+    {"question_id": "night_customer_allocation", "choice_id": "care_existing"},
+    {"question_id": "night_risk_response", "choice_id": "adaptive_landing"}
+  ]
+}
+```
+
+### Response 200
+```json
+{
+  "persona_version": 3,
+  "true_self_type": "Stability",
+  "night_self_type": "Balance",
+  "persona_goal_primary": "relationship_keep",
+  "persona_goal_secondary": "next_visit",
+  "style_assertiveness": 42,
+  "style_warmth": 71,
+  "style_risk_guard": 68
+}
+```
+
+### Errors
+- `400 VALIDATION_ERROR`
+- `401 AUTH_INVALID`
+- `500 INTERNAL_ERROR`
+
+---
+
 ## 2.4 POST /generate
 返信案（A/B/C）を生成して返す。
 
@@ -188,6 +231,7 @@ Body:
 - `history_text` は入力本文。サーバは保存しない（ログにも残さない）。
 - `combo_id`: 0..5（コンボID、Proは2以上利用可能）
 - `tuning`: Proのみ利用可能（nullable）
+- 生成スタイルは `/me/settings` 内の診断派生パラメータ（`persona_goal_primary` など）を利用してよい。
 
 ### Response 200
 ```json
