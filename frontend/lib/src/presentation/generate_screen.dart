@@ -92,6 +92,8 @@ class _GenerateScreenState extends State<GenerateScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Permy'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -106,8 +108,17 @@ class _GenerateScreenState extends State<GenerateScreen>
           ),
         ],
       ),
-      body: SafeArea(
-        child: Padding(
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFE8D4F8), Color(0xFFFCE4EC)],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -135,17 +146,29 @@ class _GenerateScreenState extends State<GenerateScreen>
                         },
                       ),
                       const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: canGenerate ? _onGeneratePressed : null,
-                        child: _loading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text('返信案を作る'),
+                      SizedBox(
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: canGenerate ? _onGeneratePressed : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFB3C1),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(28),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: _loading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                )
+                              : const Text('返信案を作る'),
+                        ),
                       ),
                       if (_daily != null) ...[
                         const SizedBox(height: 8),

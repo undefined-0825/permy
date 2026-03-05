@@ -116,20 +116,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('設定')),
-      body: SafeArea(
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : _error != null
-            ? Center(
+      appBar: AppBar(
+        title: const Text('設定'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFE8D4F8), Color(0xFFFCE4EC)],
+          ),
+        ),
+        child: SafeArea(
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
+              ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text('エラー: ${_error!.errorCode}'),
                     const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _loadSettings,
-                      child: const Text('再読込'),
+                    SizedBox(
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _loadSettings,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFFB3C1),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text('再読込'),
+                      ),
                     ),
                   ],
                 ),
@@ -146,9 +170,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const SizedBox(height: 32),
                       const SectionHeader(title: 'ペルソナ再診断'),
                       const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: _startRediagnosis,
-                        child: const Text('再診断する'),
+                      SizedBox(
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: _startRediagnosis,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFB3C1),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(28),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: const Text('再診断する'),
+                        ),
                       ),
                       const SizedBox(height: 32),
                       const SectionHeader(title: '生成設定'),
@@ -161,47 +196,82 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const SizedBox(height: 32),
                       const SectionHeader(title: '端末移行'),
                       const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  MigrationScreen(apiClient: widget.apiClient),
+                      SizedBox(
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    MigrationScreen(apiClient: widget.apiClient),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFB3C1),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(28),
                             ),
-                          );
-                        },
-                        child: const Text('端末移行の設定'),
+                            elevation: 0,
+                          ),
+                          child: const Text('端末移行の設定'),
+                        ),
                       ),
                       const SizedBox(height: 32),
                       const SectionHeader(title: 'もっと知る'),
                       const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const AboutPrivacyScreen(),
+                      SizedBox(
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const AboutPrivacyScreen(),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFB3C1),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(28),
                             ),
-                          );
-                        },
-                        child: const Text('このアプリについて'),
+                            elevation: 0,
+                          ),
+                          child: const Text('このアプリについて'),
+                        ),
                       ),
                       const SizedBox(height: 32),
-                      ElevatedButton(
-                        onPressed: _saving ? null : _saveSettings,
-                        child: _saving
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text('保存'),
+                      SizedBox(
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: _saving ? null : _saveSettings,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFB3C1),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(28),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: _saving
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                )
+                              : const Text('保存'),
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
+        ),
       ),
     );
   }
@@ -262,8 +332,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        _SettingRow(label: '夜の属性', value: nightType),
       ],
     );
   }

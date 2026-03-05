@@ -44,17 +44,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFE8D4F8), Color(0xFFFCE4EC)],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
+      body: SafeArea(
+        child: Column(
+          children: [
             Expanded(
               child: PageView(
                 controller: _pageController,
@@ -109,22 +101,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       if (_currentStep > 0) const SizedBox(width: 12),
                       Expanded(
-                        child: SizedBox(
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: _nextStep,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFFB3C1),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(28),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: Text(
-                              _currentStep == 3 ? 'ペルミィを作る' : '次へ',
-                            ),
-                          ),
+                        child: ElevatedButton(
+                          onPressed: _nextStep,
+                          child: Text(_currentStep == 3 ? 'ペルミィを作る' : '次へ'),
                         ),
                       ),
                     ],
