@@ -171,6 +171,33 @@ ios/
   - 共有データは短命（受け渡し後即削除）
   - 平文の永続保存は禁止（実装で削除を担保）
 
+### 6.4 色定義とテーマ（MUST）
+
+**カラーパレット（world_concept.md 準拠）**：
+- **通常時背景**：淡いピンク系グラデーション
+  - `Color(0xFFE8D4F8)` 淡いパープル（グラデーション開始色）
+  - `Color(0xFFFCE4EC)` 淡いピンク（グラデーション終了色）
+- **生成時背景**：黒（#000000）※反転演出用、後で実装
+- **アクセントカラー（ボタン・選択状態）**：
+  - プライマリピンク：`Color(0xFFFFB3C1)` ボタン背景、ハイライト用
+  - セカンダリピンク：`Color(0xFFFF69B4)` 選択ボーダー、チェックマーク
+  - 淡ピンク：`Colors.pink.shade50` プレースホルダー背景
+- **テキストカラー**：
+  - 標準：`Colors.black87`
+  - エラー：`Colors.red`
+  - ボタン上テキスト：`Colors.white`
+- **無効化状態**：`Colors.grey.shade300`
+
+**適用ルール**：
+- 診断画面・生成画面・Settings等、全画面で統一使用
+- 将来的に `lib/core/theme.dart` で ThemeData 定義予定（現在は各Widget内でハードコード）
+- Material Design 3 準拠、ColorScheme 活用を推奨
+
+**デザイン意図（world_concept 参照）**：
+- 淡いピンク：ユーザーの緊張を和らげ、安心感を提供
+- 黒への反転：NightSelf（分身稼働）モードへの視覚的切り替え
+- 過剰な可愛さを避け、信頼感と機能性のバランスを重視
+
 ---
 
 ## 7. 画面実装（MVP）
@@ -193,37 +220,99 @@ ios/
 - 途中離脱時は旧設定を維持
 
 #### 7.2.1.1 Diagnosis Screen UI（デザインリニューアル版）
+
+**全体構造**：
+- Scaffold body に Container を配置、decoration で背景設定
+- SafeArea 内に Column（上部ヘッダー + 質問エリア + エラー表示 + ボタン）
+
 **背景**：
-- 淡いピンク/パープルグラデーション画像 (`assets/images/backgrounds/diagnosis_background.png`)
-- BoxDecoration with DecorationImage, fit: BoxFit.cover
+- **現在実装**：LinearGradient（topCenter → bottomCenter）
+  - 開始色：`Color(0xFFE8D4F8)` 淡いパープル
+  - 終了色：`Color(0xFFFCE4EC)` 淡いピンク
+- **将来対応**：DecorationImage (`assets/images/backgrounds/diagnosis_background.png`, fit: BoxFit.cover)
+  - 現在はコメントアウト、画像準備後に有効化
 
-**上部レイアウト**（SafeArea内）：
-- 左上：ペルミィ黒猫アイコン（48x48、後で画像差し替え可、プレースホルダーは黒丸+Icon(Icons.pets)）
-- 進捗表示：「N/7」形式（例：1/7, 2/7, ...）、fontSize 18、fontWeight bold
+**上部ヘッダー**（SafeArea内、padding 16-12-16-12）：
+- Row構成：ペルミィアイコン + SizedBox(12) + 進捗表示
+- **ペルミィアイコン**（プレースホルダー、後で画像差し替え）：
+  - Container 48x48、黒背景（Colors.black87）、borderRadius 24
+  - Icon(Icons.pets, color: white, size: 28)
+- **進捗表示**：
+  - Text「N/7」（例：1/7, 2/7, ...、N は _currentQuestionIndex + 1）
+  - fontSize 18、fontWeight bold、color black87
 
-**質問表示**：
-- 1問ずつ表示（ページング形式）
-- 質問文：中央寄せ、fontSize 20、fontWeight bold、height 1.5
+**質問表示エリア**（Expanded + SingleChildScrollView）：
+- **ページング動作**：
+  - 状態変数 `_currentQuestionIndex`（0〜6）で現在問を管理
+  - 「次へ」ボタンタップで `_currentQuestionIndex++`、最終問は送信
+  - 各問の回答は `_answers[questionId] = choiceId` で保持（全問回答可能）
+- **質問文**：
+  - padding: EdgeInsets.symmetric(horizontal: 16)
+  - SizedBox(height: 24) 後に配置
+  - fontSize 20、fontWeight bold、color black87、height 1.5
+  - textAlign center
+- **選択肢カード群**：
+  - SizedBox(height: 32) 後に配置
+  - 各選択肢を `_ChoiceCard` ウィジェットで表示
 
-**選択肢カード**：
-- Container + InkWell、borderRadius 12、padding 16
-- 背景：白（opacity 0.9）、選択時はピンクボーダー（3px、#FF69B4）
-- レイアウト：Row（画像プレースホルダー 80x80 + テキスト + チェックマーク）
-- 画像プレースホルダー：淡ピンク背景 + Icons.image_outlined（後でキャラクター画像差し替え可）
-- 選択時：右端に check_circle アイコン（ピンク、size 28）
+**選択肢カード** (`_ChoiceCard`)：
+- **構造**：Padding(bottom: 12) > InkWell > Container
+- **InkWell**：onTap で選択、borderRadius 16
+- **Container**：
+  - padding 16、borderRadius 16
+  - 背景：白（opacity 0.9）
+  - ボーダー：選択時のみ `Color(0xFFFF69B4)` ピンク、width 3
+  - boxShadow：黒10%、blurRadius 8、offset (0,2)
+- **内部レイアウト**（Row）：
+  1. **画像プレースホルダー**（80x80、borderRadius 12）：
+     - Container、背景 `Colors.pink.shade50`
+     - Icon(Icons.image_outlined, size: 40, color: pink.shade200)
+     - 後でキャラクター画像（Image.asset）に差し替え可能
+  2. SizedBox(width: 16)
+  3. **選択肢テキスト**（Expanded）：
+     - fontSize 14、fontWeight w500、color black87、height 1.4
+  4. **チェックマーク**（選択時のみ表示）：
+     - Icon(Icons.check_circle, color: 0xFFFF69B4, size: 28)
 
-**次へボタン**：
-- 下部固定、幅full、高さ56、borderRadius 28
-- 背景色：#FFB3C1（ピンク）、テキスト色：白、fontSize 16、fontWeight bold
-- ラベル：「次へ」（最終問は「この内容で進む」）
-- 未選択時は無効化（グレー背景）
+**エラー表示**（ボタン上部）：
+- if (_error != null) で条件表示
+- Padding(horizontal: 16)
+- Text：赤文字（Colors.red）、fontWeight bold、textAlign center
+- 表示内容：「うまく反映できなかった。少し待って、もう一度」
 
-**エラー表示**：
-- ボタン上部、赤文字、中央寄せ
+**次へボタン**（下部固定）：
+- Padding(all: 16) 内に SizedBox(width: double.infinity, height: 56)
+- **ElevatedButton**：
+  - onPressed：`_canProceed && !_saving ? _handleNext : null`
+    - `_canProceed`：現在問の回答が存在するか判定
+    - `_isLastQuestion`：最終問（index == 6）判定
+  - style：
+    - backgroundColor: `Color(0xFFFFB3C1)` ピンク
+    - foregroundColor: 白
+    - disabledBackgroundColor: `Colors.grey.shade300`
+    - shape: RoundedRectangleBorder(borderRadius: 28)
+    - elevation: 0
+  - child：
+    - 保存中（_saving）：CircularProgressIndicator（24x24、白、strokeWidth 2）
+    - 通常：Text（fontSize 16、fontWeight bold）
+      - 最終問：「この内容で進む」
+      - それ以外：「次へ」
 
-**重要**：
-- 背景画像、ペルミィアイコン、選択肢キャラクター画像は段階的実装
-- 現在はプレースホルダーで実装、後で画像差し替え可能な構造
+**動作フロー**：
+1. 初期表示：_currentQuestionIndex = 0、質問1を表示
+2. ユーザーが選択肢タップ → _answers[questionId] = choiceId、UI更新
+3. 「次へ」タップ：
+   - 最終問以外 → _currentQuestionIndex++、次問へ遷移
+   - 最終問 → _submit()、POST /me/diagnosis 実行
+4. 送信成功 → widget.onCompleted(answers) 呼び出し、pop で Settings へ戻る
+5. 送信失敗 → エラーメッセージ表示
+
+**段階的実装の注記**：
+- **Phase 1（完了）**：グラデーション背景、プレースホルダー配置、UI構造実装
+- **Phase 2（今後）**：
+  - 背景画像有効化（DecorationImage コメントアウト解除）
+  - ペルミィアイコン画像差し替え（Container → Image.asset）
+  - 選択肢画像差し替え（Icon → Image.asset、20-30枚想定）
 
 ### 7.3 Generate（メイン）
 - sharedText state（メモリのみ）
