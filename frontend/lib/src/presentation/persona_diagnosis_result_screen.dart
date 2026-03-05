@@ -19,51 +19,80 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('あなたのペルソナ')),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '普段の自分',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              _PersonaTypeCard(
-                typeName: trueType,
-                description: _getTrueTypeDescription(trueType),
-              ),
-              const SizedBox(height: 32),
-              const Text(
-                '夜の私',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              _PersonaTypeCard(
-                typeName: nightType,
-                description: _getNightTypeDescription(nightType),
-              ),
-              const SizedBox(height: 32),
-              const Text(
-                'スタイルスコア',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              _StyleScoreRow(label: '主張度', score: assertiveness),
-              const SizedBox(height: 12),
-              _StyleScoreRow(label: '温かみ', score: warmth),
-              const SizedBox(height: 12),
-              _StyleScoreRow(label: 'リスク回避', score: riskGuard),
-              const SizedBox(height: 32),
-              const Text(
-                'これらのペルソナは、あなたの返信スタイルを決める大事な指標。'
-                'ときどき見返して、「今のぼくはこう考えてるんだ」って確認してみてね。',
-                style: TextStyle(fontSize: 13, height: 1.6, color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
+      appBar: AppBar(
+        title: const Text('あなたのペルソナ'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFE8D4F8), // 淡いパープル
+              Color(0xFFFCE4EC), // 淡いピンク
             ],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '普段の自分',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _PersonaTypeCard(
+                  typeName: trueType,
+                  description: _getTrueTypeDescription(trueType),
+                ),
+                const SizedBox(height: 32),
+                const Text(
+                  '夜の私',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _PersonaTypeCard(
+                  typeName: nightType,
+                  description: _getNightTypeDescription(nightType),
+                ),
+                const SizedBox(height: 32),
+                const Text(
+                  'スタイルスコア',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _StyleScoreRow(label: '主張度', score: assertiveness),
+                const SizedBox(height: 12),
+                _StyleScoreRow(label: '温かみ', score: warmth),
+                const SizedBox(height: 12),
+                _StyleScoreRow(label: 'リスク回避', score: riskGuard),
+                const SizedBox(height: 32),
+                const Text(
+                  'これらのペルソナは、あなたの返信スタイルを決める大事な指標。'
+                  'ときどき見返して、「今のぼくはこう考えてるんだ」って確認してみてね。',
+                  style: TextStyle(fontSize: 13, height: 1.6, color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         ),
       ),

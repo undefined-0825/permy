@@ -15,9 +15,9 @@ void main() {
         ),
       );
 
-      expect(find.text('ホンネの私（True Self）'), findsOneWidget);
+      expect(find.text('普段の自分'), findsOneWidget);
       expect(find.text('Stability'), findsOneWidget);
-      expect(find.text('ヨルノジブン（Night Self）'), findsOneWidget);
+      expect(find.text('夜の私'), findsOneWidget);
     });
 
     testWidgets('Night タイプが正しく表示される', (WidgetTester tester) async {
