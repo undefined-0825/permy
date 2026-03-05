@@ -32,7 +32,7 @@ void main() {
     setUpAll(() async {
       // モックトークンストア初期化
       tokenStore = MockTokenStore();
-      
+
       // APIクライアント初期化（localhost:8000）
       apiClient = ApiClient(
         baseUrl: 'http://localhost:8000',
@@ -50,7 +50,7 @@ void main() {
 
     test('生成: 返信案取得（Free可能）', () async {
       final result = await apiClient.generate(historyText: 'こんにちは');
-      
+
       expect(result.candidates, isNotEmpty);
       expect(result.daily, isNotNull);
       expect(result.plan, anyOf('free', 'pro'));
@@ -61,14 +61,14 @@ void main() {
         historyText: 'お疲れ様です',
         comboId: 1,
       );
-      
+
       expect(result.candidates.length, equals(3));
       expect(result.candidates[0].label, 'A');
     });
 
     test('設定: getSettings取得', () async {
       final settings = await apiClient.getSettings();
-      
+
       expect(settings.settings, isNotNull);
       expect(settings.etag, isNotEmpty);
     });
@@ -77,27 +77,38 @@ void main() {
       // 有効な診断データ（診断に必要な7項目）
       final answers = [
         DiagnosisAnswer(questionId: 'true_priority', choiceId: 'life_balance'),
-        DiagnosisAnswer(questionId: 'true_decision_axis', choiceId: 'low_stress'),
-        DiagnosisAnswer(questionId: 'night_goal_primary', choiceId: 'next_visit'),
+        DiagnosisAnswer(
+          questionId: 'true_decision_axis',
+          choiceId: 'low_stress',
+        ),
+        DiagnosisAnswer(
+          questionId: 'night_goal_primary',
+          choiceId: 'next_visit',
+        ),
         DiagnosisAnswer(questionId: 'night_temperature', choiceId: 'calm_safe'),
-        DiagnosisAnswer(questionId: 'night_game_tolerance', choiceId: 'avoid_game'),
-        DiagnosisAnswer(questionId: 'night_customer_allocation', choiceId: 'wide_touchpoints'),
-        DiagnosisAnswer(questionId: 'night_risk_response', choiceId: 'firefighting_safe'),
+        DiagnosisAnswer(
+          questionId: 'night_game_tolerance',
+          choiceId: 'avoid_game',
+        ),
+        DiagnosisAnswer(
+          questionId: 'night_customer_allocation',
+          choiceId: 'wide_touchpoints',
+        ),
+        DiagnosisAnswer(
+          questionId: 'night_risk_response',
+          choiceId: 'firefighting_safe',
+        ),
       ];
-      
+
       await apiClient.completeDiagnosis(answers);
       // 成功時は例外が出ないことを確認
     });
 
     test('テレメトリ: イベント送信', () async {
       final events = [
-        {
-          'event_name': 'app_opened',
-          'app_version': '1.0.0',
-          'os': 'android',
-        },
+        {'event_name': 'app_opened', 'app_version': '1.0.0', 'os': 'android'},
       ];
-      
+
       await apiClient.postTelemetryEvents(events);
       // 成功時は例外が出ないことを確認
     });
