@@ -27,6 +27,22 @@ class _FakeApiClient implements AppApiClient {
   ) async {}
 
   @override
+  Future<MigrationIssueResult> issueMigrationCode() async {
+    return MigrationIssueResult(
+      migrationCode: '123456789012',
+      expiresAt: '2026-03-05T12:00:00Z',
+    );
+  }
+
+  @override
+  Future<MigrationConsumeResult> consumeMigrationCode(String code) async {
+    return MigrationConsumeResult(
+      token: 'new-token-after-consume',
+      userId: 'user-123',
+    );
+  }
+
+  @override
   Future<GenerateResult> generate({
     required String historyText,
     int comboId = 0,

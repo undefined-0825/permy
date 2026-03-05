@@ -18,6 +18,10 @@ abstract class AppApiClient {
 
   Future<void> completeDiagnosis(List<DiagnosisAnswer> answers);
 
+  Future<MigrationIssueResult> issueMigrationCode();
+
+  Future<MigrationConsumeResult> consumeMigrationCode(String code);
+
   Future<void> postTelemetryEvents(List<Map<String, dynamic>> events);
 }
 
@@ -193,6 +197,56 @@ class ApiClient implements AppApiClient {
       ..['style_risk_guard'] = diagnosis.styleRiskGuard;
 
     await updateSettings(updated, current.etag);
+  }
+
+  @override
+  Future<MigrationIssueResult> issueMigrationCode() async {
+    await bootstrapAuth();
+    return _runWithAuthRetry(() async {
+      final token = await tokenStore.read();
+      final response = await _httpClient.post(
+        Uri.parse('$baseUrl/api/v1/migration/issue'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: '{}',
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final body = _tryJson(response.body) ?? <String, dynamic>{};
+        return MigrationIssueResult.fromJson(body);
+      }
+
+      throw ApiError.fromBody(
+        httpStatus: response.statusCode,
+        body: _tryJson(response.body),
+      );
+    });
+  }
+
+  @override
+  Future<MigrationConsumeResult> consumeMigrationCode(String code) async {
+    final response = await _httpClient.post(
+      Uri.parse('$baseUrl/api/v1/migration/consume'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'migration_code': code}),
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final body = _tryJson(response.body) ?? <String, dynamic>{};
+      final result = MigrationConsumeResult.fromJson(body);
+      // token を保存
+      await tokenStore.write(result.token);
+      return result;
+    }
+
+    throw ApiError.fromBody(
+      httpStatus: response.statusCode,
+      body: _tryJson(response.body),
+    );
   }
 
   @override

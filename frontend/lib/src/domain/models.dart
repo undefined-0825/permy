@@ -175,3 +175,31 @@ class SettingsSnapshot {
   final Map<String, dynamic> settings;
   final String etag;
 }
+
+class MigrationIssueResult {
+  MigrationIssueResult({required this.migrationCode, required this.expiresAt});
+
+  final String migrationCode;
+  final String expiresAt;
+
+  factory MigrationIssueResult.fromJson(Map<String, dynamic> json) {
+    return MigrationIssueResult(
+      migrationCode: json['migration_code']?.toString() ?? '',
+      expiresAt: json['expires_at']?.toString() ?? '',
+    );
+  }
+}
+
+class MigrationConsumeResult {
+  MigrationConsumeResult({required this.token, required this.userId});
+
+  final String token;
+  final String userId;
+
+  factory MigrationConsumeResult.fromJson(Map<String, dynamic> json) {
+    return MigrationConsumeResult(
+      token: json['token']?.toString() ?? '',
+      userId: json['user_id']?.toString() ?? '',
+    );
+  }
+}
