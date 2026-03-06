@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../core/theme.dart';
 import '../domain/models.dart';
 import '../domain/telemetry_event.dart';
 import '../infrastructure/api_client.dart';
@@ -161,49 +160,64 @@ class _GenerateScreenState extends State<GenerateScreen>
                         const SizedBox(height: 12),
                         _ComboSelector(
                           selectedCombo: _comboId,
-                          return Scaffold(
-                            extendBodyBehindAppBar: true,
-                            body: Container(
-                              decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Color(0xFFE8D4F8), // 淡いパープル
-                                    Color(0xFFFCE4EC), // 淡いピンク
-                                  ],
-                                ),
-                              ),
-                              child: CustomScrollView(
-                                slivers: [
-                                  SliverAppBar.large(
-                                    title: const Text('Permy'),
-                                    backgroundColor: Colors.transparent,
-                                    elevation: 0,
-                                    actions: [
-                                      IconButton(
-                                        icon: const Icon(Icons.settings),
-                                        onPressed: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  SettingsScreen(apiClient: widget.apiClient),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ],
+                          isPro: _plan == 'pro',
+                          onChanged: (int value) {
+                            final isPro = value >= 2; // combo 2-5 は Pro のみ
+                            if (isPro && _plan == 'free') {
+                              // Pro 限定オプション選択時は購買画面へ遷移
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (context) => const Scaffold(
+                                    body: Center(
+                                      child: Text('Pro プランへの購買ページ（準備中）'),
+                                    ),
                                   ),
-                                  SliverToBoxAdapter(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                                        children: [
-                                          const Text(
-                                            'ぼくはきみの分身・・・',
-                                            style: TextStyle(color: Color(0xFF374151)),
-                                          ),
+                                ),
+                              );
+                            } else {
+                              setState(() {
+                                _comboId = value;
+                              });
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        PrimaryButton(
+                          onPressed: canGenerate ? _onGeneratePressed : null,
+                          isLoading: _loading,
+                          child: const Text('ぼくが返信案を考えるよ'),
+                        ),
+                        if (_daily != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            '今日の残り: ${_daily!.remaining}/${_daily!.limit}（${_plan.toUpperCase()}）',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.normal,
+                              color: Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
+                        if (_plan == 'pro' && _metaPro != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            '推定メーター: $_metaPro%',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.normal,
+                              color: Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
+                        if (_error != null) ...[
+                          const SizedBox(height: 8),
+                          _ErrorBanner(message: _errorMessage(_error!)),
+                        ],
+                        const SizedBox(height: 12),
+                        ...List.generate(_candidates.length, (index) {
+                          final candidate = _candidates[index];
+                          final isCopied = _copiedLabel == candidate.label;
+                          return Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 400),
@@ -450,7 +464,7 @@ class _ShareStatusCard extends StatelessWidget {
         decoration: const BoxDecoration(
           color: Colors.transparent,
           border: Border(
-            bottom: BorderSide(color: PermyColors.separator, width: 0.5),
+            bottom: BorderSide(color: Color(0xFFE5E7EB), width: 0.5),
           ),
         ),
         child: Column(
@@ -461,7 +475,7 @@ class _ShareStatusCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
-                color: PermyColors.primaryTitle,
+                color: Color(0xFF1A1C1E),
               ),
             ),
             const SizedBox(height: 4),
@@ -470,7 +484,7 @@ class _ShareStatusCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.normal,
-                color: PermyColors.metaText,
+                color: Color(0xFF6B7280),
               ),
             ),
           ],
@@ -509,7 +523,7 @@ class _ComboSelector extends StatelessWidget {
         decoration: const BoxDecoration(
           color: Colors.transparent,
           border: Border(
-            bottom: BorderSide(color: PermyColors.separator, width: 0.5),
+            bottom: BorderSide(color: Color(0xFFE5E7EB), width: 0.5),
           ),
         ),
         child: Column(
@@ -520,7 +534,7 @@ class _ComboSelector extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
-                color: PermyColors.primaryTitle,
+                color: Color(0xFF1A1C1E),
               ),
             ),
             const SizedBox(height: 12),
@@ -539,8 +553,8 @@ class _ComboSelector extends StatelessWidget {
                       label,
                       style: TextStyle(
                         color: isLocked
-                            ? PermyColors.metaText
-                            : PermyColors.bodyText,
+                            ? const Color(0xFF6B7280)
+                            : const Color(0xFF374151),
                         fontSize: 15,
                       ),
                     ),

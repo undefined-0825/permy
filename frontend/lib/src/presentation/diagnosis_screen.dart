@@ -152,6 +152,14 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
 
   void _handleNext() {
     HapticFeedback.mediumImpact();
+    final currentQuestion = diagnosisQuestions[_currentQuestionIndex];
+    if (_answers[currentQuestion.id] == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('選択肢を選んでください')));
+      return;
+    }
+
     if (_isLastQuestion) {
       _submit();
     } else {
@@ -162,11 +170,21 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
   }
 
   Future<void> _submit() async {
+    final hasMissingAnswer = diagnosisQuestions.any(
+      (question) => _answers[question.id] == null,
+    );
+    if (hasMissingAnswer) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('すべての質問に回答してください')));
+      return;
+    }
+
     final answers = diagnosisQuestions
         .map(
           (question) => DiagnosisAnswer(
             questionId: question.id,
-            choiceId: _answers[question.id]!,
+            choiceId: (_answers[question.id] ?? '').toString(),
           ),
         )
         .toList();

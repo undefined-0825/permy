@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../core/theme.dart';
 import '../domain/persona_diagnosis.dart';
 import '../domain/persona_type_helper.dart';
 import '../domain/models.dart';
@@ -121,6 +120,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/images/icons/permy_icon.png',
+              width: 24,
+              height: 24,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(width: 8),
+            const Text('設定'),
+          ],
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
@@ -128,37 +144,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              PermyColors.backgroundStart,
-              PermyColors.backgroundEnd,
+              Color(0xFFE8D4F8), // 淡いパープル
+              Color(0xFFFCE4EC), // 淡いピンク
             ],
           ),
         ),
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar.large(
-              title: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    'assets/images/icons/permy_icon.png',
-                    width: 40,
-                    height: 40,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(width: 8),
-                  const Text('設定'),
-                ],
-              ),
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-            ),
-            if (_loading)
-              SliverFillRemaining(
-                child: const Center(child: CircularProgressIndicator()),
-              )
-            else if (_error != null)
-              SliverFillRemaining(
-                child: Center(
+        child: SafeArea(
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
+              ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -173,11 +168,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ],
                   ),
-                ),
-              )
-            else
-              SliverToBoxAdapter(
-                child: Padding(
+                )
+              : Padding(
                   padding: const EdgeInsets.all(16),
                   child: SingleChildScrollView(
                     child: Column(
@@ -333,7 +325,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       'タップして詳しく見る →',
-                      style: TextStyle(fontSize: 12, color: PermyColors.metaText),
+                      style: TextStyle(fontSize: 12, color: Color(0xFF2563EB)),
                     ),
                   ),
               ],
@@ -366,7 +358,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 8),
         const Text(
           'Pro版ではさらに 4種類の方針が選択できます',
-          style: TextStyle(fontSize: 12, color: PermyColors.bodyText),
+          style: TextStyle(fontSize: 12, color: Color(0xFF374151)),
         ),
       ],
     );
@@ -399,7 +391,11 @@ class SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: PermyTypography.primaryTitle,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: Color(0xFF1A1C1E),
+      ),
     );
   }
 }
@@ -417,12 +413,12 @@ class _SettingRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: PermyColors.bodyText)),
+          Text(label, style: const TextStyle(color: Color(0xFF374151))),
           Text(
             value,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: PermyColors.bodyText,
+              color: Color(0xFF374151),
             ),
           ),
         ],

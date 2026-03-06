@@ -222,10 +222,7 @@ class _StyleScoreRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [Text(label), Text('${(score).toStringAsFixed(0)}/100')],
-        ),
+        Text(label),
         const SizedBox(height: 8),
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
