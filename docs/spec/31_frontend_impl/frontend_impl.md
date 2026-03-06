@@ -582,7 +582,6 @@ await apiClient.post('/api/v1/telemetry/events', {
 ### 12.3 実装で発生した失敗の再発防止（MUST）
 - **遷移テストは導線ごとに1本以上**を追加する。
   - 最低対象：Settings → 再診断 / 端末移行 / About / 診断結果
-- `SingleChildScrollView` 内の要素をテストする際は、`scrollUntilVisible` を使って対象を可視化してから `tap` する。
 - 同一文言が複数表示される可能性があるUIでは、`find.text(..., findsOneWidget)` 前提に依存しない。
   - 必要に応じて `Key` を付与し、`find.byKey` で検証する。
 - クリップボードや非同期コールバック起点の `SnackBar` はタイミング依存で不安定になりうる。

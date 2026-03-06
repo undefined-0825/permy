@@ -306,7 +306,6 @@
   - Settings → 端末移行（TC-FE-15）
   - Settings → About/Privacy（TC-FE-15）
   - Settings → 診断結果詳細（TC-FE-14）
-- `SingleChildScrollView` 配下のボタン検証は、可視化 (`scrollUntilVisible`) を前提手順にする。
 - 同一ラベルが複数ある画面は、`findsOneWidget` に固定せず `Key` または画面種別 (`find.byType`) で検証する。
 
 ---
