@@ -56,7 +56,7 @@ Copilot・AI・開発者は必ずこの順で読む。
 8) `docs/spec/20_backend/backend_spec.md`（バックエンド設計：API/認証/データモデル/本文ゼロ/レート制限/コストガード）  
 9) `docs/spec/21_backend_impl/backend_impl.md`（バックエンド実装仕様：DTO/生成/中ゲート/メタ/OPENAI_DISABLED）  
 10) `docs/spec/30_frontend/frontend_spec.md`（フロント設計：画面遷移/導線/文言/演出/貼り付け欄禁止）  
-11) **`docs/spec/30_frontend/design_rule.md`（デザインコンセプトSSOT：Edge-less Flat、ピンク系グラデーション背景、タイポグラフィ体系、UIコンポーネント定義）**  
+11) **`docs/spec/30_frontend/design_rule.md`（デザインコンセプト："Modern Seamless & Breathable"、Edge-less Flatレイアウト、ピンク系グラデーション、タイポグラフィ・カラーパレット・UIコンポーネント定義）**  
 12) `docs/spec/31_frontend_impl/frontend_impl.md`（フロント実装：状態/DTO/API呼び出し/NG UI/設定同期）  
 13) `docs/spec/31_frontend_impl/native_share_wrappers.md`（Android/iOS共有受信ラッパー：.txtのみ、永続化禁止、受け渡しI/F）
 
@@ -146,8 +146,8 @@ Copilot・AI・開発者は必ずこの順で読む。
 - A/B/Cカード仕様（タップでコピー等）。
 
 ### 4.7 design_rule.md（デザインコンセプトSSOT / 2026-03-06追加）
-- UI/デザインの統一原則："Modern Seamless & Breathable"
-- レイアウト構造、カラーパレット、タイポグラフィ、UIコンポーネント定義。
+- デザイン統一原則："Modern Seamless & Breathable"（Edge-less Flatスタイル）。
+- レイアウト構造（グラデーション背景、マージン、ヘッダー設計）、カラーパレット、タイポグラフィ、UIコンポーネント定義。
 - **全画面・全コンポーネント実装はこのデザインコンセプトに厳密に従う（MUST）**
 
 ### 4.8 frontend_impl.md（フロント実装仕様）

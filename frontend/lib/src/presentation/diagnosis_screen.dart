@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../domain/persona_diagnosis.dart';
 
@@ -17,8 +18,6 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
   String? _error;
   int _currentQuestionIndex = 0;
 
-  bool get _ready => _answers.length == diagnosisQuestions.length;
-
   @override
   Widget build(BuildContext context) {
     final question = diagnosisQuestions[_currentQuestionIndex];
@@ -26,15 +25,15 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
         '${_currentQuestionIndex + 1}/${diagnosisQuestions.length}';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE8D4F8),
       body: Container(
         decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(
-              'assets/images/backgrounds/diagnosis_background.png',
-            ),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(Color(0x66FFFFFF), BlendMode.lighten),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFE8D4F8), // 淡いパープル
+              Color(0xFFFCE4EC), // 淡いピンク
+            ],
           ),
         ),
         child: SafeArea(
@@ -76,7 +75,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: Color(0xFF1A1C1E),
                       ),
                     ),
                   ],
@@ -95,10 +94,10 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                       Text(
                         question.title,
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                          height: 1.5,
+                          color: Color(0xFF1A1C1E),
+                          height: 1.4,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -149,9 +148,9 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFFFB3C1),
                             foregroundColor: Colors.white,
-                            disabledBackgroundColor: Colors.grey.shade300,
+                            disabledBackgroundColor: const Color(0xFFE6DCE8),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(28),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             elevation: 0,
                           ),
@@ -185,9 +184,6 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
       ),
     );
   }
-
-  bool get _canProceed =>
-      _answers.containsKey(diagnosisQuestions[_currentQuestionIndex].id);
 
   bool get _isLastQuestion =>
       _currentQuestionIndex == diagnosisQuestions.length - 1;
@@ -232,7 +228,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
   }
 }
 
-class _ChoiceCard extends StatelessWidget {
+class _ChoiceCard extends StatefulWidget {
   const _ChoiceCard({
     required this.label,
     required this.isSelected,
@@ -244,42 +240,51 @@ class _ChoiceCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<_ChoiceCard> createState() => _ChoiceCardState();
+}
+
+class _ChoiceCardState extends State<_ChoiceCard> {
+  bool _isHovering = false;
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          widget.onTap();
+          HapticFeedback.lightImpact();
+        },
+        onHover: (hovering) {
+          setState(() => _isHovering = hovering);
+        },
+        splashColor: const Color(0xFFF3F4F6),
+        highlightColor: const Color(0xFFF3F4F6),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          height: 72,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isSelected ? const Color(0xFFFF69B4) : Colors.transparent,
-              width: 3,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+            color: _isHovering ? const Color(0xFFF3F4F6) : Colors.transparent,
+            border: Border(
+              bottom: BorderSide(
+                color: const Color(0xFFE5E7EB),
+                width: 0.5,
               ),
-            ],
+            ),
           ),
           child: Row(
             children: [
               // プレースホルダー画像エリア（後でキャラクター画像に差し替え）
               Container(
-                width: 80,
-                height: 80,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: Colors.pink.shade50,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   Icons.image_outlined,
-                  size: 40,
+                  size: 20,
                   color: Colors.pink.shade200,
                 ),
               ),
@@ -287,21 +292,21 @@ class _ChoiceCard extends StatelessWidget {
               // テキスト
               Expanded(
                 child: Text(
-                  label,
+                  widget.label,
                   style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                    height: 1.4,
+                    fontSize: 15,
+                    fontWeight: FontWeight.normal,
+                    color: Color(0xFF374151),
+                    height: 1.6,
                   ),
                 ),
               ),
               // チェックマーク
-              if (isSelected)
+              if (widget.isSelected)
                 const Icon(
                   Icons.check_circle,
                   color: Color(0xFFFF69B4),
-                  size: 28,
+                  size: 24,
                 ),
             ],
           ),

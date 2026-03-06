@@ -123,12 +123,13 @@ class _GenerateScreenState extends State<GenerateScreen>
       extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(
-              'assets/images/backgrounds/diagnosis_background.png',
-            ),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(Color(0x66FFFFFF), BlendMode.lighten),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFE8D4F8), // 淡いパープル
+              Color(0xFFFCE4EC), // 淡いピンク
+            ],
           ),
         ),
         child: SafeArea(
@@ -212,14 +213,22 @@ class _GenerateScreenState extends State<GenerateScreen>
                           const SizedBox(height: 8),
                           Text(
                             '今日の残り: ${_daily!.remaining}/${_daily!.limit}（${_plan.toUpperCase()}）',
-                            style: const TextStyle(color: Colors.black87),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.normal,
+                              color: Color(0xFF6B7280),
+                            ),
                           ),
                         ],
                         if (_plan == 'pro' && _metaPro != null) ...[
                           const SizedBox(height: 8),
                           Text(
                             '推定メーター: $_metaPro%',
-                            style: const TextStyle(color: Colors.black87),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.normal,
+                              color: Color(0xFF6B7280),
+                            ),
                           ),
                         ],
                         if (_error != null) ...[
@@ -470,15 +479,36 @@ class _ShareStatusCard extends StatelessWidget {
         ? (fileName == null ? '.txtを受け取ったよ' : '$fileName を受け取ったよ')
         : 'LINEでトーク履歴を送信して、このアプリに共有して';
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: const BoxDecoration(
+          color: Colors.transparent,
+          border: Border(
+            bottom: BorderSide(color: Color(0xFFE5E7EB), width: 0.5),
+          ),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1C1E),
+              ),
+            ),
             const SizedBox(height: 4),
-            Text(description),
+            Text(
+              description,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.normal,
+                color: Color(0xFF6B7280),
+              ),
+            ),
           ],
         ),
       ),
@@ -508,13 +538,27 @@ class _ComboSelector extends StatelessWidget {
       ('落とす（恋愛寄せ）', true), // 5: Pro
     ];
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: const BoxDecoration(
+          color: Colors.transparent,
+          border: Border(
+            bottom: BorderSide(color: Color(0xFFE5E7EB), width: 0.5),
+          ),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('生成方針', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              '生成方針',
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1C1E),
+              ),
+            ),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
@@ -529,13 +573,12 @@ class _ComboSelector extends StatelessWidget {
                     enabled: !isLocked,
                     child: Text(
                       label,
-                      style: isLocked
-                          ? TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            )
-                          : null,
+                      style: TextStyle(
+                        color: isLocked
+                            ? const Color(0xFF6B7280)
+                            : const Color(0xFF374151),
+                        fontSize: 15,
+                      ),
                     ),
                   );
                 }),

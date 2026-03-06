@@ -64,13 +64,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/backgrounds/diagnosis_background.png'),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-              Color(0x66FFFFFF),
-              BlendMode.lighten,
-            ),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFE8D4F8), // 淡いパープル
+              Color(0xFFFCE4EC), // 淡いピンク
+            ],
           ),
         ),
         child: SafeArea(
@@ -132,6 +132,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Expanded(
                           child: ElevatedButton(
                             onPressed: _nextStep,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFFB3C1),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
                             child: Text(_currentStep == 3 ? 'ペルミィを作る' : '次へ'),
                           ),
                         ),
@@ -162,13 +170,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 24),
           const Text(
             'ペルミィへようこそ',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1C1E),
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           const Text(
             'ぼくはきみの分身。\nLINEのトーク履歴から、\nぴったりな返信を作るよ。',
-            style: TextStyle(fontSize: 16, color: Colors.black87),
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.normal,
+              color: Color(0xFF374151),
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -186,13 +202,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 24),
           const Text(
             'トーク履歴を送ろう',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1C1E),
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           const Text(
-            'LINEで、会話を長押し。\n『トーク履歴を送信』を選ぶ。\nテキストファイルでぼくに送ってね。',
-            style: TextStyle(fontSize: 16, color: Colors.black87),
+            'LINEで、会話を長押し。\n【トーク履歴を送信】を選ぶ。\nテキストファイルでぼくに送ってね。',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.normal,
+              color: Color(0xFF374151),
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -210,13 +234,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 24),
           const Text(
             'プライバシー保護',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1C1E),
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           const Text(
             'トークの本文は保存されません。\n生成した返信案だけ、\nあなたがコピーして送ります。\n完全にあなたが操作。',
-            style: TextStyle(fontSize: 16, color: Colors.black87),
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.normal,
+              color: Color(0xFF374151),
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -234,13 +266,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 24),
           const Text(
             'さあ、始めよう',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1C1E),
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           const Text(
-            'ぼくに任せて。\nあなただけの返信をつくる。\nさあ、変身しよう。',
-            style: TextStyle(fontSize: 16, color: Colors.black87),
+            'ぼくに䮵せて。\nあなただけの返信をつくる。\nさあ、変身しよう。',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.normal,
+              color: Color(0xFF374151),
+            ),
             textAlign: TextAlign.center,
           ),
         ],

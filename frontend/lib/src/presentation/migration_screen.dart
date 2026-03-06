@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 
 import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
-import '../infrastructure/token_store.dart';
 
 class MigrationScreen extends StatefulWidget {
   const MigrationScreen({required this.apiClient, super.key});
@@ -136,13 +135,13 @@ class _MigrationScreenState extends State<MigrationScreen> {
       ),
       body: Container(
         decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/backgrounds/diagnosis_background.png'),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-              Color(0x66FFFFFF),
-              BlendMode.lighten,
-            ),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFE8D4F8), // 淡いパープル
+              Color(0xFFFCE4EC), // 淡いピンク
+            ],
           ),
         ),
         child: SafeArea(
@@ -172,11 +171,23 @@ class _MigrationScreenState extends State<MigrationScreen> {
       children: [
         const Text(
           '端末を移行しますか？',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1A1C1E),
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),
-        const Text('このアプリのアカウント情報を別の端末に移行できます。', textAlign: TextAlign.center),
+        const Text(
+          'このアプリのアカウント情報を別の端末に移行できます。',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.normal,
+            color: Color(0xFF374151),
+          ),
+          textAlign: TextAlign.center,
+        ),
         const SizedBox(height: 32),
         ElevatedButton(
           onPressed: _loading ? null : _handleIssueMigration,

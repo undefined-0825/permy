@@ -41,13 +41,13 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
       extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/backgrounds/diagnosis_background.png'),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-              Color(0x66FFFFFF),
-              BlendMode.lighten,
-            ),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFE8D4F8), // 淡いパープル
+              Color(0xFFFCE4EC), // 淡いピンク
+            ],
           ),
         ),
         child: SafeArea(
