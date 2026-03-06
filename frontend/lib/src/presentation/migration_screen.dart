@@ -331,11 +331,15 @@ class _MigrationScreenState extends State<MigrationScreen> {
           const SizedBox(height: 32),
           TextField(
             controller: _codeInputController,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: '移行コード（12桁）',
               hintText: '000000000000',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+              border: UnderlineInputBorder(),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                  color: Color(0xFFFFB3C1),
+                  width: 2,
+                ),
               ),
             ),
             keyboardType: TextInputType.number,
