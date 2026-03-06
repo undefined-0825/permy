@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
+import 'widgets/primary_button.dart';
 
 class MigrationScreen extends StatefulWidget {
   const MigrationScreen({required this.apiClient, super.key});
@@ -191,20 +192,15 @@ class _MigrationScreenState extends State<MigrationScreen> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 32),
-        ElevatedButton(
+        PrimaryButton(
           onPressed: _loading
               ? null
               : () {
                   HapticFeedback.mediumImpact();
                   _handleIssueMigration();
                 },
-          child: _loading
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('この端末から移行コードを発行'),
+          isLoading: _loading,
+          child: const Text('この端末から移行コードを発行'),
         ),
         const SizedBox(height: 16),
         OutlinedButton(
@@ -348,20 +344,15 @@ class _MigrationScreenState extends State<MigrationScreen> {
             style: const TextStyle(fontSize: 20, letterSpacing: 1),
           ),
           const SizedBox(height: 24),
-          ElevatedButton(
+          PrimaryButton(
             onPressed: _loading
                 ? null
                 : () {
                     HapticFeedback.mediumImpact();
                     _handleConsumeMigration();
                   },
-            child: _loading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('アカウントを引き継ぐ'),
+            isLoading: _loading,
+            child: const Text('アカウントを引き継ぐ'),
           ),
           const SizedBox(height: 12),
           OutlinedButton(

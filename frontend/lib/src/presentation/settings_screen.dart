@@ -10,6 +10,7 @@ import 'diagnosis_screen.dart';
 import 'migration_screen.dart';
 import 'onboarding_screen.dart';
 import 'persona_diagnosis_result_screen.dart';
+import 'widgets/primary_button.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({required this.apiClient, super.key});
@@ -158,23 +159,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       Text('エラー: ${_error!.errorCode}'),
                       const SizedBox(height: 16),
-                      SizedBox(
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            HapticFeedback.mediumImpact();
-                            _loadSettings();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFFB3C1),
-                            foregroundColor: const Color(0xFFFFFFFF),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: const Text('再読込'),
-                        ),
+                      PrimaryButton(
+                        onPressed: () {
+                          HapticFeedback.mediumImpact();
+                          _loadSettings();
+                        },
+                        child: const Text('再読込'),
                       ),
                     ],
                   ),
@@ -191,23 +181,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const SizedBox(height: 32),
                         const SectionHeader(title: 'ペルソナ再診断'),
                         const SizedBox(height: 12),
-                        SizedBox(
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              HapticFeedback.mediumImpact();
-                              _startRediagnosis();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFFB3C1),
-                              foregroundColor: const Color(0xFFFFFFFF),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: const Text('再診断する'),
-                          ),
+                        PrimaryButton(
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            _startRediagnosis();
+                          },
+                          child: const Text('再診断する'),
                         ),
                         const SizedBox(height: 32),
                         SectionHeader(title: '生成設定'),
@@ -220,119 +199,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const SizedBox(height: 32),
                         SectionHeader(title: '端末移行'),
                         const SizedBox(height: 12),
-                        SizedBox(
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              HapticFeedback.mediumImpact();
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => MigrationScreen(
-                                    apiClient: widget.apiClient,
-                                  ),
+                        PrimaryButton(
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => MigrationScreen(
+                                  apiClient: widget.apiClient,
                                 ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFFB3C1),
-                              foregroundColor: const Color(0xFFFFFFFF),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
                               ),
-                              elevation: 0,
-                            ),
-                            child: const Text('端末移行の設定'),
-                          ),
+                            );
+                          },
+                          child: const Text('端末移行の設定'),
                         ),
                         const SizedBox(height: 32),
                         SectionHeader(title: 'チュートリアル'),
                         const SizedBox(height: 12),
-                        SizedBox(
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              HapticFeedback.mediumImpact();
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (onboardingContext) =>
-                                      OnboardingScreen(
-                                        onCompleted: () {
-                                          if (!onboardingContext.mounted)
-                                            return;
-                                          Navigator.of(onboardingContext).pop();
-                                        },
-                                      ),
-                                ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFFB3C1),
-                              foregroundColor: const Color(0xFFFFFFFF),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                        PrimaryButton(
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (onboardingContext) =>
+                                    OnboardingScreen(
+                                      onCompleted: () {
+                                        if (!onboardingContext.mounted)
+                                          return;
+                                        Navigator.of(onboardingContext).pop();
+                                      },
+                                    ),
                               ),
-                              elevation: 0,
-                            ),
-                            child: const Text('チュートリアルをもう一度確認する'),
-                          ),
+                            );
+                          },
+                          child: const Text('チュートリアルをもう一度確認する'),
                         ),
                         const SizedBox(height: 32),
                         SectionHeader(title: 'もっと知る'),
                         const SizedBox(height: 12),
-                        SizedBox(
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              HapticFeedback.mediumImpact();
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const AboutPrivacyScreen(),
-                                ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFFB3C1),
-                              foregroundColor: const Color(0xFFFFFFFF),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                        PrimaryButton(
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const AboutPrivacyScreen(),
                               ),
-                              elevation: 0,
-                            ),
-                            child: const Text('このアプリについて'),
-                          ),
+                            );
+                          },
+                          child: const Text('このアプリについて'),
                         ),
                         const SizedBox(height: 32),
-                        SizedBox(
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: _saving
-                                ? null
-                                : () {
-                                    HapticFeedback.mediumImpact();
-                                    _saveSettings();
-                                  },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFFB3C1),
-                              foregroundColor: const Color(0xFFFFFFFF),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: _saving
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Color(0xFFFFFFFF),
-                                      ),
-                                    ),
-                                  )
-                                : const Text('保存'),
-                          ),
+                        PrimaryButton(
+                          onPressed: _saving
+                              ? null
+                              : () {
+                                  HapticFeedback.mediumImpact();
+                                  _saveSettings();
+                                },
+                          isLoading: _saving,
+                          child: const Text('保存'),
                         ),
                       ],
                     ),

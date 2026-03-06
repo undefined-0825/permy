@@ -9,6 +9,7 @@ import '../infrastructure/api_client.dart';
 import '../infrastructure/share_receiver.dart';
 import '../infrastructure/telemetry_queue.dart';
 import 'settings_screen.dart';
+import 'widgets/primary_button.dart';
 
 class GenerateScreen extends StatefulWidget {
   const GenerateScreen({
@@ -181,33 +182,10 @@ class _GenerateScreenState extends State<GenerateScreen>
                           },
                         ),
                         const SizedBox(height: 12),
-                        SizedBox(
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: canGenerate ? _onGeneratePressed : null,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFFB3C1),
-                              foregroundColor: const Color(0xFFFFFFFF),
-                              disabledBackgroundColor: const Color(0xFFE6DCE8),
-                              disabledForegroundColor: const Color(0xFF6B7280),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(28),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: _loading
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Color(0xFFFFFFFF),
-                                      ),
-                                    ),
-                                  )
-                                : const Text('ぼくが返信案を考えるよ'),
-                          ),
+                        PrimaryButton(
+                          onPressed: canGenerate ? _onGeneratePressed : null,
+                          isLoading: _loading,
+                          child: const Text('ぼくが返信案を考えるよ'),
                         ),
                         if (_daily != null) ...[
                           const SizedBox(height: 8),

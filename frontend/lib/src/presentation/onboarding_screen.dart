@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'widgets/primary_button.dart';
+
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onCompleted;
 
@@ -132,19 +134,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                         if (_currentStep > 0) const SizedBox(width: 12),
                         Expanded(
-                          child: ElevatedButton(
+                          child: PrimaryButton(
                             onPressed: () {
                               HapticFeedback.mediumImpact();
                               _nextStep();
                             },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFFB3C1),
-                              foregroundColor: const Color(0xFFFFFFFF),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 0,
-                            ),
                             child: Text(_currentStep == 3 ? 'ペルミィを作る' : '次へ'),
                           ),
                         ),

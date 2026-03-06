@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../domain/persona_diagnosis.dart';
+import 'widgets/primary_button.dart';
 
 class DiagnosisScreen extends StatefulWidget {
   const DiagnosisScreen({required this.onCompleted, super.key});
@@ -140,38 +141,15 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: !_saving ? _handleNext : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFFB3C1),
-                            foregroundColor: const Color(0xFFFFFFFF),
-                            disabledBackgroundColor: const Color(0xFFE6DCE8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
+                      PrimaryButton(
+                        onPressed: !_saving ? _handleNext : null,
+                        isLoading: _saving,
+                        child: const Text(
+                          'もう一度',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
-                          child: _saving
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Color(0xFFFFFFFF),
-                                    ),
-                                  ),
-                                )
-                              : const Text(
-                                  'もう一度',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
                         ),
                       ),
                     ],
