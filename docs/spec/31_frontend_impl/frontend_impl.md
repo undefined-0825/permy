@@ -305,11 +305,18 @@ ios/
   4. **チェックマーク**（選択時のみ表示）：
      - Icon(Icons.check_circle, color: 0xFFFF69B4, size: 28)
 
-**エラー表示**（ボタン上部）：
+**エラー表示**（ボタン上部、ペルミィトーン統一）：
 - if (_error != null) で条件表示
 - Padding(horizontal: 16)
 - Text：赤文字（Colors.red）、fontWeight bold、textAlign center
-- 表示内容：「うまく反映できなかった。少し待って、もう一度」
+- 表示内容：`error_code` に基づいて以下を返す（`error_codes.md` を正とする不）：
+  - `AUTH_INVALID` / `AUTH_REQUIRED`：「認証を更新したよ。もう一度ためしてね」
+  - `VALIDATION_ERROR`：「うまく読めなかった。もう一度ためしてね」
+  - `RATE_LIMITED`：「少し混み合ってるみたい。少し待って、もう一度」
+  - `UPSTREAM_UNAVAILABLE` / `UPSTREAM_TIMEOUT`：「今は不安定みたい。少し待って、もう一度」
+  - `INTERNAL_ERROR` / `STORAGE_UNAVAILABLE`：「サーバーが不安定みたい。少し待って、もう一度」
+  - その他：「うまく反映できなかった。少し待って、もう一度」
+- エラー発生後、ユーザーは「完了」ボタン（"この内容で進む"）を再度タップして retry。呼び出し側（Settings）で retry 後の結果判定を担当
 
 **次へボタン**（下部固定）：
 - Padding(all: 16) 内に SizedBox(width: double.infinity, height: 56)
@@ -355,7 +362,21 @@ ios/
   - タップでClipboardへコピー
   - 0.4秒のハイライトフィードバック
 
-### 7.3.1 Persona Diagnosis Result Screen（新規画面）
+#### 7.3.1 Generate 画面のエラーハンドリング
+- **エラー発生箇所**：`/generate` 呼び出し失敗時
+- **エラー表示**：_ErrorBanner ウィジェット（の背景色：淡赤、text：赤文字）
+- **メッセージング**：`error_code` に基づいて以下を返す（`error_codes.md` を正とする）：
+  - `AUTH_INVALID` / `AUTH_REQUIRED`：「認証を更新したよ。もう一度ためしてね」
+  - `SETTINGS_VERSION_CONFLICT` / `ETAG_MISMATCH`：「設定が更新されていたみたい。読み込み直してね」
+  - `RATE_LIMITED`：「少し混み合ってるみたい。少し待って、もう一度」
+  - `DAILY_LIMIT_REACHED` / `DAILY_LIMIT_EXCEEDED`：「今日はここまで。続きは明日か、Proで使える」
+  - `PLAN_REQUIRED`：「この機能はProで使えるよ」
+  - `OPENAI_DISABLED`：「この環境では生成を止めているよ」
+  - `UPSTREAM_UNAVAILABLE` / `UPSTREAM_TIMEOUT`：「今は不安定みたい。少し待って、もう一度」
+  - その他：「うまく読めなかった。もう一度共有して」
+- **Retry 導線**：エラー表示後、ユーザーは「生成」ボタンを再度タップして retry。自動リトライは行わない（ユーザーの明示的操作）
+
+### 7.3.2 Persona Diagnosis Result Screen（新規画面）
 - **目的**：診断されたペルソナを詳細表示。Settings から タップエントリーポイント
 - **表示内容**（読み取り専用）：
   1) 普段の自分：True Self（5タイプ：Stability/Independence/Approval/Realism/Romance）

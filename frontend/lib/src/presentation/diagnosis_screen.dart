@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../domain/models.dart';
 import '../domain/persona_diagnosis.dart';
 import 'widgets/primary_button.dart';
 
@@ -195,16 +196,36 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
 
     try {
       await widget.onCompleted(answers);
-    } catch (_) {
+    } on ApiError catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'うまく反映できなかった。少し待って、もう一度';
+        _error = _getErrorMessage(e);
       });
     } finally {
       if (!mounted) return;
       setState(() {
         _saving = false;
       });
+    }
+  }
+
+  String _getErrorMessage(ApiError error) {
+    switch (error.errorCode) {
+      case 'AUTH_INVALID':
+      case 'AUTH_REQUIRED':
+        return '認証を更新したよ。もう一度ためしてね';
+      case 'VALIDATION_ERROR':
+        return 'うまく読めなかった。もう一度ためしてね';
+      case 'RATE_LIMITED':
+        return '少し混み合ってるみたい。少し待って、もう一度';
+      case 'UPSTREAM_UNAVAILABLE':
+      case 'UPSTREAM_TIMEOUT':
+        return '今は不安定みたい。少し待って、もう一度';
+      case 'INTERNAL_ERROR':
+      case 'STORAGE_UNAVAILABLE':
+        return 'サーバーが不安定みたい。少し待って、もう一度';
+      default:
+        return 'うまく反映できなかった。少し待って、もう一度';
     }
   }
 }
