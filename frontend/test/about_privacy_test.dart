@@ -15,8 +15,8 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: AboutPrivacyScreen()));
 
       expect(find.text('Permyについて'), findsOneWidget);
-      // ScrollView内のテキストは find.byType で Widget の存在確認
-      expect(find.byType(SingleChildScrollView), findsOneWidget);
+      // SliverAppBar.large() 化により CustomScrollView を使用
+      expect(find.byType(CustomScrollView), findsOneWidget);
     });
 
     testWidgets('プライバシーセクションが表示される', (WidgetTester tester) async {

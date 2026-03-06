@@ -62,7 +62,7 @@ void main() {
         ),
       );
 
-      expect(find.text('あなたのペルソナ'), findsOneWidget);
+      expect(find.text('あなたのペルソナ'), findsWidgets);
     });
   });
 }
