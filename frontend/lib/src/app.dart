@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/theme.dart';
 import 'domain/persona_diagnosis.dart';
 import 'domain/telemetry_event.dart';
 import 'infrastructure/api_client.dart';
@@ -18,7 +19,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Permy',
-      theme: ThemeData(useMaterial3: true),
+      theme: PermyTheme.lightTheme,
       home: const AppRoot(),
     );
   }
