@@ -11,7 +11,9 @@ void main() {
       WidgetTester tester,
     ) async {
       // セットアップ：UPSTREAM_UNAVAILABLE エラーをシミュレート
-      Future<void> onCompletedWithError(List<DiagnosisAnswer> answers) async {
+      Future<DiagnosisResult> onCompletedWithError(
+        List<DiagnosisAnswer> answers,
+      ) async {
         throw ApiError(
           httpStatus: 503,
           errorCode: 'UPSTREAM_UNAVAILABLE',
@@ -39,7 +41,7 @@ void main() {
     });
 
     testWidgets('RATE_LIMITED エラー時の適切なメッセージ', (WidgetTester tester) async {
-      Future<void> onCompletedWithRateLimit(
+      Future<DiagnosisResult> onCompletedWithRateLimit(
         List<DiagnosisAnswer> answers,
       ) async {
         throw ApiError(
@@ -68,7 +70,7 @@ void main() {
     });
 
     testWidgets('AUTH_INVALID エラー時の適切なメッセージ', (WidgetTester tester) async {
-      Future<void> onCompletedWithAuthError(
+      Future<DiagnosisResult> onCompletedWithAuthError(
         List<DiagnosisAnswer> answers,
       ) async {
         throw ApiError(
@@ -97,7 +99,7 @@ void main() {
     });
 
     testWidgets('複数の error_code でのメッセージング', (WidgetTester tester) async {
-      Future<void> onCompletedWithValidationError(
+      Future<DiagnosisResult> onCompletedWithValidationError(
         List<DiagnosisAnswer> answers,
       ) async {
         throw ApiError(

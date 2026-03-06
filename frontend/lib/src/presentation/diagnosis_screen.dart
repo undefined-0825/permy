@@ -8,7 +8,8 @@ import 'widgets/primary_button.dart';
 class DiagnosisScreen extends StatefulWidget {
   const DiagnosisScreen({required this.onCompleted, super.key});
 
-  final Future<void> Function(List<DiagnosisAnswer> answers) onCompleted;
+  final Future<DiagnosisResult> Function(List<DiagnosisAnswer> answers)
+  onCompleted;
 
   @override
   State<DiagnosisScreen> createState() => _DiagnosisScreenState();
@@ -19,12 +20,14 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
   bool _saving = false;
   String? _error;
   int _currentQuestionIndex = 0;
+  DiagnosisResult? _diagnosisResult;
 
   @override
   Widget build(BuildContext context) {
-    final question = diagnosisQuestions[_currentQuestionIndex];
-    final progress =
-        '${_currentQuestionIndex + 1}/${diagnosisQuestions.length}';
+    final isShowingResult = _diagnosisResult != null;
+    final progress = isShowingResult
+        ? '完了'
+        : '${_currentQuestionIndex + 1}/${diagnosisQuestions.length}';
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -64,7 +67,12 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                   padding: EdgeInsets.zero,
                   icon: const Icon(Icons.arrow_back, size: 20),
                   onPressed: () {
-                    if (_currentQuestionIndex > 0) {
+                    if (isShowingResult) {
+                      // 結果ページから戻る場合は質問ページに戻る
+                      setState(() {
+                        _diagnosisResult = null;
+                      });
+                    } else if (_currentQuestionIndex > 0) {
                       setState(() => _currentQuestionIndex--);
                     } else {
                       Navigator.of(context).pop();
@@ -73,75 +81,10 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                 ),
               ),
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 24),
-                    // 質問文
-                    Text(
-                      question.title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A1C1E),
-                        height: 1.4,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
-                    // 選択肢カード
-                    ...question.choices.map((choice) {
-                      final isSelected = _answers[question.id] == choice.id;
-                      return _ChoiceCard(
-                        label: choice.label,
-                        isSelected: isSelected,
-                        onTap: () {
-                          setState(() {
-                            _answers[question.id] = choice.id;
-                          });
-                          // 選択肢を選んだら自動で次へ進む
-                          Future.delayed(
-                            const Duration(milliseconds: 300),
-                            _handleNext,
-                          );
-                        },
-                      );
-                    }),
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
-            ),
-            // エラー表示
-            if (_error != null)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _error!,
-                        style: const TextStyle(
-                          color: Color(0xFFEF4444),
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      PrimaryButton(
-                        onPressed: !_saving ? _handleNext : null,
-                        isLoading: _saving,
-                        child: const Text('もう一度'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            if (isShowingResult)
+              _buildResultSlider()
+            else
+              _buildQuestionSlider(),
           ],
         ),
       ),
@@ -195,15 +138,16 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
     });
 
     try {
-      await widget.onCompleted(answers);
+      final result = await widget.onCompleted(answers);
+      if (!mounted) return;
+      setState(() {
+        _diagnosisResult = result;
+        _saving = false;
+      });
     } on ApiError catch (e) {
       if (!mounted) return;
       setState(() {
         _error = _getErrorMessage(e);
-      });
-    } finally {
-      if (!mounted) return;
-      setState(() {
         _saving = false;
       });
     }
@@ -227,6 +171,251 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
       default:
         return 'うまく反映できなかった。少し待って、もう一度';
     }
+  }
+
+  Widget _buildQuestionSlider() {
+    final question = diagnosisQuestions[_currentQuestionIndex];
+
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 24),
+            // 質問文
+            Text(
+              question.title,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1C1E),
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            // 選択肢カード
+            ...question.choices.map((choice) {
+              final isSelected = _answers[question.id] == choice.id;
+              return _ChoiceCard(
+                label: choice.label,
+                isSelected: isSelected,
+                onTap: () {
+                  setState(() {
+                    _answers[question.id] = choice.id;
+                  });
+                  // 選択肢を選んだら自動で次へ進む
+                  Future.delayed(
+                    const Duration(milliseconds: 300),
+                    _handleNext,
+                  );
+                },
+              );
+            }),
+            const SizedBox(height: 24),
+            // エラー表示
+            if (_error != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                _error!,
+                style: const TextStyle(
+                  color: Color(0xFFEF4444),
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              PrimaryButton(
+                onPressed: !_saving ? _handleNext : null,
+                isLoading: _saving,
+                child: const Text('もう一度'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultSlider() {
+    final result = _diagnosisResult!;
+
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 24),
+            // タイトル
+            const Text(
+              'あなたのペルソナが決まりました',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1C1E),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            // 普段の自分
+            _buildResultSection(
+              title: '普段の自分',
+              value: result.trueSelfType,
+              description: '日常で大事にしていることを表しています',
+            ),
+            const SizedBox(height: 24),
+            // 夜の私
+            _buildResultSection(
+              title: '夜の私',
+              value: result.nightSelfType,
+              description: 'LINE返信時のあなたのスタイルを表しています',
+            ),
+            const SizedBox(height: 24),
+            // スタイルスコア
+            _buildStyleScores(result),
+            const SizedBox(height: 32),
+            // わかりました ボタン
+            PrimaryButton(
+              onPressed: !_saving ? _onResultConfirmed : null,
+              isLoading: _saving,
+              child: const Text('わかりました'),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultSection({
+    required String title,
+    required String value,
+    required String description,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFFB3C1), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF6B7280),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1C1E),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            description,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.normal,
+              color: Color(0xFF9CA3AF),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStyleScores(DiagnosisResult result) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFFB3C1), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'スタイルスコア',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF6B7280),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildScoreRow('主張度', result.styleAssertiveness),
+          const SizedBox(height: 12),
+          _buildScoreRow('温かみ', result.styleWarmth),
+          const SizedBox(height: 12),
+          _buildScoreRow('リスク回避', result.styleRiskGuard),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScoreRow(String label, int value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF374151),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: value / 100,
+                  minHeight: 8,
+                  backgroundColor: const Color(0xFFE5E7EB),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Color.lerp(
+                      const Color(0xFFFF69B4),
+                      const Color(0xFFFFB3C1),
+                      1 - (value / 100),
+                    )!,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '$value%',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF6B7280),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Future<void> _onResultConfirmed() async {
+    // 結果ページを閉じて Settings に戻る
+    if (!mounted) return;
+    Navigator.of(context).pop(true);
   }
 }
 

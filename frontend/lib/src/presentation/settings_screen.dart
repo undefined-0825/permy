@@ -101,10 +101,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final updated = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (diagnosisContext) => DiagnosisScreen(
-          onCompleted: (List<DiagnosisAnswer> answers) async {
-            await widget.apiClient.completeDiagnosis(answers);
-            if (!diagnosisContext.mounted) return;
-            Navigator.of(diagnosisContext).pop(true);
+          onCompleted: (List<DiagnosisAnswer> answers) {
+            return widget.apiClient.completeDiagnosis(answers).then((result) {
+              if (!diagnosisContext.mounted) return result;
+              Navigator.of(diagnosisContext).pop(true);
+              return result;
+            });
           },
         ),
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:sample_app/src/domain/models.dart';
+import 'package:sample_app/src/domain/persona_diagnosis.dart';
 import 'package:sample_app/src/infrastructure/api_client.dart';
 import 'package:sample_app/src/presentation/migration_screen.dart';
 
@@ -34,7 +35,19 @@ class MockMigrationApiClient implements AppApiClient {
   ) async {}
 
   @override
-  Future<void> completeDiagnosis(List answers) async {}
+  Future<DiagnosisResult> completeDiagnosis(
+    List<DiagnosisAnswer> answers,
+  ) async {
+    return DiagnosisResult(
+      trueSelfType: 'Stability',
+      nightSelfType: 'VisitPush',
+      personaGoalPrimary: 'romance',
+      personaGoalSecondary: null,
+      styleAssertiveness: 50,
+      styleWarmth: 60,
+      styleRiskGuard: 70,
+    );
+  }
 
   @override
   Future<MigrationIssueResult> issueMigrationCode() async {

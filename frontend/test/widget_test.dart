@@ -13,7 +13,19 @@ class _FakeApiClient implements AppApiClient {
   Future<void> bootstrapAuth() async {}
 
   @override
-  Future<void> completeDiagnosis(List<DiagnosisAnswer> answers) async {}
+  Future<DiagnosisResult> completeDiagnosis(
+    List<DiagnosisAnswer> answers,
+  ) async {
+    return DiagnosisResult(
+      trueSelfType: 'Stability',
+      nightSelfType: 'VisitPush',
+      personaGoalPrimary: 'romance',
+      personaGoalSecondary: null,
+      styleAssertiveness: 50,
+      styleWarmth: 60,
+      styleRiskGuard: 70,
+    );
+  }
 
   @override
   Future<SettingsSnapshot> getSettings() async {

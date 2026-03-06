@@ -16,7 +16,7 @@ abstract class AppApiClient {
 
   Future<void> updateSettings(Map<String, dynamic> settings, String etag);
 
-  Future<void> completeDiagnosis(List<DiagnosisAnswer> answers);
+  Future<DiagnosisResult> completeDiagnosis(List<DiagnosisAnswer> answers);
 
   Future<MigrationIssueResult> issueMigrationCode();
 
@@ -137,7 +137,9 @@ class ApiClient implements AppApiClient {
   }
 
   @override
-  Future<void> completeDiagnosis(List<DiagnosisAnswer> answers) async {
+  Future<DiagnosisResult> completeDiagnosis(
+    List<DiagnosisAnswer> answers,
+  ) async {
     await bootstrapAuth();
 
     final diagnosis = await _runWithAuthRetry(() async {
@@ -200,6 +202,8 @@ class ApiClient implements AppApiClient {
       ..['style_risk_guard'] = diagnosis.styleRiskGuard;
 
     await updateSettings(updated, current.etag);
+
+    return diagnosis;
   }
 
   @override
