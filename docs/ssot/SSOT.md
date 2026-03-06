@@ -1,6 +1,6 @@
 # docs/ssot/SSOT.md — Project Permy（Copilot作業用 SSOT / 入口）
 
-**Last Updated (JST):** 2026-03-02 04:05:00 +0900
+**Last Updated (JST):** 2026-03-06 (デザインコンセプトSSOT追加)
 
 ---
 
@@ -56,8 +56,9 @@ Copilot・AI・開発者は必ずこの順で読む。
 8) `docs/spec/20_backend/backend_spec.md`（バックエンド設計：API/認証/データモデル/本文ゼロ/レート制限/コストガード）  
 9) `docs/spec/21_backend_impl/backend_impl.md`（バックエンド実装仕様：DTO/生成/中ゲート/メタ/OPENAI_DISABLED）  
 10) `docs/spec/30_frontend/frontend_spec.md`（フロント設計：画面遷移/導線/文言/演出/貼り付け欄禁止）  
-11) `docs/spec/31_frontend_impl/frontend_impl.md`（フロント実装：状態/DTO/API呼び出し/NG UI/設定同期）  
-12) `docs/spec/31_frontend_impl/native_share_wrappers.md`（Android/iOS共有受信ラッパー：.txtのみ、永続化禁止、受け渡しI/F）
+11) **`docs/spec/30_frontend/design_rule.md`（デザインコンセプトSSOT：Edge-less Flat、ピンク系グラデーション背景、タイポグラフィ体系、UIコンポーネント定義）**  
+12) `docs/spec/31_frontend_impl/frontend_impl.md`（フロント実装：状態/DTO/API呼び出し/NG UI/設定同期）  
+13) `docs/spec/31_frontend_impl/native_share_wrappers.md`（Android/iOS共有受信ラッパー：.txtのみ、永続化禁止、受け渡しI/F）
 
 補助（必要時のみ）：
 - `docs/spec/01_rules/telemetry_policy.md`（本文ゼロの計測ポリシー：時間帯バケットUTC）
@@ -144,16 +145,21 @@ Copilot・AI・開発者は必ずこの順で読む。
 - 生成時演出（色反転/セリフ）と禁止語。
 - A/B/Cカード仕様（タップでコピー等）。
 
-### 4.7 frontend_impl.md（フロント実装仕様）
+### 4.7 design_rule.md（デザインコンセプトSSOT / 2026-03-06追加）
+- UI/デザインの統一原則："Modern Seamless & Breathable"
+- レイアウト構造、カラーパレット、タイポグラフィ、UIコンポーネント定義。
+- **全画面・全コンポーネント実装はこのデザインコンセプトに厳密に従う（MUST）**
+
+### 4.8 frontend_impl.md（フロント実装仕様）
 - 状態管理、DTO、API呼び出し。
 - Android/iOS共有受信ラッパー（`.txt`）。
 - NG設定UI（ng_tags/ng_free_phrases）同期、テレメトリ送信（本文無し）。
 
-### 4.8 telemetry_policy.md / telemetry_schema.md
+### 4.9 telemetry_policy.md / telemetry_schema.md
 - 収集してよい情報/禁止情報。
 - イベントスキーマ、保持期間、集計（hourly rollup）。
 
-### 4.9 test_strategy.md / ci_policy.md / deploy_strategy.md
+### 4.10 test_strategy.md / ci_policy.md / deploy_strategy.md
 - CIのみ（自動デプロイなし）を前提に、実行範囲とコストガードを定義。
 - OpenAIライブテストは手動のみ＆上限必須。
 
@@ -177,5 +183,6 @@ AIが「完成」「更新済み」と言う前に、以下が全て満たされ
 
 ## 7. “AIにやらせる範囲”の明確化（MUST）
 - AIは **実装を進めてよい**が、Spec変更は **提案のみ**。
+- 指示されたことや、指摘されたことが **specと異なる** 、**specに記載されていない** 場合は追加・修正の提案を行う。
 - AIはテストを **勝手に実行しない**（実行は開発者が行う）。
 - OpenAI課金が発生する処理は、CIでは絶対に実行しない。
