@@ -99,6 +99,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
   }
 
   void _copyCodeToClipboard() {
+    HapticFeedback.selectionClick();
     Clipboard.setData(ClipboardData(text: _migrationCode)).then((_) {
       ScaffoldMessenger.of(
         context,
@@ -107,6 +108,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
   }
 
   void _shareCode() {
+    HapticFeedback.selectionClick();
     // OS 共有（実装例）
     ScaffoldMessenger.of(
       context,
@@ -190,7 +192,12 @@ class _MigrationScreenState extends State<MigrationScreen> {
         ),
         const SizedBox(height: 32),
         ElevatedButton(
-          onPressed: _loading ? null : _handleIssueMigration,
+          onPressed: _loading
+              ? null
+              : () {
+                  HapticFeedback.mediumImpact();
+                  _handleIssueMigration();
+                },
           child: _loading
               ? const SizedBox(
                   height: 20,
@@ -202,6 +209,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
         const SizedBox(height: 16),
         OutlinedButton(
           onPressed: () {
+            HapticFeedback.selectionClick();
             setState(() {
               _currentStep = 2;
             });
@@ -263,7 +271,10 @@ class _MigrationScreenState extends State<MigrationScreen> {
                 const SizedBox(height: 16),
                 Text(
                   '有効期限: $_expiresAt',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF374151)),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF374151),
+                  ),
                 ),
               ],
             ),
@@ -291,6 +302,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
           const SizedBox(height: 24),
           OutlinedButton(
             onPressed: () {
+              HapticFeedback.selectionClick();
               setState(() {
                 _currentStep = 0;
                 _migrationCode = '';
@@ -337,7 +349,12 @@ class _MigrationScreenState extends State<MigrationScreen> {
           ),
           const SizedBox(height: 24),
           ElevatedButton(
-            onPressed: _loading ? null : _handleConsumeMigration,
+            onPressed: _loading
+                ? null
+                : () {
+                    HapticFeedback.mediumImpact();
+                    _handleConsumeMigration();
+                  },
             child: _loading
                 ? const SizedBox(
                     height: 20,
@@ -349,6 +366,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
           const SizedBox(height: 12),
           OutlinedButton(
             onPressed: () {
+              HapticFeedback.selectionClick();
               setState(() {
                 _currentStep = 0;
                 _codeInputController.clear();

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../domain/persona_diagnosis.dart';
 import '../domain/persona_type_helper.dart';
@@ -160,7 +161,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       SizedBox(
                         height: 56,
                         child: ElevatedButton(
-                          onPressed: _loadSettings,
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            _loadSettings();
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFFFB3C1),
                             foregroundColor: const Color(0xFFFFFFFF),
@@ -190,7 +194,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         SizedBox(
                           height: 56,
                           child: ElevatedButton(
-                            onPressed: _startRediagnosis,
+                            onPressed: () {
+                              HapticFeedback.mediumImpact();
+                              _startRediagnosis();
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFB3C1),
                               foregroundColor: const Color(0xFFFFFFFF),
@@ -217,6 +224,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           height: 56,
                           child: ElevatedButton(
                             onPressed: () {
+                              HapticFeedback.mediumImpact();
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (context) => MigrationScreen(
@@ -243,6 +251,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           height: 56,
                           child: ElevatedButton(
                             onPressed: () {
+                              HapticFeedback.mediumImpact();
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (onboardingContext) =>
@@ -274,6 +283,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           height: 56,
                           child: ElevatedButton(
                             onPressed: () {
+                              HapticFeedback.mediumImpact();
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (context) =>
@@ -296,7 +306,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         SizedBox(
                           height: 56,
                           child: ElevatedButton(
-                            onPressed: _saving ? null : _saveSettings,
+                            onPressed: _saving
+                                ? null
+                                : () {
+                                    HapticFeedback.mediumImpact();
+                                    _saveSettings();
+                                  },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFB3C1),
                               foregroundColor: const Color(0xFFFFFFFF),
@@ -346,6 +361,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         GestureDetector(
           onTap: trueTypeValue != '診断待機中...' && nightTypeValue != '診断待機中...'
               ? () {
+                  HapticFeedback.lightImpact();
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => PersonaDiagnosisResultScreen(
@@ -368,7 +384,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              color: trueTypeValue != '診断待機中...' ? const Color(0xFFEFF6FF) : null,
+              color: trueTypeValue != '診断待機中...'
+                  ? const Color(0xFFEFF6FF)
+                  : null,
             ),
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -382,10 +400,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       'タップして詳しく見る →',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF2563EB),
-                      ),
+                      style: TextStyle(fontSize: 12, color: Color(0xFF2563EB)),
                     ),
                   ),
               ],
@@ -411,6 +426,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
           selected: <int>{currentCombo},
           onSelectionChanged: (Set<int> newSelection) {
+            HapticFeedback.selectionClick();
             _updateSetting('combo_id', newSelection.first);
           },
         ),

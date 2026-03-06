@@ -189,6 +189,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
       _currentQuestionIndex == diagnosisQuestions.length - 1;
 
   void _handleNext() {
+    HapticFeedback.mediumImpact();
     if (_isLastQuestion) {
       _submit();
     } else {
@@ -266,10 +267,7 @@ class _ChoiceCardState extends State<_ChoiceCard> {
           decoration: BoxDecoration(
             color: _isHovering ? const Color(0xFFF3F4F6) : Colors.transparent,
             border: Border(
-              bottom: BorderSide(
-                color: const Color(0xFFE5E7EB),
-                width: 0.5,
-              ),
+              bottom: BorderSide(color: const Color(0xFFE5E7EB), width: 0.5),
             ),
           ),
           child: Row(

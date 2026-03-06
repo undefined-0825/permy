@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AboutPrivacyScreen extends StatelessWidget {
   const AboutPrivacyScreen({super.key});
@@ -123,6 +124,7 @@ class AboutPrivacyScreen extends StatelessWidget {
                       Expanded(
                         child: GestureDetector(
                           onTap: () {
+                            HapticFeedback.lightImpact();
                             // メールアプリ起動
                             // TODO: URLランチャー実装
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -146,7 +148,10 @@ class AboutPrivacyScreen extends StatelessWidget {
                 Center(
                   child: Text(
                     'Version 1.0.0',
-                    style: const TextStyle(color: Color(0xFF374151), fontSize: 12),
+                    style: const TextStyle(
+                      color: Color(0xFF374151),
+                      fontSize: 12,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),

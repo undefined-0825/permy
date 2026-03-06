@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onCompleted;
@@ -38,6 +39,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _skipOnboarding() {
+    HapticFeedback.selectionClick();
     widget.onCompleted();
   }
 
@@ -131,7 +133,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         if (_currentStep > 0) const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: _nextStep,
+                            onPressed: () {
+                              HapticFeedback.mediumImpact();
+                              _nextStep();
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFB3C1),
                               foregroundColor: const Color(0xFFFFFFFF),
@@ -147,7 +152,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     const SizedBox(height: 12),
                     TextButton(
-                      onPressed: _skipOnboarding,
+                      onPressed: () {
+                        HapticFeedback.selectionClick();
+                        _skipOnboarding();
+                      },
                       child: const Text('スキップ'),
                     ),
                   ],

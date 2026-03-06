@@ -279,6 +279,7 @@ class _GenerateScreenState extends State<GenerateScreen>
   }
 
   Future<void> _onGeneratePressed() async {
+    HapticFeedback.mediumImpact();
     final text = _sharedText?.trim();
     if (text == null || text.isEmpty) return;
 
@@ -366,6 +367,7 @@ class _GenerateScreenState extends State<GenerateScreen>
   }
 
   Future<void> _copyCandidate(Candidate candidate) async {
+    HapticFeedback.selectionClick();
     await Clipboard.setData(ClipboardData(text: candidate.text));
 
     // candidate_copied イベント送信
@@ -582,6 +584,7 @@ class _ComboSelector extends StatelessWidget {
                 }),
                 onChanged: (int? value) {
                   if (value != null) {
+                    HapticFeedback.selectionClick();
                     onChanged(value);
                   }
                 },
