@@ -111,8 +111,8 @@ class AboutPrivacyScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
-                    border: Border.all(color: Colors.black12),
+                    color: const Color(0xFFFFFFFF).withOpacity(0.9),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   padding: const EdgeInsets.all(12),
@@ -133,7 +133,7 @@ class AboutPrivacyScreen extends StatelessWidget {
                           },
                           child: const Text(
                             'support@permy.jp',
-                            style: TextStyle(color: Colors.blue),
+                            style: TextStyle(color: Color(0xFF3B82F6)),
                           ),
                         ),
                       ),
@@ -146,7 +146,7 @@ class AboutPrivacyScreen extends StatelessWidget {
                 Center(
                   child: Text(
                     'Version 1.0.0',
-                    style: const TextStyle(color: Colors.black87, fontSize: 12),
+                    style: const TextStyle(color: Color(0xFF374151), fontSize: 12),
                   ),
                 ),
                 const SizedBox(height: 16),

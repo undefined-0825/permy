@@ -61,7 +61,7 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: Color(0xFF374151),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -75,7 +75,7 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: Color(0xFF374151),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -89,7 +89,7 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: Color(0xFF374151),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -105,7 +105,7 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     height: 1.6,
-                    color: Colors.black87,
+                    color: Color(0xFF374151),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -183,8 +183,8 @@ class _PersonaTypeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
-        border: Border.all(color: Colors.black12),
+        color: const Color(0xFFFFFFFF).withOpacity(0.9),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
@@ -196,7 +196,7 @@ class _PersonaTypeCard extends StatelessWidget {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.blue,
+              color: Color(0xFF3B82F6),
             ),
           ),
           const SizedBox(height: 12),
@@ -228,7 +228,7 @@ class _StyleScoreRow extends StatelessWidget {
           child: LinearProgressIndicator(
             value: score / 100,
             minHeight: 8,
-            backgroundColor: Colors.grey.shade200,
+            backgroundColor: const Color(0xFFE5E7EB),
             valueColor: AlwaysStoppedAnimation<Color>(_getScoreColor(score)),
           ),
         ),
@@ -238,11 +238,11 @@ class _StyleScoreRow extends StatelessWidget {
 
   Color _getScoreColor(int score) {
     if (score < 30) {
-      return Colors.orange;
+      return const Color(0xFFF97316);
     } else if (score < 70) {
-      return Colors.blue;
+      return const Color(0xFF3B82F6);
     } else {
-      return Colors.green;
+      return const Color(0xFF10B981);
     }
   }
 }

@@ -134,7 +134,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                       Text(
                         _error!,
                         style: const TextStyle(
-                          color: Colors.red,
+                          color: Color(0xFFEF4444),
                           fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
@@ -147,7 +147,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                           onPressed: !_saving ? _handleNext : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFFFB3C1),
-                            foregroundColor: Colors.white,
+                            foregroundColor: const Color(0xFFFFFFFF),
                             disabledBackgroundColor: const Color(0xFFE6DCE8),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -161,7 +161,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
+                                      Color(0xFFFFFFFF),
                                     ),
                                   ),
                                 )
@@ -279,13 +279,13 @@ class _ChoiceCardState extends State<_ChoiceCard> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.pink.shade50,
+                  color: const Color(0xFFFCE7F3),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.image_outlined,
                   size: 20,
-                  color: Colors.pink.shade200,
+                  color: Color(0xFFFBCFE8),
                 ),
               ),
               const SizedBox(width: 16),

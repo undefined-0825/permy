@@ -213,12 +213,12 @@ class _MigrationScreenState extends State<MigrationScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.red.shade100,
+              color: const Color(0xFFFFE5E5),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               _error!.message,
-              style: const TextStyle(color: Colors.red),
+              style: const TextStyle(color: Color(0xFFEF4444)),
             ),
           ),
         ],
@@ -240,15 +240,15 @@ class _MigrationScreenState extends State<MigrationScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
-              border: Border.all(color: Colors.black12),
+              color: const Color(0xFFFFFFFF).withOpacity(0.9),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
               children: [
                 const Text(
                   '12桁のコード',
-                  style: TextStyle(fontSize: 12, color: Colors.black87),
+                  style: TextStyle(fontSize: 12, color: Color(0xFF374151)),
                 ),
                 const SizedBox(height: 8),
                 SelectableText(
@@ -263,7 +263,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
                 const SizedBox(height: 16),
                 Text(
                   '有効期限: $_expiresAt',
-                  style: const TextStyle(fontSize: 12, color: Colors.black87),
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF374151)),
                 ),
               ],
             ),
@@ -362,12 +362,12 @@ class _MigrationScreenState extends State<MigrationScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.shade100,
+                color: const Color(0xFFFFE5E5),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 _error!.message,
-                style: const TextStyle(color: Colors.red),
+                style: const TextStyle(color: Color(0xFFEF4444)),
               ),
             ),
           ],

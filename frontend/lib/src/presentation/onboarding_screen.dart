@@ -107,8 +107,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: index == _currentStep
-                                ? Colors.black
-                                : Colors.black54,
+                                ? const Color(0xFF1A1C1E)
+                                : const Color(0xFF6B7280),
                           ),
                         ),
                       ),
@@ -134,7 +134,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             onPressed: _nextStep,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFB3C1),
-                              foregroundColor: Colors.white,
+                              foregroundColor: const Color(0xFFFFFFFF),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -166,7 +166,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.message, size: 80, color: Colors.pinkAccent),
+          const Icon(Icons.message, size: 80, color: Color(0xFFF06292)),
           const SizedBox(height: 24),
           const Text(
             'ペルミィへようこそ',
@@ -198,7 +198,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.share, size: 80, color: Colors.pinkAccent),
+          const Icon(Icons.share, size: 80, color: Color(0xFFF06292)),
           const SizedBox(height: 24),
           const Text(
             'トーク履歴を送ろう',
@@ -230,7 +230,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.lock_outline, size: 80, color: Colors.pinkAccent),
+          const Icon(Icons.lock_outline, size: 80, color: Color(0xFFF06292)),
           const SizedBox(height: 24),
           const Text(
             'プライバシー保護',
@@ -262,7 +262,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.star, size: 80, color: Colors.pinkAccent),
+          const Icon(Icons.star, size: 80, color: Color(0xFFF06292)),
           const SizedBox(height: 24),
           const Text(
             'さあ、始めよう',

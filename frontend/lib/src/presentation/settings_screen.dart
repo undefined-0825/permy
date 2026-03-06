@@ -163,7 +163,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onPressed: _loadSettings,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFFFB3C1),
-                            foregroundColor: Colors.white,
+                            foregroundColor: const Color(0xFFFFFFFF),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -193,7 +193,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             onPressed: _startRediagnosis,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFB3C1),
-                              foregroundColor: Colors.white,
+                              foregroundColor: const Color(0xFFFFFFFF),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -227,7 +227,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFB3C1),
-                              foregroundColor: Colors.white,
+                              foregroundColor: const Color(0xFFFFFFFF),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -258,7 +258,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFB3C1),
-                              foregroundColor: Colors.white,
+                              foregroundColor: const Color(0xFFFFFFFF),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -283,7 +283,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFB3C1),
-                              foregroundColor: Colors.white,
+                              foregroundColor: const Color(0xFFFFFFFF),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -299,7 +299,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             onPressed: _saving ? null : _saveSettings,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFB3C1),
-                              foregroundColor: Colors.white,
+                              foregroundColor: const Color(0xFFFFFFFF),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -312,7 +312,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
+                                        Color(0xFFFFFFFF),
                                       ),
                                     ),
                                   )
@@ -368,7 +368,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              color: trueTypeValue != '診断待機中...' ? Colors.blue.shade50 : null,
+              color: trueTypeValue != '診断待機中...' ? const Color(0xFFEFF6FF) : null,
             ),
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -384,7 +384,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'タップして詳しく見る →',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.blue.shade600,
+                        color: Color(0xFF2563EB),
                       ),
                     ),
                   ),
@@ -417,7 +417,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 8),
         const Text(
           'Pro版ではさらに 4種類の方針が選択できます',
-          style: TextStyle(fontSize: 12, color: Colors.black87),
+          style: TextStyle(fontSize: 12, color: Color(0xFF374151)),
         ),
       ],
     );
@@ -472,12 +472,12 @@ class _SettingRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.black87)),
+          Text(label, style: const TextStyle(color: Color(0xFF374151))),
           Text(
             value,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Color(0xFF374151),
             ),
           ),
         ],

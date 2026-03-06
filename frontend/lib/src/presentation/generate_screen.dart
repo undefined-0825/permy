@@ -145,11 +145,11 @@ class _GenerateScreenState extends State<GenerateScreen>
                       children: [
                         const Text(
                           'ぼくはきみの分身・・・',
-                          style: TextStyle(color: Colors.black87),
+                          style: TextStyle(color: Color(0xFF374151)),
                         ),
                         const Text(
                           'ぼくに任せて・・・',
-                          style: TextStyle(color: Colors.black87),
+                          style: TextStyle(color: Color(0xFF374151)),
                         ),
                         const SizedBox(height: 12),
                         _ShareStatusCard(
@@ -187,9 +187,9 @@ class _GenerateScreenState extends State<GenerateScreen>
                             onPressed: canGenerate ? _onGeneratePressed : null,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFB3C1),
-                              foregroundColor: Colors.white,
+                              foregroundColor: const Color(0xFFFFFFFF),
                               disabledBackgroundColor: const Color(0xFFE6DCE8),
-                              disabledForegroundColor: Colors.black54,
+                              disabledForegroundColor: const Color(0xFF6B7280),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(28),
                               ),
@@ -202,7 +202,7 @@ class _GenerateScreenState extends State<GenerateScreen>
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
+                                        Color(0xFFFFFFFF),
                                       ),
                                     ),
                                   )
@@ -245,10 +245,8 @@ class _GenerateScreenState extends State<GenerateScreen>
                               duration: const Duration(milliseconds: 400),
                               decoration: BoxDecoration(
                                 color: isCopied
-                                    ? Theme.of(
-                                        context,
-                                      ).colorScheme.primaryContainer
-                                    : Theme.of(context).colorScheme.surface,
+                                    ? const Color(0xFFFFE5ED)
+                                    : const Color(0xFFFFFFFF),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: OutlinedButton(
@@ -605,7 +603,7 @@ class _ErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.errorContainer,
+        color: const Color(0xFFFFE5E5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(padding: const EdgeInsets.all(10), child: Text(message)),
