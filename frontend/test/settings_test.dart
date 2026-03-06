@@ -148,8 +148,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(DiagnosisScreen), findsOneWidget);
-      // 新UI: 進捗表示を確認
-      expect(find.textContaining('/'), findsOneWidget);
+      // 新UI: 進捗表示を確認（複数の '/' を含むテキストがあるため）
+      expect(find.textContaining('/'), findsWidgets);
     });
 
     testWidgets('端末移行ボタンで Migration 画面へ遷移できる', (WidgetTester tester) async {
@@ -166,7 +166,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(MigrationScreen), findsOneWidget);
-      expect(find.text('端末移行'), findsOneWidget);
+      expect(find.text('端末移行'), findsWidgets); // SliverAppBar.large() で複数表示
     });
 
     testWidgets('このアプリについてボタンで About 画面へ遷移できる', (WidgetTester tester) async {
@@ -216,7 +216,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(PersonaDiagnosisResultScreen), findsOneWidget);
-      expect(find.text('あなたのペルソナ'), findsOneWidget);
+      expect(find.text('あなたのペルソナ'), findsWidgets); // SliverAppBar.large() で複数表示
     });
   });
 }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/theme.dart';
 import '../domain/models.dart';
 import '../domain/telemetry_event.dart';
 import '../infrastructure/api_client.dart';
@@ -127,10 +128,7 @@ class _GenerateScreenState extends State<GenerateScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFE8D4F8), // 淡いパープル
-              Color(0xFFFCE4EC), // 淡いピンク
-            ],
+            colors: [PermyColors.backgroundStart, PermyColors.backgroundEnd],
           ),
         ),
         child: SafeArea(
@@ -146,11 +144,11 @@ class _GenerateScreenState extends State<GenerateScreen>
                       children: [
                         const Text(
                           'ぼくはきみの分身・・・',
-                          style: TextStyle(color: Color(0xFF374151)),
+                          style: TextStyle(color: PermyColors.bodyText),
                         ),
                         const Text(
                           'ぼくに任せて・・・',
-                          style: TextStyle(color: Color(0xFF374151)),
+                          style: TextStyle(color: PermyColors.bodyText),
                         ),
                         const SizedBox(height: 12),
                         _ShareStatusCard(
@@ -194,7 +192,7 @@ class _GenerateScreenState extends State<GenerateScreen>
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.normal,
-                              color: Color(0xFF6B7280),
+                              color: PermyColors.metaText,
                             ),
                           ),
                         ],
@@ -205,7 +203,7 @@ class _GenerateScreenState extends State<GenerateScreen>
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.normal,
-                              color: Color(0xFF6B7280),
+                              color: PermyColors.metaText,
                             ),
                           ),
                         ],
@@ -223,8 +221,8 @@ class _GenerateScreenState extends State<GenerateScreen>
                               duration: const Duration(milliseconds: 400),
                               decoration: BoxDecoration(
                                 color: isCopied
-                                    ? const Color(0xFFFFE5ED)
-                                    : const Color(0xFFFFFFFF),
+                                    ? PermyColors.lightPink
+                                    : PermyColors.white,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: OutlinedButton(
@@ -464,7 +462,7 @@ class _ShareStatusCard extends StatelessWidget {
         decoration: const BoxDecoration(
           color: Colors.transparent,
           border: Border(
-            bottom: BorderSide(color: Color(0xFFE5E7EB), width: 0.5),
+            bottom: BorderSide(color: PermyColors.separator, width: 0.5),
           ),
         ),
         child: Column(
@@ -475,7 +473,7 @@ class _ShareStatusCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1C1E),
+                color: PermyColors.primaryTitle,
               ),
             ),
             const SizedBox(height: 4),
@@ -484,7 +482,7 @@ class _ShareStatusCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.normal,
-                color: Color(0xFF6B7280),
+                color: PermyColors.metaText,
               ),
             ),
           ],
@@ -523,7 +521,7 @@ class _ComboSelector extends StatelessWidget {
         decoration: const BoxDecoration(
           color: Colors.transparent,
           border: Border(
-            bottom: BorderSide(color: Color(0xFFE5E7EB), width: 0.5),
+            bottom: BorderSide(color: PermyColors.separator, width: 0.5),
           ),
         ),
         child: Column(
@@ -534,7 +532,7 @@ class _ComboSelector extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1C1E),
+                color: PermyColors.primaryTitle,
               ),
             ),
             const SizedBox(height: 12),
@@ -553,8 +551,8 @@ class _ComboSelector extends StatelessWidget {
                       label,
                       style: TextStyle(
                         color: isLocked
-                            ? const Color(0xFF6B7280)
-                            : const Color(0xFF374151),
+                            ? PermyColors.metaText
+                            : PermyColors.bodyText,
                         fontSize: 15,
                       ),
                     ),
@@ -584,7 +582,7 @@ class _ErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: const Color(0xFFFFE5E5),
+        color: PermyColors.lightPink,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(padding: const EdgeInsets.all(10), child: Text(message)),

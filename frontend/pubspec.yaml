@@ -65,6 +65,7 @@ flutter:
   assets:
     - assets/images/backgrounds/
     - assets/images/icons/
+    - assets/images/diagnosis_choices/
     - assets/images/personas/true_self/
     - assets/images/personas/night_self/
 
