@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/theme.dart';
 import '../domain/models.dart';
 import '../domain/telemetry_event.dart';
 import '../infrastructure/api_client.dart';
@@ -449,7 +450,7 @@ class _ShareStatusCard extends StatelessWidget {
         decoration: const BoxDecoration(
           color: Colors.transparent,
           border: Border(
-            bottom: BorderSide(color: Color(0xFFE5E7EB), width: 0.5),
+            bottom: BorderSide(color: PermyColors.separator, width: 0.5),
           ),
         ),
         child: Column(
@@ -460,7 +461,7 @@ class _ShareStatusCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1C1E),
+                color: PermyColors.primaryTitle,
               ),
             ),
             const SizedBox(height: 4),
@@ -469,7 +470,7 @@ class _ShareStatusCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.normal,
-                color: Color(0xFF6B7280),
+                color: PermyColors.metaText,
               ),
             ),
           ],
@@ -508,7 +509,7 @@ class _ComboSelector extends StatelessWidget {
         decoration: const BoxDecoration(
           color: Colors.transparent,
           border: Border(
-            bottom: BorderSide(color: Color(0xFFE5E7EB), width: 0.5),
+            bottom: BorderSide(color: PermyColors.separator, width: 0.5),
           ),
         ),
         child: Column(
@@ -519,7 +520,7 @@ class _ComboSelector extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1C1E),
+                color: PermyColors.primaryTitle,
               ),
             ),
             const SizedBox(height: 12),
@@ -538,8 +539,8 @@ class _ComboSelector extends StatelessWidget {
                       label,
                       style: TextStyle(
                         color: isLocked
-                            ? const Color(0xFF6B7280)
-                            : const Color(0xFF374151),
+                            ? PermyColors.metaText
+                            : PermyColors.bodyText,
                         fontSize: 15,
                       ),
                     ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/theme.dart';
 import '../domain/persona_diagnosis.dart';
 import '../domain/persona_type_helper.dart';
 import '../domain/models.dart';
@@ -127,8 +128,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFE8D4F8), // 淡いパープル
-              Color(0xFFFCE4EC), // 淡いピンク
+              PermyColors.backgroundStart,
+              PermyColors.backgroundEnd,
             ],
           ),
         ),
@@ -332,7 +333,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       'タップして詳しく見る →',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF2563EB)),
+                      style: TextStyle(fontSize: 12, color: PermyColors.metaText),
                     ),
                   ),
               ],
@@ -365,7 +366,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 8),
         const Text(
           'Pro版ではさらに 4種類の方針が選択できます',
-          style: TextStyle(fontSize: 12, color: Color(0xFF374151)),
+          style: TextStyle(fontSize: 12, color: PermyColors.bodyText),
         ),
       ],
     );
@@ -398,11 +399,7 @@ class SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: Color(0xFF1A1C1E),
-      ),
+      style: PermyTypography.primaryTitle,
     );
   }
 }
@@ -420,12 +417,12 @@ class _SettingRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Color(0xFF374151))),
+          Text(label, style: const TextStyle(color: PermyColors.bodyText)),
           Text(
             value,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: Color(0xFF374151),
+              color: PermyColors.bodyText,
             ),
           ),
         ],

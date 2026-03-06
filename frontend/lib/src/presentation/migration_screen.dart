@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/theme.dart';
 import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
 import 'widgets/primary_button.dart';
@@ -150,8 +151,8 @@ class _MigrationScreenState extends State<MigrationScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color(0xFFE8D4F8), // 淡いパープル
-                    Color(0xFFFCE4EC), // 淡いピンク
+                    PermyColors.backgroundStart,
+                    PermyColors.backgroundEnd,
                   ],
                 ),
               ),
@@ -183,21 +184,13 @@ class _MigrationScreenState extends State<MigrationScreen> {
       children: [
         const Text(
           '端末を移行しますか？',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1A1C1E),
-          ),
+          style: PermyTypography.primaryTitle,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),
         const Text(
           'このアプリのアカウント情報を別の端末に移行できます。',
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.normal,
-            color: Color(0xFF374151),
-          ),
+          style: PermyTypography.body,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 32),
@@ -231,7 +224,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
             ),
             child: Text(
               _error!.message,
-              style: const TextStyle(color: Color(0xFFEF4444)),
+              style: const TextStyle(color: PermyColors.error),
             ),
           ),
         ],
@@ -261,7 +254,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
               children: [
                 const Text(
                   '12桁のコード',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF374151)),
+                  style: TextStyle(fontSize: 12, color: PermyColors.bodyText),
                 ),
                 const SizedBox(height: 8),
                 SelectableText(
@@ -278,7 +271,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
                   '有効期限: $_expiresAt',
                   style: const TextStyle(
                     fontSize: 12,
-                    color: Color(0xFF374151),
+                    color: PermyColors.bodyText,
                   ),
                 ),
               ],
@@ -386,7 +379,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
               ),
               child: Text(
                 _error!.message,
-                style: const TextStyle(color: Color(0xFFEF4444)),
+                style: const TextStyle(color: PermyColors.error),
               ),
             ),
           ],
