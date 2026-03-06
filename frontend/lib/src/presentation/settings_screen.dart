@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/theme.dart';
 import '../domain/persona_diagnosis.dart';
 import '../domain/persona_type_helper.dart';
 import '../domain/models.dart';
@@ -143,10 +144,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFE8D4F8), // 淡いパープル
-              Color(0xFFFCE4EC), // 淡いピンク
-            ],
+            colors: [PermyColors.backgroundStart, PermyColors.backgroundEnd],
           ),
         ),
         child: SafeArea(
@@ -223,8 +221,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 builder: (onboardingContext) =>
                                     OnboardingScreen(
                                       onCompleted: () {
-                                        if (!onboardingContext.mounted)
-                                          return;
+                                        if (!onboardingContext.mounted) return;
                                         Navigator.of(onboardingContext).pop();
                                       },
                                     ),
@@ -309,9 +306,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              color: trueTypeValue != '診断待機中...'
-                  ? const Color(0xFFEFF6FF)
-                  : null,
+              color: trueTypeValue != '診断待機中...' ? PermyColors.highlight : null,
             ),
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -325,7 +320,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       'タップして詳しく見る →',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF2563EB)),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: PermyColors.primaryPink,
+                      ),
                     ),
                   ),
               ],
@@ -358,7 +356,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 8),
         const Text(
           'Pro版ではさらに 4種類の方針が選択できます',
-          style: TextStyle(fontSize: 12, color: Color(0xFF374151)),
+          style: const TextStyle(fontSize: 12, color: PermyColors.bodyText),
         ),
       ],
     );
@@ -394,7 +392,7 @@ class SectionHeader extends StatelessWidget {
       style: const TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: Color(0xFF1A1C1E),
+        color: PermyColors.primaryTitle,
       ),
     );
   }
@@ -413,12 +411,12 @@ class _SettingRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Color(0xFF374151))),
+          Text(label, style: const TextStyle(color: PermyColors.bodyText)),
           Text(
             value,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: Color(0xFF374151),
+              color: PermyColors.bodyText,
             ),
           ),
         ],

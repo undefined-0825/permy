@@ -186,7 +186,9 @@ void main() {
       expect(find.text('このアプリについて'), findsWidgets);
     });
 
-    testWidgets('再チュートリアルボタンで Onboarding 画面へ遷移できる', (WidgetTester tester) async {
+    testWidgets('再チュートリアルボタンで Onboarding 画面へ遷移できる', (
+      WidgetTester tester,
+    ) async {
       final mockApi = MockApiClient();
 
       await tester.pumpWidget(

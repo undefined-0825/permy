@@ -219,7 +219,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFE5E5),
+              color: PermyColors.lightPink,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -246,8 +246,8 @@ class _MigrationScreenState extends State<MigrationScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFFFF).withOpacity(0.9),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
+              color: PermyColors.white.withOpacity(0.9),
+              border: Border.all(color: PermyColors.separator),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
@@ -338,7 +338,10 @@ class _MigrationScreenState extends State<MigrationScreen> {
               hintText: '000000000000',
               border: UnderlineInputBorder(),
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFFFFB3C1), width: 2),
+                borderSide: BorderSide(
+                  color: PermyColors.primaryPink,
+                  width: 2,
+                ),
               ),
             ),
             keyboardType: TextInputType.number,
@@ -374,7 +377,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFE5E5),
+                color: PermyColors.lightPink,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
