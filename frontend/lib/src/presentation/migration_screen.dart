@@ -119,40 +119,49 @@ class _MigrationScreenState extends State<MigrationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(
-              'assets/images/icons/permy_icon.png',
-              width: 24,
-              height: 24,
-              fit: BoxFit.contain,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar.large(
+            title: const Text('端末移行'),
+            flexibleSpace: FlexibleSpaceBar(
+              title: Padding(
+                padding: const EdgeInsets.only(left: 16, bottom: 16),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      'assets/images/icons/permy_icon.png',
+                      width: 24,
+                      height: 24,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text('端末移行'),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(width: 8),
-            const Text('端末移行'),
-          ],
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFE8D4F8), // 淡いパープル
-              Color(0xFFFCE4EC), // 淡いピンク
-            ],
+            backgroundColor: Colors.transparent,
           ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: _buildContent(),
+          SliverFillRemaining(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFE8D4F8), // 淡いパープル
+                    Color(0xFFFCE4EC), // 淡いピンク
+                  ],
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: _buildContent(),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -336,10 +345,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
               hintText: '000000000000',
               border: UnderlineInputBorder(),
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(
-                  color: Color(0xFFFFB3C1),
-                  width: 2,
-                ),
+                borderSide: BorderSide(color: Color(0xFFFFB3C1), width: 2),
               ),
             ),
             keyboardType: TextInputType.number,

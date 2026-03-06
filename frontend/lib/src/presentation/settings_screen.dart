@@ -120,23 +120,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(
-              'assets/images/icons/permy_icon.png',
-              width: 24,
-              height: 24,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(width: 8),
-            const Text('設定'),
-          ],
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
       extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
@@ -149,11 +132,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ),
-        child: SafeArea(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _error != null
-              ? Center(
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar.large(
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    'assets/images/icons/permy_icon.png',
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('設定'),
+                ],
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+            ),
+            if (_loading)
+              SliverFillRemaining(
+                child: const Center(child: CircularProgressIndicator()),
+              )
+            else if (_error != null)
+              SliverFillRemaining(
+                child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -168,8 +172,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ],
                   ),
-                )
-              : Padding(
+                ),
+              )
+            else
+              SliverToBoxAdapter(
+                child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: SingleChildScrollView(
                     child: Column(

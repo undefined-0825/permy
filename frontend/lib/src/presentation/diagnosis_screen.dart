@@ -26,6 +26,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
         '${_currentQuestionIndex + 1}/${diagnosisQuestions.length}';
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -37,100 +38,90 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
             ],
           ),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // 上部：戻るボタン + ペルミィアイコン + 進捗表示
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                child: Row(
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar.large(
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    'assets/images/icons/permy_icon.png',
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(progress),
+                ],
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: SizedBox(
+                width: 36,
+                height: 36,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(Icons.arrow_back, size: 20),
+                  onPressed: () {
+                    if (_currentQuestionIndex > 0) {
+                      setState(() => _currentQuestionIndex--);
+                    } else {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // 戻るボタン（最初のページなら画面を閉じる、それ以外は前の質問へ）
-                    SizedBox(
-                      width: 36,
-                      height: 36,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: const Icon(Icons.arrow_back, size: 20),
-                        onPressed: () {
-                          if (_currentQuestionIndex > 0) {
-                            setState(() => _currentQuestionIndex--);
-                          } else {
-                            Navigator.of(context).pop();
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // ペルミィアイコン
-                    Image.asset(
-                      'assets/images/icons/permy_icon.png',
-                      width: 48,
-                      height: 48,
-                      fit: BoxFit.contain,
-                    ),
-                    const SizedBox(width: 12),
-                    // 進捗表示
+                    const SizedBox(height: 24),
+                    // 質問文
                     Text(
-                      progress,
+                      question.title,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1A1C1E),
+                        height: 1.4,
                       ),
+                      textAlign: TextAlign.center,
                     ),
+                    const SizedBox(height: 32),
+                    // 選択肢カード
+                    ...question.choices.map((choice) {
+                      final isSelected = _answers[question.id] == choice.id;
+                      return _ChoiceCard(
+                        label: choice.label,
+                        isSelected: isSelected,
+                        onTap: () {
+                          setState(() {
+                            _answers[question.id] = choice.id;
+                          });
+                          // 選択肢を選んだら自動で次へ進む
+                          Future.delayed(
+                            const Duration(milliseconds: 300),
+                            _handleNext,
+                          );
+                        },
+                      );
+                    }),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
-
-              // 中央：質問と選択肢
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 24),
-                      // 質問文
-                      Text(
-                        question.title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1C1E),
-                          height: 1.4,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 32),
-                      // 選択肢カード
-                      ...question.choices.map((choice) {
-                        final isSelected = _answers[question.id] == choice.id;
-                        return _ChoiceCard(
-                          label: choice.label,
-                          isSelected: isSelected,
-                          onTap: () {
-                            setState(() {
-                              _answers[question.id] = choice.id;
-                            });
-                            // 選択肢を選んだら自動で次へ進む
-                            Future.delayed(
-                              const Duration(milliseconds: 300),
-                              _handleNext,
-                            );
-                          },
-                        );
-                      }),
-                    ],
-                  ),
-                ),
-              ),
-
-              // エラー表示
-              if (_error != null)
-                Padding(
+            ),
+            // エラー表示
+            if (_error != null)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         _error!,
@@ -144,20 +135,13 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                       PrimaryButton(
                         onPressed: !_saving ? _handleNext : null,
                         isLoading: _saving,
-                        child: const Text(
-                          'もう一度',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: const Text('もう一度'),
                       ),
                     ],
                   ),
                 ),
-              if (_error == null) const SizedBox(height: 16),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );

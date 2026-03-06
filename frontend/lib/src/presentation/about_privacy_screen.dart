@@ -7,24 +7,7 @@ class AboutPrivacyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(
-              'assets/images/icons/permy_icon.png',
-              width: 24,
-              height: 24,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(width: 8),
-            const Text('このアプリについて'),
-          ],
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      extendBodyBehindAppBar: false,
+      extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -36,10 +19,29 @@ class AboutPrivacyScreen extends StatelessWidget {
             ],
           ),
         ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar.large(
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    'assets/images/icons/permy_icon.png',
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('このアプリについて'),
+                ],
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Permyについて
@@ -157,7 +159,9 @@ class AboutPrivacyScreen extends StatelessWidget {
                 const SizedBox(height: 16),
               ],
             ),
-          ),
+              ),
+            ),
+          ],
         ),
       ),
     );

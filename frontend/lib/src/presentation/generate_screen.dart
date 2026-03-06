@@ -160,64 +160,49 @@ class _GenerateScreenState extends State<GenerateScreen>
                         const SizedBox(height: 12),
                         _ComboSelector(
                           selectedCombo: _comboId,
-                          isPro: _plan == 'pro',
-                          onChanged: (int value) {
-                            final isPro = value >= 2; // combo 2-5 は Pro のみ
-                            if (isPro && _plan == 'free') {
-                              // Pro 限定オプション選択時は購買画面へ遷移
-                              Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (context) => const Scaffold(
-                                    body: Center(
-                                      child: Text('Pro プランへの購買ページ（準備中）'),
-                                    ),
-                                  ),
+                          return Scaffold(
+                            extendBodyBehindAppBar: true,
+                            body: Container(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Color(0xFFE8D4F8), // 淡いパープル
+                                    Color(0xFFFCE4EC), // 淡いピンク
+                                  ],
                                 ),
-                              );
-                            } else {
-                              setState(() {
-                                _comboId = value;
-                              });
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        PrimaryButton(
-                          onPressed: canGenerate ? _onGeneratePressed : null,
-                          isLoading: _loading,
-                          child: const Text('ぼくが返信案を考えるよ'),
-                        ),
-                        if (_daily != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            '今日の残り: ${_daily!.remaining}/${_daily!.limit}（${_plan.toUpperCase()}）',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.normal,
-                              color: Color(0xFF6B7280),
-                            ),
-                          ),
-                        ],
-                        if (_plan == 'pro' && _metaPro != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            '推定メーター: $_metaPro%',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.normal,
-                              color: Color(0xFF6B7280),
-                            ),
-                          ),
-                        ],
-                        if (_error != null) ...[
-                          const SizedBox(height: 8),
-                          _ErrorBanner(message: _errorMessage(_error!)),
-                        ],
-                        const SizedBox(height: 12),
-                        ...List.generate(_candidates.length, (index) {
-                          final candidate = _candidates[index];
-                          final isCopied = _copiedLabel == candidate.label;
-                          return Padding(
+                              ),
+                              child: CustomScrollView(
+                                slivers: [
+                                  SliverAppBar.large(
+                                    title: const Text('Permy'),
+                                    backgroundColor: Colors.transparent,
+                                    elevation: 0,
+                                    actions: [
+                                      IconButton(
+                                        icon: const Icon(Icons.settings),
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  SettingsScreen(apiClient: widget.apiClient),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                  SliverToBoxAdapter(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                                        children: [
+                                          const Text(
+                                            'ぼくはきみの分身・・・',
+                                            style: TextStyle(color: Color(0xFF374151)),
+                                          ),
                             padding: const EdgeInsets.only(bottom: 8),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 400),
