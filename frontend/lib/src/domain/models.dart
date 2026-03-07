@@ -176,6 +176,35 @@ class SettingsSnapshot {
   final String etag;
 }
 
+class AppVersionInfo {
+  AppVersionInfo({
+    required this.latestVersion,
+    required this.minSupportedVersion,
+    required this.androidStoreUrl,
+    required this.iosStoreUrl,
+  });
+
+  final String latestVersion;
+  final String minSupportedVersion;
+  final String androidStoreUrl;
+  final String iosStoreUrl;
+
+  factory AppVersionInfo.fromJson(Map<String, dynamic> json) {
+    return AppVersionInfo(
+      latestVersion:
+          json['latest_version']?.toString() ??
+          json['version']?.toString() ??
+          '',
+      minSupportedVersion:
+          json['min_supported_version']?.toString() ??
+          json['version']?.toString() ??
+          '',
+      androidStoreUrl: json['android_store_url']?.toString() ?? '',
+      iosStoreUrl: json['ios_store_url']?.toString() ?? '',
+    );
+  }
+}
+
 class MigrationIssueResult {
   MigrationIssueResult({required this.migrationCode, required this.expiresAt});
 

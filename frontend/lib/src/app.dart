@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../core/theme.dart';
+import 'domain/app_versioning.dart';
 import 'domain/persona_diagnosis.dart';
 import 'domain/telemetry_event.dart';
 import 'infrastructure/api_client.dart';
@@ -72,11 +77,16 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   Future<void> _bootstrap() async {
     await _apiClient.bootstrapAuth();
 
+    final packageInfo = await PackageInfo.fromPlatform();
+    final installedVersion = packageInfo.version;
+
+    await _checkForAppUpdate(installedVersion);
+
     // app_opened イベント送信
     _telemetryQueue.enqueue(
-      const AppOpenedEvent(
-        appVersion: '1.0.0',
-        os: 'android', // TODO: Platform.isAndroid/isIOS で分岐
+      AppOpenedEvent(
+        appVersion: installedVersion,
+        os: _currentOsName(),
         deviceClass: 'phone',
       ),
     );
@@ -98,6 +108,80 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
           (nightType == null || nightType.isEmpty);
       _loading = false;
     });
+  }
+
+  String _currentOsName() {
+    if (Platform.isAndroid) return 'android';
+    if (Platform.isIOS) return 'ios';
+    return 'unknown';
+  }
+
+  Future<void> _checkForAppUpdate(String installedVersion) async {
+    try {
+      final info = await _apiClient.getAppVersionInfo();
+
+      final shouldForce =
+          compareAppVersions(installedVersion, info.minSupportedVersion) < 0;
+      final hasUpdate =
+          compareAppVersions(installedVersion, info.latestVersion) < 0;
+
+      if (!hasUpdate || !mounted) return;
+
+      final storeUrl = Platform.isIOS ? info.iosStoreUrl : info.androidStoreUrl;
+
+      await _showUpdateDialog(
+        forceUpdate: shouldForce,
+        latestVersion: info.latestVersion,
+        storeUrl: storeUrl,
+      );
+    } catch (_) {
+      // versionチェック失敗時は起動を継続
+    }
+  }
+
+  Future<void> _showUpdateDialog({
+    required bool forceUpdate,
+    required String latestVersion,
+    required String storeUrl,
+  }) async {
+    final canClose = !forceUpdate || storeUrl.isEmpty;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: canClose,
+      builder: (dialogContext) {
+        return WillPopScope(
+          onWillPop: () async => canClose,
+          child: AlertDialog(
+            title: const Text('アップデートのお知らせ'),
+            content: Text(
+              forceUpdate
+                  ? 'このバージョンでは利用できません。最新バージョン（$latestVersion）へ更新してください。'
+                  : '新しいバージョン（$latestVersion）が利用できます。ストアで更新しますか？',
+            ),
+            actions: [
+              if (canClose)
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text(forceUpdate ? '閉じる' : 'あとで'),
+                ),
+              TextButton(
+                onPressed: () async {
+                  if (storeUrl.isNotEmpty) {
+                    final uri = Uri.parse(storeUrl);
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                  if (canClose && dialogContext.mounted) {
+                    Navigator.of(dialogContext).pop();
+                  }
+                },
+                child: const Text('ストアを開く'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _onOnboardingCompleted() async {

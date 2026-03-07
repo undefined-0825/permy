@@ -23,6 +23,8 @@ abstract class AppApiClient {
   Future<MigrationConsumeResult> consumeMigrationCode(String code);
 
   Future<void> postTelemetryEvents(List<Map<String, dynamic>> events);
+
+  Future<AppVersionInfo> getAppVersionInfo();
 }
 
 class ApiClient implements AppApiClient {
@@ -277,6 +279,23 @@ class ApiClient implements AppApiClient {
         body: _tryJson(response.body),
       );
     });
+  }
+
+  @override
+  Future<AppVersionInfo> getAppVersionInfo() async {
+    final response = await _httpClient.get(
+      Uri.parse('$baseUrl/api/v1/version'),
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final body = _tryJson(response.body) ?? <String, dynamic>{};
+      return AppVersionInfo.fromJson(body);
+    }
+
+    throw ApiError.fromBody(
+      httpStatus: response.statusCode,
+      body: _tryJson(response.body),
+    );
   }
 
   Future<T> _runWithAuthRetry<T>(Future<T> Function() action) async {

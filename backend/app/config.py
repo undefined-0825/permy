@@ -9,7 +9,10 @@ class Settings(BaseSettings):
     app_name: str = "permy-serverside"
     app_env: str = "dev"
     app_version: str = "0.1.0"
+    app_min_supported_version: str = "0.1.0"
     commit_sha: str = "dev"
+    app_android_store_url: str = ""
+    app_ios_store_url: str = ""
 
     session_ttl_seconds: int = 30 * 24 * 3600
 
