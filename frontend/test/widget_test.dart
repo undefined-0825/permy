@@ -11,10 +11,7 @@ import 'package:sample_app/src/infrastructure/telemetry_queue.dart';
 import 'package:sample_app/src/presentation/generate_screen.dart';
 
 class _FakePurchaseService extends PurchaseService {
-  _FakePurchaseService()
-    : super(
-        storage: const FlutterSecureStorage(),
-      );
+  _FakePurchaseService() : super(storage: const FlutterSecureStorage());
 
   @override
   bool get isPro => false;
