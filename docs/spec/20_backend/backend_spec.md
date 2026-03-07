@@ -128,6 +128,8 @@
 ### 5.2 最小エンドポイント
 - `POST /api/v1/auth/anonymous`
   - 匿名ユーザー開始（token発行）
+- `DELETE /api/v1/auth/me`
+  - アカウント削除（関連メタ削除 + セッション無効化）
 - `GET /api/v1/me/settings`
   - 設定取得（`ETag`返却）
 - `PUT /api/v1/me/settings`
