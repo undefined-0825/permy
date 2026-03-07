@@ -77,5 +77,5 @@ databases:
   - name: permy-db
     databaseName: permy
     user: permy
-    plan: starter  # 有料プラン（256MB〜）
+    plan: basic  # 新プラン（legacy starter廃止対応）
     region: singapore  # Backend と同じリージョンを推奨
