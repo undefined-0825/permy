@@ -1,6 +1,22 @@
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
+
+
+def normalize_database_url(database_url: str) -> str:
+    """Normalize DATABASE_URL for SQLAlchemy usage.
+
+    Render commonly provides `postgresql://...` or `postgres://...`.
+    Use psycopg driver explicitly to avoid fallback to psycopg2.
+    """
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    if database_url.startswith("postgresql://"):
+        return database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+    return database_url
 
 
 class Settings(BaseSettings):
@@ -62,6 +78,13 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
 
     uvicorn_access_log: bool = False
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def _normalize_database_url(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return normalize_database_url(value)
+        return value
 
 
 settings = Settings()
