@@ -29,7 +29,9 @@ secrets/
 **/exports/**
 **/*.txt
 !docs/**.txt
+!**/requirements.txt
 # (Allow docs/*.txt if you intentionally store documentation text files)
+# (Allow requirements.txt for Python dependencies)
 
 # ---- Logs / runtime ----
 *.log
