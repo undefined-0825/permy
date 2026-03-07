@@ -77,6 +77,36 @@
 
 ## 2. Endpoints
 
+## 2.0 GET /version
+アプリのバージョン情報と更新判定情報を返す。
+
+### Request
+- 認証不要
+
+### Response 200
+```json
+{
+  "app": "permy-serverside",
+  "version": "1.2.0",
+  "latest_version": "1.2.0",
+  "min_supported_version": "1.1.0",
+  "android_store_url": "https://play.google.com/store/apps/details?id=...",
+  "ios_store_url": "https://apps.apple.com/app/id...",
+  "commit": "abc1234",
+  "env": "production"
+}
+```
+
+**Notes**
+- `latest_version`: 任意更新の判定に使用する。
+- `min_supported_version`: 強制更新の判定に使用する。
+- `android_store_url` / `ios_store_url`: ストア誘導先。未設定時は空文字を許容。
+
+### Errors
+- `500 INTERNAL_ERROR`
+
+---
+
 ## 2.1 POST /auth/anonymous
 匿名ユーザーとして開始し、トークンを発行する。
 

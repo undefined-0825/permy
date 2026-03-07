@@ -130,6 +130,28 @@ ios/
 - `meta.plan` は `free|pro` の2値のみ。UI上は free/proとして扱う（pro_compは露出しない）。
 - エラーは `error_code` を最優先で分岐。
 
+### 4.5 起動時アップデート判定（MUST）
+- 起動時に端末のアプリバージョンを取得する（`package_info_plus`）。
+- `GET /api/v1/version` を呼び、以下で判定する。
+  - `installed_version < min_supported_version` の場合：**強制更新**ダイアログを表示
+  - `installed_version < latest_version` の場合：**任意更新**ダイアログを表示
+- ストア誘導先はOSに応じて切り替える。
+  - Android: `android_store_url`
+  - iOS: `ios_store_url`
+- `version` API失敗時は起動を継続する（更新判定失敗でブロックしない）。
+
+#### 4.5.1 UI要件
+- 強制更新時：
+  - ダイアログを閉じられない（ただしストアURL未設定時は閉じるを許可）。
+  - ボタンは「ストアを開く」を表示。
+- 任意更新時：
+  - 「あとで」または同等のスキップ導線を表示。
+  - 「ストアを開く」で外部アプリ遷移（`url_launcher`）する。
+
+#### 4.5.2 Telemetry連携
+- `app_opened.app_version` は固定値ではなく端末実バージョンを送信する。
+- `os` は実行環境で判定する（`android` / `ios`）。
+
 ---
 
 ## 5. エラー処理（error_codes.* 整合）

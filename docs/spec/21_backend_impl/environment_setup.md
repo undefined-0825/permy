@@ -58,6 +58,10 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 - `OPENAI_API_KEY`: LLM呼び出し用（CIでは設定しない）
 - `LOG_LEVEL`: `INFO|DEBUG|WARNING|ERROR`
 - `REDIS_URL`: Phase 2以降（任意）
+- `APP_VERSION`: 最新アプリバージョン（例 `1.2.0`）
+- `APP_MIN_SUPPORTED_VERSION`: 強制更新の最小サポート版（例 `1.1.0`）
+- `APP_ANDROID_STORE_URL`: Google Play のストアURL
+- `APP_IOS_STORE_URL`: App Store のストアURL
 - `MIGRATION_CODE_TTL_MIN`: 移行コード期限（数値は別Specに従う）
 - `RATE_LIMIT_MODE`: `memory|db|redis`
 - `REQUEST_ID_HEADER`: `X-Request-Id` 等
