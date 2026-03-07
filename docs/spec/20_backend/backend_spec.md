@@ -145,8 +145,25 @@
   - 移行コード発行（12桁、期限あり、レート制限）
 - `POST /api/v1/migration/consume`
   - 移行コード消費（1回限り、期限あり、レート制限）
-
-※課金検証API（例：`POST /api/v1/billing/verify`）は導入段階で追加するが、仕様（購読状態の正規化・返金/復元反映）は別Specで管理する。
+- `POST /api/v1/billing/verify`
+  - ストア購入の検証結果を反映
+  - Request:
+    - `platform`（ios/android）
+    - `product_id`（商品ID）
+    - `purchase_token`（購入トークン/レシート）
+  - Response:
+    - `plan`（free/pro）
+    - `verified`（bool）
+  - 動作:
+    - 許可された product_id かチェック（許可リスト: `com.sukimalab.permy.pro_monthly`（iOS）、`pro_monthly`（Android））
+    - purchase_token が存在するかチェック
+    - 検証成功時、`feature_tier=plus`、`billing_tier=pro_store` に更新
+    - PlanStatus を `plan=pro` に更新（未存在なら作成）
+  - 制限:
+    - 本番環境（`APP_ENV=prod`）では無効化（503 `BILLING_NOT_CONFIGURED`）
+    - 現時点は mock mode のみ（実ストアサーバ検証は将来実装）
+  - 注意:
+    - 実ストアサーバ検証（Apple App Store Server API / Google Play Billing API）への置き換えが必要
 
 ### 5.3 エラーコード指針（例）
 - `AUTH_INVALID`

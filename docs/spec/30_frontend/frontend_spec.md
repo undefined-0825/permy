@@ -192,6 +192,39 @@
 
 ---
 
+## 8.5 課金連携（Billing Verification）
+### 8.5.1 概要
+- ストア課金（iOS/Android）と backend を連携し、購入成功時に自動的に feature_tier/billing_tier を更新する。
+- 購入イベントを PurchaseService で監視し、backend へ検証リクエストを送信する。
+
+### 8.5.2 BillingProof モデル
+- PurchaseService から Settings画面へ購入情報を伝達するための軽量モデル
+- フィールド:
+  - `platform`（String: "ios" or "android"）
+  - `productId`（String: 商品ID）
+  - `purchaseToken`（String: 購入トークン/レシート）
+
+### 8.5.3 フロー
+1. ユーザーが Settings画面で「プロプランを購入」操作
+2. PurchaseService が `in_app_purchase` パッケージで購入フロー実行
+3. 購入成功時、PurchaseService が `billingProofStream` に BillingProof を emit
+4. Settings画面が stream を subscribe し、BillingProof を受信
+5. Settings画面が `POST /api/v1/billing/verify` を呼び出し
+6. backend が検証し、成功時に feature_tier/billing_tier を更新
+7. Settings画面がユーザーに成功通知（スナックバー等）
+
+### 8.5.4 エラー対応
+- `BILLING_NOT_CONFIGURED`（503）：ストア検証が未設定（開発中）を案内
+- `BILLING_PRODUCT_INVALID`（400）：商品IDが不正（登録されていない商品）
+- `BILLING_RECEIPT_INVALID`（400）：購入情報が不正
+- ネットワークエラー：リトライ可能を案内
+
+### 8.5.5 注意事項
+- 現時点は mock mode での動作（実ストアサーバ検証は将来実装）
+- 本番環境では `/billing/verify` が 503 を返すため、ストア検証実装後に有効化
+
+---
+
 ## 9. 運用・安全（本文ゼロ）
 ### 9.1 ログ/解析SDK
 - 解析SDKを入れる場合でも、本文が送信されないことを担保する（イベント設計はメタ情報のみ）。
