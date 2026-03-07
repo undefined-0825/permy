@@ -25,6 +25,8 @@ abstract class AppApiClient {
   Future<void> postTelemetryEvents(List<Map<String, dynamic>> events);
 
   Future<AppVersionInfo> getAppVersionInfo();
+
+  Future<void> deleteAccount();
 }
 
 class ApiClient implements AppApiClient {
@@ -296,6 +298,28 @@ class ApiClient implements AppApiClient {
       httpStatus: response.statusCode,
       body: _tryJson(response.body),
     );
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    await bootstrapAuth();
+    return _runWithAuthRetry(() async {
+      final token = await tokenStore.read();
+      final response = await _httpClient.delete(
+        Uri.parse('$baseUrl/api/v1/auth/me'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 204) {
+        await tokenStore.delete();
+        return;
+      }
+
+      throw ApiError.fromBody(
+        httpStatus: response.statusCode,
+        body: _tryJson(response.body),
+      );
+    });
   }
 
   Future<T> _runWithAuthRetry<T>(Future<T> Function() action) async {

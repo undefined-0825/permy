@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Request, Header, Depends
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.db import get_db
-from app.models import User, UserSettings, PlanStatus
+from app.models import User, UserSettings, PlanStatus, UsageDaily
 from app.schemas import AuthAnonymousResponse
-from app.security import create_session
+from app.security import create_session, get_auth_context, AuthContext, invalidate_all_sessions
 from app.ratelimit import fixed_window_limit
 from app.utils import etag_for_json
 
@@ -48,3 +49,30 @@ async def auth_anonymous(
 
     token = await create_session(user.user_id)
     return AuthAnonymousResponse(user_id=user.user_id, access_token=token)
+
+
+@router.delete("/auth/me", status_code=204)
+async def delete_account(
+    auth: AuthContext = Depends(get_auth_context),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    アカウント削除（取り消し不可）
+    - ユーザーデータ（settings含む）を削除
+    - 日次カウントを削除
+    - セッションを無効化
+    """
+    user_id = auth.user_id
+
+    # 関連データを削除
+    await db.execute(delete(UserSettings).where(UserSettings.user_id == user_id))
+    await db.execute(delete(PlanStatus).where(PlanStatus.user_id == user_id))
+    await db.execute(delete(UsageDaily).where(UsageDaily.user_id == user_id))
+    await db.execute(delete(User).where(User.user_id == user_id))
+
+    await db.commit()
+
+    # セッションを無効化
+    await invalidate_all_sessions(user_id)
+
+    return None  # 204 No Content

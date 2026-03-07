@@ -135,6 +135,9 @@ class MockApiClient implements AppApiClient {
       iosStoreUrl: '',
     );
   }
+
+  @override
+  Future<void> deleteAccount() async {}
 }
 
 void main() {
@@ -441,6 +444,79 @@ void main() {
 
       expect(find.byType(PersonaDiagnosisResultScreen), findsOneWidget);
       expect(find.text('あなたのペルソナ'), findsWidgets); // SliverAppBar.large() で複数表示
+    });
+
+    testWidgets('アカウント削除ボタンで確認ダイアログが表示される', (
+      WidgetTester tester,
+    ) async {
+      final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // アカウント削除ボタンまでスクロール
+      await tester.scrollUntilVisible(
+        find.text('アカウントを削除する'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+
+      // アカウント削除ボタンをタップ
+      await tester.tap(find.text('アカウントを削除する'));
+      await tester.pumpAndSettle();
+
+      // 確認ダイアログが表示されることを確認
+      expect(find.text('アカウントを削除しますか？'), findsOneWidget);
+      expect(
+        find.text('すべてのデータが削除され、復元できません。この操作は取り消せません。'),
+        findsOneWidget,
+      );
+      expect(find.text('キャンセル'), findsOneWidget);
+      expect(find.text('削除する'), findsOneWidget);
+    });
+
+    testWidgets('アカウント削除確認でキャンセルを選択できる', (
+      WidgetTester tester,
+    ) async {
+      final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('アカウントを削除する'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('アカウントを削除する'));
+      await tester.pumpAndSettle();
+
+      // キャンセルをタップ
+      await tester.tap(find.text('キャンセル'));
+      await tester.pumpAndSettle();
+
+      // ダイアログが閉じる
+      expect(find.text('アカウントを削除しますか？'), findsNothing);
+      // 設定画面に戻る
+      expect(find.text('設定'), findsOneWidget);
     });
   });
 }

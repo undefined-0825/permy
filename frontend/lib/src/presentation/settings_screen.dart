@@ -333,6 +333,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           child: const Text('オープンソースライセンス'),
                         ),
                         const SizedBox(height: 32),
+                        SectionHeader(title: 'アカウント管理'),
+                        const SizedBox(height: 12),
+                        PrimaryButton(
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            _confirmDeleteAccount();
+                          },
+                          child: const Text('アカウントを削除する'),
+                        ),
+                        const SizedBox(height: 32),
                         PrimaryButton(
                           onPressed: _saving
                               ? null
@@ -734,6 +744,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('サブスク管理画面を開けませんでした')));
+    }
+  }
+
+  Future<void> _confirmDeleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('アカウントを削除しますか？'),
+        content: const Text('すべてのデータが削除され、復元できません。この操作は取り消せません。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('削除する'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _deleteAccount();
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    try {
+      await widget.apiClient.deleteAccount();
+      if (!mounted) return;
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('アカウントを削除しました')));
+    } on ApiError catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('削除に失敗しました: ${e.errorCode}')));
     }
   }
 }

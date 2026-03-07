@@ -63,3 +63,52 @@ def test_auth_anonymous_with_device_fingerprint(client):
     )
     assert res.status_code == 200
     assert "user_id" in res.json()
+
+
+def test_delete_account_requires_auth(client):
+    """
+    DELETE /api/v1/auth/me は認証必須
+    """
+    res = client.delete("/api/v1/auth/me")
+    assert res.status_code == 401
+
+
+def test_delete_account_returns_204(client):
+    """
+    DELETE /api/v1/auth/me は204を返す
+    """
+    # ユーザー作成
+    res = client.post("/api/v1/auth/anonymous")
+    assert res.status_code == 200
+    token = res.json()["access_token"]
+
+    # アカウント削除
+    res = client.delete(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 204
+
+
+def test_delete_account_invalidates_session(client):
+    """
+    アカウント削除後はセッションが無効化される
+    """
+    # ユーザー作成
+    res = client.post("/api/v1/auth/anonymous")
+    assert res.status_code == 200
+    token = res.json()["access_token"]
+
+    # アカウント削除
+    res = client.delete(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 204
+
+    # 削除後のトークンでアクセスすると401
+    res = client.get(
+        "/api/v1/me/settings",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 401
