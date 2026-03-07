@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AboutPrivacyScreen extends StatelessWidget {
   const AboutPrivacyScreen({super.key});
@@ -143,20 +144,43 @@ class AboutPrivacyScreen extends StatelessWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: GestureDetector(
-                              onTap: () {
+                              onTap: () async {
                                 HapticFeedback.lightImpact();
-                                // メールアプリ起動
-                                // TODO: URLランチャー実装
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'support@permy.jp にメールしてください',
-                                    ),
-                                  ),
+                                final Uri emailUri = Uri(
+                                  scheme: 'mailto',
+                                  path: 'sukima.lab.nakanoya@gmail.com',
+                                  queryParameters: {
+                                    'subject': 'Permy お問い合わせ',
+                                  },
                                 );
+                                try {
+                                  if (await canLaunchUrl(emailUri)) {
+                                    await launchUrl(emailUri);
+                                  } else {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'メールアプリが見つかりません',
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'メールアプリの起動に失敗しました',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                }
                               },
                               child: const Text(
-                                'support@permy.jp',
+                                'sukima.lab.nakanoya@gmail.com',
                                 style: TextStyle(color: Color(0xFF3B82F6)),
                               ),
                             ),

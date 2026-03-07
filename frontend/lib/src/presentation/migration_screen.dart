@@ -134,8 +134,9 @@ class _MigrationScreenState extends State<MigrationScreen> {
       if (widget.shareCodeHandler != null) {
         await widget.shareCodeHandler!(shareText);
       } else {
-        await SharePlus.instance.share(
-          ShareParams(text: shareText, subject: 'Permy 端末移行コード'),
+        await Share.share(
+          shareText,
+          subject: 'Permy 端末移行コード',
         );
       }
 
