@@ -162,16 +162,7 @@ class _GenerateScreenState extends State<GenerateScreen>
                           onChanged: (int value) {
                             final isPro = value >= 2; // combo 2-5 は Pro のみ
                             if (isPro && _plan == 'free') {
-                              // Pro 限定オプション選択時は購買画面へ遷移
-                              Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (context) => const Scaffold(
-                                    body: Center(
-                                      child: Text('Pro プランへの購買ページ（準備中）'),
-                                    ),
-                                  ),
-                                ),
-                              );
+                              _showUpsellDialog();
                             } else {
                               setState(() {
                                 _comboId = value;
@@ -429,8 +420,8 @@ class _GenerateScreenState extends State<GenerateScreen>
               .map(
                 (choice) => TextButton(
                   onPressed: () {
-                    // TODO: 選択値をサーバへ保存（PUT /me/settings）
-                    Navigator.of(context).pop();
+                    HapticFeedback.selectionClick();
+                    _saveFollowupChoice(followup, choice);
                   },
                   child: Text(choice.label),
                 ),
@@ -439,6 +430,53 @@ class _GenerateScreenState extends State<GenerateScreen>
         );
       },
     );
+  }
+
+  Future<void> _saveFollowupChoice(
+    FollowupInfo followup,
+    FollowupChoice choice,
+  ) async {
+    Navigator.of(context).pop();
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final snapshot = await widget.apiClient.getSettings();
+      final updated = Map<String, dynamic>.from(snapshot.settings);
+
+      if (followup.key == 'ng_tags' || followup.key == 'ng_free_phrases') {
+        final values = (updated[followup.key] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            <String>[];
+        if (!values.contains(choice.id)) {
+          values.add(choice.id);
+        }
+        updated[followup.key] = values;
+      } else {
+        updated[followup.key] = choice.id;
+      }
+
+      await widget.apiClient.updateSettings(updated, snapshot.etag);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('情報を反映したよ。もう一度生成してみてね')),
+      );
+    } on ApiError catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = error;
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+      });
+    }
   }
 }
 
@@ -546,9 +584,8 @@ class _ComboSelector extends StatelessWidget {
                   final isLocked = isProOnly && !isPro;
                   return DropdownMenuItem<int>(
                     value: index,
-                    enabled: !isLocked,
                     child: Text(
-                      label,
+                      isLocked ? '$label（Pro）' : label,
                       style: TextStyle(
                         color: isLocked
                             ? PermyColors.metaText

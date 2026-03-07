@@ -9,6 +9,11 @@ import 'package:sample_app/src/infrastructure/telemetry_queue.dart';
 import 'package:sample_app/src/presentation/generate_screen.dart';
 
 class _FakeApiClient implements AppApiClient {
+  _FakeApiClient({this.generateResult});
+
+  final GenerateResult? generateResult;
+  Map<String, dynamic> lastUpdatedSettings = <String, dynamic>{};
+
   @override
   Future<void> bootstrapAuth() async {}
 
@@ -29,14 +34,23 @@ class _FakeApiClient implements AppApiClient {
 
   @override
   Future<SettingsSnapshot> getSettings() async {
-    return SettingsSnapshot(settings: <String, dynamic>{}, etag: 'test');
+    return SettingsSnapshot(
+      settings: <String, dynamic>{
+        'relationship_type': 'new_customer',
+        'ng_tags': <String>[],
+        'ng_free_phrases': <String>[],
+      },
+      etag: 'test',
+    );
   }
 
   @override
   Future<void> updateSettings(
     Map<String, dynamic> settings,
     String etag,
-  ) async {}
+  ) async {
+    lastUpdatedSettings = Map<String, dynamic>.from(settings);
+  }
 
   @override
   Future<MigrationIssueResult> issueMigrationCode() async {
@@ -59,6 +73,10 @@ class _FakeApiClient implements AppApiClient {
     required String historyText,
     int comboId = 0,
   }) async {
+    if (generateResult != null) {
+      return generateResult!;
+    }
+
     return GenerateResult(
       candidates: [
         Candidate(label: 'A', text: '返信案A'),
@@ -142,5 +160,67 @@ void main() {
     expect(find.textContaining('A: 返信案A'), findsOneWidget);
     expect(find.textContaining('B: 返信案B'), findsOneWidget);
     expect(find.textContaining('C: 返信案C'), findsOneWidget);
+  });
+
+  testWidgets('Followup選択でsettingsを保存できる', (WidgetTester tester) async {
+    final apiClient = _FakeApiClient(
+      generateResult: GenerateResult(
+        candidates: [Candidate(label: 'A', text: '返信案A')],
+        plan: 'free',
+        daily: DailyInfo(limit: 3, used: 1, remaining: 2),
+        followup: FollowupInfo(
+          key: 'relationship_type',
+          question: 'お客様との関係を教えてね',
+          choices: [FollowupChoice(id: 'repeat', label: '常連')],
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: apiClient,
+          shareReceiver: _FakeShareInput(
+            SharePayload(text: '共有本文', fileName: 'line.txt'),
+          ),
+          telemetryQueue: _FakeTelemetryQueue(),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.text('ぼくが返信案を考えるよ'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('情報補足'), findsOneWidget);
+    await tester.tap(find.text('常連'));
+    await tester.pumpAndSettle();
+
+    expect(apiClient.lastUpdatedSettings['relationship_type'], 'repeat');
+    expect(find.text('情報を反映したよ。もう一度生成してみてね'), findsOneWidget);
+  });
+
+  testWidgets('FreeでPro項目選択時に購買案内を表示する', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: _FakeApiClient(),
+          shareReceiver: _FakeShareInput(
+            SharePayload(text: '共有本文', fileName: 'line.txt'),
+          ),
+          telemetryQueue: _FakeTelemetryQueue(),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final dropdown = tester.widget<DropdownButton<int>>(
+      find.byType(DropdownButton<int>),
+    );
+    dropdown.onChanged?.call(2);
+    await tester.pumpAndSettle();
+
+    expect(find.text('有料版のみ'), findsOneWidget);
+    expect(find.text('このモードはProで使える機能だよ。'), findsOneWidget);
   });
 }
