@@ -1,12 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sample_app/src/domain/models.dart';
 import 'package:sample_app/src/domain/persona_diagnosis.dart';
 import 'package:sample_app/src/domain/telemetry_event.dart';
 import 'package:sample_app/src/infrastructure/api_client.dart';
+import 'package:sample_app/src/infrastructure/purchase_service.dart';
 import 'package:sample_app/src/infrastructure/share_receiver.dart';
 import 'package:sample_app/src/infrastructure/telemetry_queue.dart';
 import 'package:sample_app/src/presentation/generate_screen.dart';
+
+class _FakePurchaseService extends PurchaseService {
+  _FakePurchaseService()
+    : super(
+        storage: const FlutterSecureStorage(),
+      );
+
+  @override
+  bool get isPro => false;
+
+  @override
+  Future<void> initialize() async {}
+
+  @override
+  void dispose() {}
+
+  @override
+  Future<bool> isAvailable() async => true;
+
+  @override
+  Future<void> purchase() async {}
+
+  @override
+  Future<void> restorePurchases() async {}
+}
 
 class _FakeApiClient implements AppApiClient {
   _FakeApiClient({this.generateResult});
@@ -144,6 +171,7 @@ void main() {
           apiClient: _FakeApiClient(),
           shareReceiver: _FakeShareInput(null),
           telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
         ),
       ),
     );
@@ -162,6 +190,7 @@ void main() {
             SharePayload(text: '共有本文', fileName: 'line.txt'),
           ),
           telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
         ),
       ),
     );
@@ -204,6 +233,7 @@ void main() {
             SharePayload(text: '共有本文', fileName: 'line.txt'),
           ),
           telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
         ),
       ),
     );
@@ -229,6 +259,7 @@ void main() {
             SharePayload(text: '共有本文', fileName: 'line.txt'),
           ),
           telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
         ),
       ),
     );

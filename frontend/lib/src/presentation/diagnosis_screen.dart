@@ -200,6 +200,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
             ...question.choices.map((choice) {
               final isSelected = _answers[question.id] == choice.id;
               return _ChoiceCard(
+                choiceId: choice.id,
                 label: choice.label,
                 isSelected: isSelected,
                 onTap: () {
@@ -441,11 +442,13 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
 
 class _ChoiceCard extends StatefulWidget {
   const _ChoiceCard({
+    required this.choiceId,
     required this.label,
     required this.isSelected,
     required this.onTap,
   });
 
+  final String choiceId;
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
@@ -482,7 +485,7 @@ class _ChoiceCardState extends State<_ChoiceCard> {
           ),
           child: Row(
             children: [
-              // プレースホルダー画像エリア（後でキャラクター画像に差し替え）
+              // 選択肢画像
               Container(
                 width: 40,
                 height: 40,
@@ -490,10 +493,22 @@ class _ChoiceCardState extends State<_ChoiceCard> {
                   color: const Color(0xFFFCE7F3),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
-                  Icons.image_outlined,
-                  size: 20,
-                  color: Color(0xFFFBCFE8),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/images/diagnosis_choices/${widget.choiceId}.png',
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      // 画像が存在しない場合はアイコンで代用
+                      return const Icon(
+                        Icons.image_outlined,
+                        size: 20,
+                        color: Color(0xFFFBCFE8),
+                      );
+                    },
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
