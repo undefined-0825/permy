@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../domain/models.dart';
 import '../domain/persona_diagnosis.dart';
+import 'persona_diagnosis_result_screen.dart';
 import 'widgets/primary_button.dart';
 
 class DiagnosisScreen extends StatefulWidget {
@@ -276,11 +277,30 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
             // スタイルスコア
             _buildStyleScores(result),
             const SizedBox(height: 32),
-            // わかりました ボタン
+            // 詳しく見る ボタン
+            OutlinedButton(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => PersonaDiagnosisResultScreen(
+                      trueType: result.trueSelfType,
+                      nightType: result.nightSelfType,
+                      assertiveness: result.styleAssertiveness,
+                      warmth: result.styleWarmth,
+                      riskGuard: result.styleRiskGuard,
+                    ),
+                  ),
+                );
+              },
+              child: const Text('詳しく見る'),
+            ),
+            const SizedBox(height: 16),
+            // さっそく使ってみる ボタン
             PrimaryButton(
               onPressed: !_saving ? _onResultConfirmed : null,
               isLoading: _saving,
-              child: const Text('わかりました'),
+              child: const Text('さっそく使ってみる'),
             ),
             const SizedBox(height: 16),
           ],
