@@ -8,6 +8,7 @@ import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
 import 'about_privacy_screen.dart';
 import 'diagnosis_screen.dart';
+import 'help_screen.dart';
 import 'migration_screen.dart';
 import 'onboarding_screen.dart';
 import 'persona_diagnosis_result_screen.dart';
@@ -278,6 +279,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             );
                           },
                           child: const Text('プライバシーポリシー'),
+                        ),
+                        const SizedBox(height: 12),
+                        PrimaryButton(
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const HelpScreen(),
+                              ),
+                            );
+                          },
+                          child: const Text('ヘルプ（使い方）'),
                         ),
                         const SizedBox(height: 12),
                         PrimaryButton(

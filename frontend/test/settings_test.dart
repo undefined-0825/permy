@@ -6,6 +6,7 @@ import 'package:sample_app/src/domain/persona_diagnosis.dart';
 import 'package:sample_app/src/infrastructure/api_client.dart';
 import 'package:sample_app/src/presentation/about_privacy_screen.dart';
 import 'package:sample_app/src/presentation/diagnosis_screen.dart';
+import 'package:sample_app/src/presentation/help_screen.dart';
 import 'package:sample_app/src/presentation/migration_screen.dart';
 import 'package:sample_app/src/presentation/onboarding_screen.dart';
 import 'package:sample_app/src/presentation/persona_diagnosis_result_screen.dart';
@@ -257,6 +258,27 @@ void main() {
 
       expect(find.byType(PrivacyPolicyScreen), findsOneWidget);
       expect(find.text('1. 基本方針'), findsOneWidget);
+    });
+
+    testWidgets('ヘルプボタンでヘルプ画面へ遷移できる', (WidgetTester tester) async {
+      final mockApi = MockApiClient();
+
+      await tester.pumpWidget(
+        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+      );
+
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('ヘルプ（使い方）'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('ヘルプ（使い方）'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(HelpScreen), findsOneWidget);
+      expect(find.text('2. 基本の使い方'), findsOneWidget);
     });
 
     testWidgets('再チュートリアルボタンで Onboarding 画面へ遷移できる', (
