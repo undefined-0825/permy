@@ -5,21 +5,14 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
 /// 課金状態（アプリ内管理用）
-enum AppPurchaseStatus {
-  free,
-  pro,
-  pending,
-  error,
-}
+enum AppPurchaseStatus { free, pro, pending, error }
 
 /// 課金サービス（MVPシンプル実装）
 /// - ローカル状態管理のみ（backend連携なし）
 /// - 購入・復元・サブスク管理導線を提供
 class PurchaseService {
-  PurchaseService({
-    required this.storage,
-    InAppPurchase? iapInstance,
-  }) : _iap = iapInstance ?? InAppPurchase.instance;
+  PurchaseService({required this.storage, InAppPurchase? iapInstance})
+    : _iap = iapInstance ?? InAppPurchase.instance;
 
   final FlutterSecureStorage storage;
   final InAppPurchase _iap;

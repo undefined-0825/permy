@@ -58,9 +58,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
       tokenStore: const SecureTokenStore(),
     );
     _telemetryQueue = TelemetryQueue(apiClient: _apiClient);
-    _purchaseService = PurchaseService(
-      storage: const FlutterSecureStorage(),
-    );
+    _purchaseService = PurchaseService(storage: const FlutterSecureStorage());
     _bootstrap();
   }
 

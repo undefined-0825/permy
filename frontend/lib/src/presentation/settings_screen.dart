@@ -682,23 +682,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final available = await widget.purchaseService.isAvailable();
       if (!available) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ストアが利用できません')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('ストアが利用できません')));
         return;
       }
 
       await widget.purchaseService.purchase();
       // 購入結果は PurchaseService のリスナーで処理される
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('購入処理を開始しました')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('購入処理を開始しました')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('購入に失敗しました: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('購入に失敗しました: $e')));
     }
   }
 
@@ -706,15 +706,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       await widget.purchaseService.restorePurchases();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('購入を復元しました')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('購入を復元しました')));
       setState(() {}); // 状態を更新
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('復元に失敗しました: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('復元に失敗しました: $e')));
     }
   }
 
@@ -724,18 +724,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (Theme.of(context).platform == TargetPlatform.iOS) {
       uri = Uri.parse('https://apps.apple.com/account/subscriptions');
     } else {
-      uri = Uri.parse(
-        'https://play.google.com/store/account/subscriptions',
-      );
+      uri = Uri.parse('https://play.google.com/store/account/subscriptions');
     }
 
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('サブスク管理画面を開けませんでした')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('サブスク管理画面を開けませんでした')));
     }
   }
 }
