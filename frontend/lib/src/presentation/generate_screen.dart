@@ -272,7 +272,8 @@ class _GenerateScreenState extends State<GenerateScreen>
       final ngTags = settings['ng_tags'];
       final ngFreePhrases = settings['ng_free_phrases'];
 
-      hasNgSetting = (ngTags is List && ngTags.isNotEmpty) ||
+      hasNgSetting =
+          (ngTags is List && ngTags.isNotEmpty) ||
           (ngFreePhrases is List && ngFreePhrases.isNotEmpty);
     } catch (_) {
       // 設定取得失敗の場合は false のまま
