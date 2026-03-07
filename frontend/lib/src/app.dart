@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -10,6 +11,7 @@ import 'domain/app_versioning.dart';
 import 'domain/persona_diagnosis.dart';
 import 'domain/telemetry_event.dart';
 import 'infrastructure/api_client.dart';
+import 'infrastructure/purchase_service.dart';
 import 'infrastructure/share_receiver.dart';
 import 'infrastructure/telemetry_queue.dart';
 import 'infrastructure/token_store.dart';
@@ -40,6 +42,7 @@ class AppRoot extends StatefulWidget {
 class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   late final ApiClient _apiClient;
   late final TelemetryQueue _telemetryQueue;
+  late final PurchaseService _purchaseService;
   final ShareReceiver _shareReceiver = const ShareReceiver();
 
   bool _loading = true;
@@ -55,11 +58,15 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
       tokenStore: const SecureTokenStore(),
     );
     _telemetryQueue = TelemetryQueue(apiClient: _apiClient);
+    _purchaseService = PurchaseService(
+      storage: const FlutterSecureStorage(),
+    );
     _bootstrap();
   }
 
   @override
   void dispose() {
+    _purchaseService.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -76,6 +83,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
 
   Future<void> _bootstrap() async {
     await _apiClient.bootstrapAuth();
+    await _purchaseService.initialize();
 
     final packageInfo = await PackageInfo.fromPlatform();
     final installedVersion = packageInfo.version;
@@ -225,6 +233,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
       apiClient: _apiClient,
       shareReceiver: _shareReceiver,
       telemetryQueue: _telemetryQueue,
+      purchaseService: _purchaseService,
     );
   }
 }

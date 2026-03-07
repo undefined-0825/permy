@@ -7,6 +7,7 @@ import '../../core/theme.dart';
 import '../domain/models.dart';
 import '../domain/telemetry_event.dart';
 import '../infrastructure/api_client.dart';
+import '../infrastructure/purchase_service.dart';
 import '../infrastructure/share_receiver.dart';
 import '../infrastructure/telemetry_queue.dart';
 import 'settings_screen.dart';
@@ -17,12 +18,14 @@ class GenerateScreen extends StatefulWidget {
     required this.apiClient,
     required this.shareReceiver,
     required this.telemetryQueue,
+    required this.purchaseService,
     super.key,
   });
 
   final AppApiClient apiClient;
   final ShareInput shareReceiver;
   final TelemetryQueue telemetryQueue;
+  final PurchaseService purchaseService;
 
   @override
   State<GenerateScreen> createState() => _GenerateScreenState();
@@ -114,8 +117,10 @@ class _GenerateScreenState extends State<GenerateScreen>
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) =>
-                      SettingsScreen(apiClient: widget.apiClient),
+                  builder: (context) => SettingsScreen(
+                    apiClient: widget.apiClient,
+                    purchaseService: widget.purchaseService,
+                  ),
                 ),
               );
             },

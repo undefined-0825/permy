@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:sample_app/src/domain/models.dart';
 import 'package:sample_app/src/domain/persona_diagnosis.dart';
 import 'package:sample_app/src/infrastructure/api_client.dart';
+import 'package:sample_app/src/infrastructure/purchase_service.dart';
 import 'package:sample_app/src/presentation/about_privacy_screen.dart';
 import 'package:sample_app/src/presentation/diagnosis_screen.dart';
 import 'package:sample_app/src/presentation/help_screen.dart';
@@ -13,6 +15,34 @@ import 'package:sample_app/src/presentation/persona_diagnosis_result_screen.dart
 import 'package:sample_app/src/presentation/privacy_policy_screen.dart';
 import 'package:sample_app/src/presentation/settings_screen.dart';
 import 'package:sample_app/src/presentation/terms_of_service_screen.dart';
+
+// Mock Purchase Service
+class MockPurchaseService extends PurchaseService {
+  MockPurchaseService({this.mockIsPro = false})
+      : super(
+          storage: const FlutterSecureStorage(),
+        );
+
+  final bool mockIsPro;
+
+  @override
+  bool get isPro => mockIsPro;
+
+  @override
+  Future<void> initialize() async {}
+
+  @override
+  void dispose() {}
+
+  @override
+  Future<bool> isAvailable() async => true;
+
+  @override
+  Future<void> purchase() async {}
+
+  @override
+  Future<void> restorePurchases() async {}
+}
 
 // Mock API Client
 class MockApiClient implements AppApiClient {
@@ -111,9 +141,15 @@ void main() {
   group('Settings Screen', () {
     testWidgets('設定を読み込んで表示できる', (WidgetTester tester) async {
       final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
 
       await tester.pumpWidget(
-        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
       );
 
       // ローディング状態を確認
@@ -129,9 +165,15 @@ void main() {
 
     testWidgets('コンボ設定を変更できる', (WidgetTester tester) async {
       final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
 
       await tester.pumpWidget(
-        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
       );
 
       await tester.pumpAndSettle();
@@ -148,9 +190,15 @@ void main() {
       final mockApi = MockApiClient(
         settingsSnapshot: SettingsSnapshot(settings: {}, etag: ''),
       );
+      final mockPurchase = MockPurchaseService();
 
       await tester.pumpWidget(
-        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
       );
 
       await tester.pumpAndSettle();
@@ -161,9 +209,15 @@ void main() {
 
     testWidgets('再診断ボタンで診断画面へ遷移できる', (WidgetTester tester) async {
       final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
 
       await tester.pumpWidget(
-        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
       );
 
       await tester.pumpAndSettle();
@@ -178,9 +232,15 @@ void main() {
 
     testWidgets('端末移行ボタンで Migration 画面へ遷移できる', (WidgetTester tester) async {
       final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
 
       await tester.pumpWidget(
-        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
       );
 
       await tester.pumpAndSettle();
@@ -199,9 +259,15 @@ void main() {
 
     testWidgets('このアプリについてボタンで About 画面へ遷移できる', (WidgetTester tester) async {
       final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
 
       await tester.pumpWidget(
-        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
       );
 
       await tester.pumpAndSettle();
@@ -220,9 +286,15 @@ void main() {
 
     testWidgets('利用規約ボタンで利用規約画面へ遷移できる', (WidgetTester tester) async {
       final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
 
       await tester.pumpWidget(
-        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
       );
 
       await tester.pumpAndSettle();
@@ -241,9 +313,15 @@ void main() {
 
     testWidgets('プライバシーポリシーボタンで画面へ遷移できる', (WidgetTester tester) async {
       final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
 
       await tester.pumpWidget(
-        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
       );
 
       await tester.pumpAndSettle();
@@ -262,9 +340,15 @@ void main() {
 
     testWidgets('ヘルプボタンでヘルプ画面へ遷移できる', (WidgetTester tester) async {
       final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
 
       await tester.pumpWidget(
-        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
       );
 
       await tester.pumpAndSettle();
@@ -281,13 +365,17 @@ void main() {
       expect(find.text('2. 基本の使い方'), findsOneWidget);
     });
 
-    testWidgets('オープンソースライセンスボタンでライセンスページへ遷移できる', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('オープンソースライセンスボタンでライセンスページへ遷移できる', (WidgetTester tester) async {
       final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
 
       await tester.pumpWidget(
-        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
       );
 
       await tester.pumpAndSettle();
@@ -308,9 +396,15 @@ void main() {
       WidgetTester tester,
     ) async {
       final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
 
       await tester.pumpWidget(
-        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
       );
 
       await tester.pumpAndSettle();
@@ -329,9 +423,15 @@ void main() {
 
     testWidgets('ペルソナ欄タップで診断結果画面へ遷移できる', (WidgetTester tester) async {
       final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
 
       await tester.pumpWidget(
-        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
       );
 
       await tester.pumpAndSettle();

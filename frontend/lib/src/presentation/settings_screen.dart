@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme.dart';
 import '../domain/persona_diagnosis.dart';
 import '../domain/persona_type_helper.dart';
 import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
+import '../infrastructure/purchase_service.dart';
 import 'about_privacy_screen.dart';
 import 'diagnosis_screen.dart';
 import 'help_screen.dart';
@@ -17,9 +19,14 @@ import 'terms_of_service_screen.dart';
 import 'widgets/primary_button.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({required this.apiClient, super.key});
+  const SettingsScreen({
+    required this.apiClient,
+    required this.purchaseService,
+    super.key,
+  });
 
   final AppApiClient apiClient;
+  final PurchaseService purchaseService;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -252,6 +259,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           },
                           child: const Text('チュートリアルをもう一度確認する'),
                         ),
+                        const SizedBox(height: 32),
+                        SectionHeader(title: 'Pro版（月額2,980円）'),
+                        const SizedBox(height: 12),
+                        _buildPurchaseSection(),
                         const SizedBox(height: 32),
                         SectionHeader(title: 'もっと知る'),
                         const SizedBox(height: 12),
@@ -601,6 +612,130 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (index >= 0 && index < ngFreePhrases.length) {
       ngFreePhrases.removeAt(index);
       _updateSetting('ng_free_phrases', ngFreePhrases);
+    }
+  }
+
+  Widget _buildPurchaseSection() {
+    final isPro = widget.purchaseService.isPro;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (isPro)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: PermyColors.highlight,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text(
+              'Pro版をご利用中です\n1日100回まで生成できます',
+              style: TextStyle(fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          )
+        else
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Pro版の特典:',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '• 1日100回まで生成可能（Freeは3回）\n• 推定メーター表示\n• すべての生成方針が選択可能',
+                style: TextStyle(fontSize: 14, color: PermyColors.bodyText),
+              ),
+              const SizedBox(height: 16),
+              PrimaryButton(
+                onPressed: () {
+                  HapticFeedback.mediumImpact();
+                  _purchasePro();
+                },
+                child: const Text('Proにアップグレード（月額2,980円）'),
+              ),
+            ],
+          ),
+        const SizedBox(height: 12),
+        PrimaryButton(
+          onPressed: () {
+            HapticFeedback.mediumImpact();
+            _restorePurchases();
+          },
+          child: const Text('購入を復元'),
+        ),
+        const SizedBox(height: 12),
+        PrimaryButton(
+          onPressed: () {
+            HapticFeedback.mediumImpact();
+            _openSubscriptionManagement();
+          },
+          child: const Text('サブスクリプション管理'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _purchasePro() async {
+    try {
+      final available = await widget.purchaseService.isAvailable();
+      if (!available) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ストアが利用できません')),
+        );
+        return;
+      }
+
+      await widget.purchaseService.purchase();
+      // 購入結果は PurchaseService のリスナーで処理される
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('購入処理を開始しました')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('購入に失敗しました: $e')),
+      );
+    }
+  }
+
+  Future<void> _restorePurchases() async {
+    try {
+      await widget.purchaseService.restorePurchases();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('購入を復元しました')),
+      );
+      setState(() {}); // 状態を更新
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('復元に失敗しました: $e')),
+      );
+    }
+  }
+
+  Future<void> _openSubscriptionManagement() async {
+    // iOS/Androidのサブスク管理画面へ遷移
+    final Uri uri;
+    if (Theme.of(context).platform == TargetPlatform.iOS) {
+      uri = Uri.parse('https://apps.apple.com/account/subscriptions');
+    } else {
+      uri = Uri.parse(
+        'https://play.google.com/store/account/subscriptions',
+      );
+    }
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('サブスク管理画面を開けませんでした')),
+      );
     }
   }
 }
