@@ -109,12 +109,16 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
     });
   }
 
-  Future<void> _onDiagnosisCompleted(List<DiagnosisAnswer> answers) async {
-    await _apiClient.completeDiagnosis(answers);
-    if (!mounted) return;
-    setState(() {
-      _needsDiagnosis = false;
-    });
+  Future<DiagnosisResult> _onDiagnosisCompleted(
+    List<DiagnosisAnswer> answers,
+  ) async {
+    final result = await _apiClient.completeDiagnosis(answers);
+    if (mounted) {
+      setState(() {
+        _needsDiagnosis = false;
+      });
+    }
+    return result;
   }
 
   @override

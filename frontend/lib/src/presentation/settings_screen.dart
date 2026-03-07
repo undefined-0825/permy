@@ -28,11 +28,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _loading = true;
   bool _saving = false;
   ApiError? _error;
+  final TextEditingController _ngPhraseController = TextEditingController();
+
+  // NGタグの定義
+  static const Map<String, String> _ngTagLabels = {
+    'no_preach': '説教しない',
+    'no_pressure': 'プレッシャーをかけない',
+    'no_romance_bait': '恋愛的な駆け引きNG',
+    'no_money_talk': 'お金の話をしない',
+    'no_sexual_joke': '性的な冗談をしない',
+    'no_late_reply_blame': '返信の催促をしない',
+  };
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+  }
+
+  @override
+  void dispose() {
+    _ngPhraseController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSettings() async {
@@ -365,20 +382,169 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildNGSetting() {
-    final forbidden =
-        (_settings['forbidden_type_ids'] as List?)
-            ?.map((e) => (e as num).toInt())
+    final ngTags =
+        (_settings['ng_tags'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        [];
+    final ngFreePhrases =
+        (_settings['ng_free_phrases'] as List<dynamic>?)
+            ?.map((e) => e.toString())
             .toList() ??
         [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text('禁止ワード・表現を設定してください。\n実装は後日予定です。'),
+        const Text(
+          'NGタグ（複数選択可）',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: _ngTagLabels.entries.map((entry) {
+            final isSelected = ngTags.contains(entry.key);
+            return FilterChip(
+              label: Text(entry.value),
+              selected: isSelected,
+              onSelected: (selected) {
+                HapticFeedback.selectionClick();
+                final updatedTags = List<String>.from(ngTags);
+                if (selected) {
+                  updatedTags.add(entry.key);
+                } else {
+                  updatedTags.remove(entry.key);
+                }
+                _updateSetting('ng_tags', updatedTags);
+              },
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 24),
+        const Text(
+          '禁止フレーズ（自由入力、最大10件）',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _ngPhraseController,
+                decoration: const InputDecoration(
+                  hintText: '例: 会いたい',
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
+                maxLength: 64,
+                onSubmitted: (_) => _addNgPhrase(),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.add_circle),
+              onPressed: ngFreePhrases.length >= 10 ? null : _addNgPhrase,
+              color: PermyColors.primaryPink,
+            ),
+          ],
+        ),
+        if (ngFreePhrases.length >= 10)
+          const Padding(
+            padding: EdgeInsets.only(top: 4),
+            child: Text(
+              '※ 最大10件まで登録できます',
+              style: TextStyle(fontSize: 12, color: Colors.red),
+            ),
+          ),
         const SizedBox(height: 12),
-        Text('現在の禁止設定: ${forbidden.isEmpty ? 'なし' : forbidden.join(', ')}'),
+        if (ngFreePhrases.isEmpty)
+          const Text(
+            '禁止フレーズが登録されていません',
+            style: TextStyle(fontSize: 12, color: PermyColors.bodyText),
+          )
+        else
+          ...ngFreePhrases.asMap().entries.map((entry) {
+            final index = entry.key;
+            final phrase = entry.value;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: PermyColors.lightPink.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(phrase),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, size: 20),
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      _removeNgPhrase(index);
+                    },
+                    color: Colors.grey,
+                  ),
+                ],
+              ),
+            );
+          }),
       ],
     );
+  }
+
+  void _addNgPhrase() {
+    final phrase = _ngPhraseController.text.trim();
+    if (phrase.isEmpty) return;
+
+    final ngFreePhrases =
+        (_settings['ng_free_phrases'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        [];
+
+    if (ngFreePhrases.length >= 10) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('禁止フレーズは最大10件までです')));
+      return;
+    }
+
+    if (ngFreePhrases.contains(phrase)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('既に登録されています')));
+      return;
+    }
+
+    HapticFeedback.lightImpact();
+    ngFreePhrases.add(phrase);
+    _updateSetting('ng_free_phrases', ngFreePhrases);
+    _ngPhraseController.clear();
+  }
+
+  void _removeNgPhrase(int index) {
+    final ngFreePhrases =
+        (_settings['ng_free_phrases'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        [];
+
+    if (index >= 0 && index < ngFreePhrases.length) {
+      ngFreePhrases.removeAt(index);
+      _updateSetting('ng_free_phrases', ngFreePhrases);
+    }
   }
 }
 

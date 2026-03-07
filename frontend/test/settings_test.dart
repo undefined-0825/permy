@@ -172,7 +172,11 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      await tester.scrollUntilVisible(find.text('端末移行の設定'), 200);
+      await tester.scrollUntilVisible(
+        find.text('端末移行の設定'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.tap(find.text('端末移行の設定'));
       await tester.pumpAndSettle();
 
@@ -189,7 +193,11 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      await tester.scrollUntilVisible(find.text('このアプリについて'), 200);
+      await tester.scrollUntilVisible(
+        find.text('このアプリについて'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.tap(find.text('このアプリについて'));
       await tester.pumpAndSettle();
 
@@ -208,7 +216,11 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      await tester.scrollUntilVisible(find.text('チュートリアルをもう一度確認する'), 200);
+      await tester.scrollUntilVisible(
+        find.text('チュートリアルをもう一度確認する'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.tap(find.text('チュートリアルをもう一度確認する'));
       await tester.pumpAndSettle();
 
