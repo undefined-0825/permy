@@ -89,7 +89,9 @@ async def test_resilient_redis_pipeline_fallback():
     """
     fallback = _MemoryRedis()
     primary_mock = MagicMock()
-    pipe_mock = AsyncMock()
+    pipe_mock = MagicMock()
+    pipe_mock.incr = MagicMock(return_value=pipe_mock)
+    pipe_mock.ttl = MagicMock(return_value=pipe_mock)
     pipe_mock.execute.side_effect = ConnectionError("Pipeline failed")
     primary_mock.pipeline.return_value = pipe_mock
 
@@ -130,3 +132,70 @@ async def test_resilient_redis_continues_fallback_after_switch():
     # primary.get() は 1回目の set エラー後は呼ばれない
     # (primary がすでに None なので try ブロックをスキップ)
     assert primary_mock.get.call_count == 0
+
+
+@pytest.mark.asyncio
+async def test_resilient_redis_recovers_primary_via_factory():
+    """
+    フォールバック後、primary_factory で再接続できれば primary に復帰する
+    """
+    fallback = _MemoryRedis()
+
+    primary_bad = AsyncMock()
+    primary_bad.get.side_effect = ConnectionError("Redis down")
+
+    primary_good = AsyncMock()
+    primary_good.get.return_value = "from-primary"
+
+    calls = {"n": 0}
+
+    def factory():
+        calls["n"] += 1
+        return primary_good
+
+    resilient = _ResilientRedis(
+        primary=primary_bad,
+        fallback=fallback,
+        primary_factory=factory,
+        reconnect_interval_seconds=0,
+    )
+
+    # 1回目: primary_bad が失敗して fallback へ
+    first = await resilient.get("k1")
+    assert first is None
+    assert resilient._primary is None
+
+    # 2回目: factory で復旧して primary_good が使われる
+    second = await resilient.get("k1")
+    assert second == "from-primary"
+    assert resilient._primary is primary_good
+    assert calls["n"] >= 1
+
+
+@pytest.mark.asyncio
+async def test_resilient_redis_reconnect_interval_blocks_frequent_retry():
+    """
+    再接続リトライ間隔内は factory を再実行しない
+    """
+    fallback = _MemoryRedis()
+    primary_bad = AsyncMock()
+    primary_bad.get.side_effect = ConnectionError("Redis down")
+
+    calls = {"n": 0}
+
+    def factory():
+        calls["n"] += 1
+        raise ConnectionError("still down")
+
+    resilient = _ResilientRedis(
+        primary=primary_bad,
+        fallback=fallback,
+        primary_factory=factory,
+        reconnect_interval_seconds=3600,
+    )
+
+    await resilient.get("k1")  # fallback化
+    await resilient.get("k1")  # ここで factory 1回
+    await resilient.get("k1")  # 間隔内なので factory 再実行なし
+
+    assert calls["n"] == 1

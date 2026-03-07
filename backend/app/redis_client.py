@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import time
 from typing import Any, Optional
 
 try:
@@ -141,14 +142,43 @@ class _ResilientPipeline:
 
 
 class _ResilientRedis:
-    def __init__(self, primary: Any | None, fallback: _MemoryRedis):
+    def __init__(
+        self,
+        primary: Any | None,
+        fallback: _MemoryRedis,
+        primary_factory: Any | None = None,
+        reconnect_interval_seconds: float = 5.0,
+    ):
         self._primary = primary
         self._fallback = fallback
+        self._primary_factory = primary_factory
+        self._reconnect_interval_seconds = reconnect_interval_seconds
+        self._last_reconnect_attempt_at = 0.0
 
     def _activate_fallback(self) -> None:
         self._primary = None
 
+    def _can_attempt_reconnect(self) -> bool:
+        now = time.monotonic()
+        if now - self._last_reconnect_attempt_at < self._reconnect_interval_seconds:
+            return False
+        self._last_reconnect_attempt_at = now
+        return True
+
+    def _try_reconnect(self) -> None:
+        if self._primary is not None:
+            return
+        if self._primary_factory is None:
+            return
+        if not self._can_attempt_reconnect():
+            return
+        try:
+            self._primary = self._primary_factory()
+        except Exception:
+            self._primary = None
+
     async def _call(self, method: str, *a, **kw):
+        self._try_reconnect()
         if self._primary is not None:
             try:
                 return await getattr(self._primary, method)(*a, **kw)
@@ -184,6 +214,7 @@ class _ResilientRedis:
         return await self._call("smembers", key)
 
     def pipeline(self):
+        self._try_reconnect()
         return _ResilientPipeline(self)
 
 
@@ -194,8 +225,9 @@ def _create_client():
     if redis is None:
         return fallback
     try:
-        primary = redis.from_url(settings.redis_url, decode_responses=True)
-        return _ResilientRedis(primary=primary, fallback=fallback)
+        primary_factory = lambda: redis.from_url(settings.redis_url, decode_responses=True)
+        primary = primary_factory()
+        return _ResilientRedis(primary=primary, fallback=fallback, primary_factory=primary_factory)
     except Exception:
         return fallback
 
