@@ -104,28 +104,87 @@ pytest -q
 
 ---
 
-## 5. Render でのテスト運用（Phase 1）
-### 5.1 目的
-- 知人テスト用の最小運用（少数ユーザー）
-- 自動デプロイは行わない（CIのみ）
+## 5. Render でのテスト運用（本番構成 / PostgreSQL + Redis）
+### 5.1 目的・方針
+- 本番環境テスト用の構成（PostgreSQL + Redis + Web Service）
+- **自動デプロイは行わない**（`deploy_strategy.md` に準拠、手動デプロイのみ）
+- Blueprint（`render.yaml`）を使用した一括セットアップ
 
-### 5.2 Render Web Service の作成
-- ランタイム: Docker もしくは Python
-- Start Command:
-  - Docker: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-  - Python: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+### 5.2 前提条件
+- Renderアカウント作成済み
+- GitHubリポジトリがRenderに接続済み
+- プロジェクトルートに `render.yaml` が存在
 
-### 5.3 Render 環境変数（例）
-- `ENV=staging`
-- `DATABASE_URL=sqlite:///./permy.db`（※永続性が必要ならPostgresへ）
-- `TOKEN_SECRET=<render-secret>`
-- `OPENAI_DISABLED=false`（テスト運用で生成する場合）
-- `OPENAI_API_KEY=<secret>`（RenderのSecretに設定）
-- `LOG_LEVEL=INFO`
+### 5.3 Blueprint デプロイ手順
+#### Step 1: Render Dashboard でBlueprint作成
+1. Render Dashboard → 「New」→ 「Blueprint」を選択
+2. GitHubリポジトリを選択（`permy`）
+3. ブランチを選択（例：`add_frontend` または `main`）
+4. Render が `render.yaml` を自動検出
+5. 「Apply」をクリック（3コンポーネントが作成される）
+   - `permy-backend` (Web Service)
+   - `permy-db` (PostgreSQL)
+   - `permy-redis` (Redis)
 
-### 5.4 ログ運用（本文ゼロ）
-- Renderログに本文が出ないことを確認
-- 例外ログにも本文が混入しないことを確認
+#### Step 2: 環境変数の手動設定（必須）
+Blueprint適用後、以下の環境変数を**手動設定**（`sync: false` のため自動設定されない）：
+
+1. **OPENAI_API_KEY**（必須）
+   - `permy-backend` サービス → Environment タブ
+   - Key: `OPENAI_API_KEY`
+   - Value: OpenAI Platform で発行したAPIキー（`sk-proj-...`）
+   
+2. **TELEMETRY_HASH_SECRET**（必須）
+   - `permy-backend` サービス → Environment タブ
+   - Key: `TELEMETRY_HASH_SECRET`
+   - Value: 以下のコマンドで生成
+     ```powershell
+     .\tools\generate_telemetry_secret.ps1
+     ```
+   - 出力された64文字の16進数文字列をコピー＆ペースト
+
+3. 「Save Changes」をクリック → サービスが自動再起動
+
+#### Step 3: デプロイ確認
+- Render Logs で起動ログを確認
+- Health Check エンドポイントを確認：
+  ```powershell
+  curl https://permy-backend.onrender.com/api/v1/health
+  # Expected: {"status":"ok"}
+  ```
+- Version エンドポイントを確認：
+  ```powershell
+  curl https://permy-backend.onrender.com/api/v1/version
+  # Expected: {"version":"1.0.0", ...}
+  ```
+
+### 5.4 データベース初期化
+PostgreSQLテーブルは初回起動時に自動作成される（`app/db.py` の `init_db()` が実行）。
+手動で確認したい場合：
+```bash
+# Render Shell から実行
+python -c "from app.db import init_db; import asyncio; asyncio.run(init_db())"
+```
+
+### 5.5 環境変数一覧（render.yaml で自動設定）
+以下は Blueprint で自動設定されるため手動設定不要：
+- `APP_ENV=production`
+- `AI_PROVIDER=openai`
+- `DATABASE_URL`（PostgreSQL接続文字列、自動生成）
+- `REDIS_URL`（Redis接続文字列、自動生成）
+- レート制限設定（`RL_*`）
+- 日次制限（`FREE_GENERATE_DAILY_LIMIT=3`, `PRO_GENERATE_DAILY_LIMIT=100`）
+
+### 5.6 ログ運用（本文ゼロ）
+- Render Logs に本文が出力されていないことを確認
+- 例外ログにも本文が混入していないことを確認
+- 必要に応じて `UVICORN_ACCESS_LOG=false` で詳細ログを抑制（既定値）
+
+### 5.7 コスト試算（Render Starter Plan）
+- Web Service: $7/月（512MB RAM、常時稼働）
+- PostgreSQL: $7/月（256MB storage、1GB RAM）
+- Redis: $10/月（1GB memory）
+- **合計: 約 $24/月**（初期テスト運用）
 
 ---
 
@@ -148,9 +207,26 @@ pytest -q
 - 実装で `OPENAI_DISABLED` 判定が入口で強制されているか確認
 - テストで `503 OPENAI_DISABLED` を担保
 
+### 7.4 Render デプロイエラー「Build failed」
+- Render Logs で詳細を確認
+- `requirements.txt` の依存関係エラー → ローカルで `pip install -r backend/requirements.txt` を実行して検証
+- `buildCommand` のパス間違い → `render.yaml` の `buildCommand` を確認
+
+### 7.5 Render 起動エラー「psycopg.OperationalError」
+- `DATABASE_URL` が正しく設定されているか確認（Blueprint で自動設定されるはず）
+- PostgreSQL サービスが起動しているか確認
+- Render Dashboard → `permy-db` → Status を確認
+
+### 7.6 Redis 接続エラー
+- `REDIS_URL` が正しく設定されているか確認（Blueprint で自動設定）
+- Redis サービスが起動しているか確認
+- 一時的に Redis を無効化してテストする場合：環境変数 `REDIS_DISABLED=true` を追加
+
 ---
 
 ## 8. 追加メモ（将来移行を見据えた最小）
 - `DATABASE_URL` を差し替えるだけでSQLite→Postgresに移行できるようにする
 - Redis導入は `RATE_LIMIT_MODE=redis` を実装し、差し替え可能にしておく
 - Docker化しておけば、Render→クラウド（Cloud Run/GKE等）移行が容易
+- **Blueprint 定義**: プロジェクトルートの `render.yaml` にインフラ構成を定義済み
+- **環境変数管理**: 秘匿情報（`OPENAI_API_KEY`, `TELEMETRY_HASH_SECRET`）は手動設定（`sync: false`）
