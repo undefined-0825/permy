@@ -70,6 +70,7 @@ services:
     plan: starter  # 有料プラン（1GB memory）
     region: singapore  # Backend と同じリージョンを推奨
     maxmemoryPolicy: allkeys-lru  # キャッシュ用LRU削除
+    ipAllowList: []  # 同じアカウント内のサービスのみアクセス可能（セキュリティ推奨）
 
 databases:
   # PostgreSQL Database
