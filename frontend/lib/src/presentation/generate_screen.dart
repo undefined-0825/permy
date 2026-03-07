@@ -264,15 +264,29 @@ class _GenerateScreenState extends State<GenerateScreen>
 
     final startTime = DateTime.now();
 
+    // 設定から ng_setting の有無を判定
+    bool hasNgSetting = false;
+    try {
+      final settingsSnapshot = await widget.apiClient.getSettings();
+      final settings = settingsSnapshot.settings;
+      final ngTags = settings['ng_tags'];
+      final ngFreePhrases = settings['ng_free_phrases'];
+
+      hasNgSetting = (ngTags is List && ngTags.isNotEmpty) ||
+          (ngFreePhrases is List && ngFreePhrases.isNotEmpty);
+    } catch (_) {
+      // 設定取得失敗の場合は false のまま
+      hasNgSetting = false;
+    }
+
     // generate_requested イベント送信
-    // TODO: 設定から has_ng_setting を取得（diagnose後の設定確認が必要）
     widget.telemetryQueue.enqueue(
       GenerateRequestedEvent(
         appVersion: '1.0.0',
         os: 'android',
         dailyUsed: _daily?.used ?? 0,
         dailyRemaining: _daily?.remaining ?? 3,
-        hasNgSetting: false, // ペルソナ診断後に設定が存在するか
+        hasNgSetting: hasNgSetting,
         personaVersion: 3,
       ),
     );
