@@ -352,6 +352,71 @@ ios/
   - ペルミィアイコン画像差し替え（Container → Image.asset）
   - 選択肢画像差し替え（Icon → Image.asset、20-30枚想定）
 
+#### 7.2.1.2 Diagnosis Result Display Slide（結果表示スライド / 新規 2026-03-07追加）
+
+**目的**：7問完了後、ユーザーの診断結果（True Self / Night Self / Style Scores）をその場で表示する中間ステップ。Settings へ遷移する前の確認・理解ステップ。
+
+**全体構造**：
+- 既存の Question Slider と同じ CustomScrollView + SliverAppBar + SliverToBoxAdapter 構成
+- AppBar の progress 表示：「完了」と表示（数字ではなく文字列）
+- 戻るボタン：Result Slide → Question Slider に戻る（`_diagnosisResult = null` で遷移）
+
+**状態管理**：
+- 新規フィールド：`DiagnosisResult? _diagnosisResult`
+- null = Question Slider 表示、not null = Result Slide 表示
+- API呼び出し成功時に `_diagnosisResult` を更新、UI再構築
+
+**表示コンテンツ**：
+1. **タイトル**：
+   - Text「あなたのペルソナが決まりました」
+   - fontSize 20、fontWeight bold、textAlign center、padding top 24
+2. **Result Sections ×2**：
+   - **普段の自分（True Self）**：
+     - Label：「普段の自分」（fontSize 12、fontWeight w500、gray）
+     - Value：`diagnosis.trueSelfType`（例：「Stability」、fontSize 18、bold、black87）
+     - Description：「日常で大事にしていることを表しています」（fontSize 12、gray）
+   - **夜の私（Night Self）**：
+     - Label：「夜の私」（fontSize 12、fontWeight w500、gray）
+     - Value：`diagnosis.nightSelfType`（例：「VisitPush」、fontSize 18、bold、black87）
+     - Description：「LINE返信時のあなたのスタイルを表しています」（fontSize 12、gray）
+   - **Container スタイル**：
+     - padding 16、borderRadius 12、背景 white
+     - border：`Color(0xFFFFB3C1)` ピンク width 1
+     - margin bottom 16
+3. **Style Scores Section**：
+   - Label：「スタイルスコア」（fontSize 14、fontWeight w600、color gray）
+   - 3 行表示：
+     - 主張度（Assertiveness）：`diagnosis.styleAssertiveness`（0-100）
+     - 温かみ（Warmth）：`diagnosis.styleWarmth`（0-100）
+     - リスク回避（RiskGuard）：`diagnosis.styleRiskGuard`（0-100）
+   - 各行の構造（Row）：
+     - 左：Label（fontSize 13、w500、gray）
+     - 中：LinearProgressIndicator（minHeight 8、borderRadius 4、backgroundColor = `Colors.grey.shade100`）
+     - 右：「N%」表示（fontSize 12、fontWeight w500、gray）
+   - Section 全体は Result Sections と同じ Container スタイル
+4. **ボタン**（下部固定）：
+   - 「わかりました」（Primary スタイル）
+   - onPressed：`_onResultConfirmed()`
+   - Settings へ `pop(true)` し、呼び出し元で再読込をトリガー
+
+**ナビゲーションフロー**：
+- Question Slide（0-6）
+  - 最終問で「この内容で進む」タップ
+  - `POST /me/diagnosis` 実行
+  - Success で `_diagnosisResult = DiagnosisResult`
+  - Result Slide 表示
+- Result Slide
+  - 戻るボタン：Question Slide に戻る
+  - 「わかりました」：Settings へ戻る（`pop(true)`）
+
+**実装ポイント**：
+- API から取得した `DiagnosisResult` をそのまま UI 表示に利用（不要な変換をしない）
+- Result Slide は DiagnosisScreen 内で完結し、別画面 push は行わない
+
+**段階的実装の注記**：
+- **Phase 1（完了 2026-03-07）**：Result Slide UI 実装、表示・遷移・テスト確認
+- **Phase 2（今後）**：タイプ別詳細説明の展開（モーダルまたは専用詳細導線）
+
 ### 7.3 Generate（メイン）
 - sharedText state（メモリのみ）
 - settings state（GET/PUT同期）
