@@ -90,6 +90,26 @@ class _FakeApiClient implements AppApiClient {
 
   @override
   Future<void> postTelemetryEvents(List<Map<String, dynamic>> events) async {}
+
+  @override
+  Future<void> deleteAccount() async {}
+
+  @override
+  Future<AppVersionInfo> getAppVersionInfo() async {
+    return AppVersionInfo(
+      latestVersion: '1.0.0',
+      minSupportedVersion: '1.0.0',
+      androidStoreUrl: 'https://play.google.com/store',
+      iosStoreUrl: 'https://apps.apple.com/app',
+    );
+  }
+
+  @override
+  Future<void> verifyBilling({
+    required String platform,
+    required String productId,
+    required String purchaseToken,
+  }) async {}
 }
 
 class _FakeTelemetryQueue extends TelemetryQueue {
