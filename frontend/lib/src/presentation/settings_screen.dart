@@ -11,6 +11,8 @@ import 'diagnosis_screen.dart';
 import 'migration_screen.dart';
 import 'onboarding_screen.dart';
 import 'persona_diagnosis_result_screen.dart';
+import 'privacy_policy_screen.dart';
+import 'terms_of_service_screen.dart';
 import 'widgets/primary_button.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -251,6 +253,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         const SizedBox(height: 32),
                         SectionHeader(title: 'もっと知る'),
+                        const SizedBox(height: 12),
+                        PrimaryButton(
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const TermsOfServiceScreen(),
+                              ),
+                            );
+                          },
+                          child: const Text('利用規約'),
+                        ),
+                        const SizedBox(height: 12),
+                        PrimaryButton(
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const PrivacyPolicyScreen(),
+                              ),
+                            );
+                          },
+                          child: const Text('プライバシーポリシー'),
+                        ),
                         const SizedBox(height: 12),
                         PrimaryButton(
                           onPressed: () {

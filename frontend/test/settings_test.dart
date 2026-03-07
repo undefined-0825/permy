@@ -9,7 +9,9 @@ import 'package:sample_app/src/presentation/diagnosis_screen.dart';
 import 'package:sample_app/src/presentation/migration_screen.dart';
 import 'package:sample_app/src/presentation/onboarding_screen.dart';
 import 'package:sample_app/src/presentation/persona_diagnosis_result_screen.dart';
+import 'package:sample_app/src/presentation/privacy_policy_screen.dart';
 import 'package:sample_app/src/presentation/settings_screen.dart';
+import 'package:sample_app/src/presentation/terms_of_service_screen.dart';
 
 // Mock API Client
 class MockApiClient implements AppApiClient {
@@ -91,6 +93,16 @@ class MockApiClient implements AppApiClient {
   @override
   Future<void> postTelemetryEvents(List<Map<String, dynamic>> events) async {
     throw UnimplementedError();
+  }
+
+  @override
+  Future<AppVersionInfo> getAppVersionInfo() async {
+    return AppVersionInfo(
+      latestVersion: '1.0.0',
+      minSupportedVersion: '1.0.0',
+      androidStoreUrl: '',
+      iosStoreUrl: '',
+    );
   }
 }
 
@@ -203,6 +215,48 @@ void main() {
 
       expect(find.byType(AboutPrivacyScreen), findsOneWidget);
       expect(find.text('このアプリについて'), findsWidgets);
+    });
+
+    testWidgets('利用規約ボタンで利用規約画面へ遷移できる', (WidgetTester tester) async {
+      final mockApi = MockApiClient();
+
+      await tester.pumpWidget(
+        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+      );
+
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('利用規約'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('利用規約'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TermsOfServiceScreen), findsOneWidget);
+      expect(find.text('第1条（適用）'), findsOneWidget);
+    });
+
+    testWidgets('プライバシーポリシーボタンで画面へ遷移できる', (WidgetTester tester) async {
+      final mockApi = MockApiClient();
+
+      await tester.pumpWidget(
+        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+      );
+
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('プライバシーポリシー'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('プライバシーポリシー'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PrivacyPolicyScreen), findsOneWidget);
+      expect(find.text('1. 基本方針'), findsOneWidget);
     });
 
     testWidgets('再チュートリアルボタンで Onboarding 画面へ遷移できる', (
