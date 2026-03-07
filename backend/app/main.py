@@ -4,7 +4,7 @@ import os
 import pathlib
 import logging
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 # print("=== startup probe: before settings import ===")
 # print("file =", __file__)
@@ -68,6 +68,32 @@ app.include_router(generate_router, prefix="/api/v1")
 app.include_router(migration_router, prefix="/api/v1")
 app.include_router(telemetry_router, prefix="/api/v1")
 
+_static_dir = pathlib.Path(__file__).resolve().parents[1] / "static"
+_legal_dir = _static_dir / "legal"
+
+
+def _legal_page(name: str) -> FileResponse:
+    file_path = _legal_dir / f"{name}.html"
+    if not file_path.exists():
+        # 404相当として FastAPI の標準例外処理に流す
+        raise FileNotFoundError(f"legal page not found: {name}")
+    return FileResponse(file_path, media_type="text/html; charset=utf-8")
+
+
+@app.get("/legal/terms")
+async def legal_terms():
+    return _legal_page("terms")
+
+
+@app.get("/legal/privacy")
+async def legal_privacy():
+    return _legal_page("privacy")
+
+
+@app.get("/legal/help")
+async def legal_help():
+    return _legal_page("help")
+
 # legacy compatibility for prototype endpoints
 @app.post("/api/talk/assist", response_model=None)
 async def legacy_talk_assist(request: Request):
@@ -79,6 +105,11 @@ async def legacy_talk_assist(request: Request):
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
+    if isinstance(exc, FileNotFoundError):
+        return JSONResponse(
+            status_code=404,
+            content={"error": {"code": "NOT_FOUND", "message": "ページが見つかりません", "detail": {}}},
+        )
     rid = getattr(request.state, "request_id", "") or ""
     log.exception("unhandled_error", extra={"request_id": rid, "path": request.url.path})
     return JSONResponse(

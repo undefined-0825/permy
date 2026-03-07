@@ -190,6 +190,17 @@ python -c "from app.db import init_db; import asyncio; asyncio.run(init_db())"
 - Redis: $10/月（1GB memory）
 - **合計: 約 $24/月**（初期テスト運用）
 
+### 5.8 ストア登録用 公開URL（法務ページ）
+Render公開後、以下URLを Google Play / App Store Connect に登録する。
+
+- 利用規約: `https://<your-service>.onrender.com/legal/terms`
+- プライバシーポリシー: `https://<your-service>.onrender.com/legal/privacy`
+- ヘルプ（使い方）: `https://<your-service>.onrender.com/legal/help`
+
+登録先の例：
+- Google Play Console: アプリのコンテンツ / プライバシーポリシー、ストア掲載情報
+- App Store Connect: App Information / Privacy Policy URL
+
 ---
 
 ## 6. 手動ライブテスト（回数上限・安全運用）
