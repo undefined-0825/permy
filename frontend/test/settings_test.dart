@@ -281,6 +281,29 @@ void main() {
       expect(find.text('2. 基本の使い方'), findsOneWidget);
     });
 
+    testWidgets('オープンソースライセンスボタンでライセンスページへ遷移できる', (
+      WidgetTester tester,
+    ) async {
+      final mockApi = MockApiClient();
+
+      await tester.pumpWidget(
+        MaterialApp(home: SettingsScreen(apiClient: mockApi)),
+      );
+
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('オープンソースライセンス'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('オープンソースライセンス'));
+      await tester.pumpAndSettle();
+
+      // LicensePage が表示されることを確認
+      expect(find.byType(LicensePage), findsOneWidget);
+    });
+
     testWidgets('再チュートリアルボタンで Onboarding 画面へ遷移できる', (
       WidgetTester tester,
     ) async {

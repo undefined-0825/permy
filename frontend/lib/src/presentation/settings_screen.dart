@@ -305,6 +305,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           },
                           child: const Text('このアプリについて'),
                         ),
+                        const SizedBox(height: 12),
+                        PrimaryButton(
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            showLicensePage(
+                              context: context,
+                              applicationName: 'Permy',
+                              applicationIcon: Image.asset(
+                                'assets/images/icons/permy_icon.png',
+                                width: 48,
+                                height: 48,
+                              ),
+                            );
+                          },
+                          child: const Text('オープンソースライセンス'),
+                        ),
                         const SizedBox(height: 32),
                         PrimaryButton(
                           onPressed: _saving
