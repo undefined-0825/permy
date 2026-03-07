@@ -1,5 +1,7 @@
 # docs/ssot/SSOT.md — Project Permy（Copilot作業用 SSOT / 入口）
 
+**発行者：** 隙間産業ラボ 中野家  
+**メール：** sukima.lab.nakanoya@gmail.com  
 **Last Updated (JST):** 2026-03-06 (デザインコンセプトSSOT追加)
 
 ---
