@@ -341,17 +341,58 @@ backend/
 ---
 
 ## 15. 実装チェックリスト（本文ゼロ監査）
-- [ ] request/response body をログしていない
-- [ ] 例外ログに本文が混入しない（バリデーション含む）
-- [ ] DBに本文/生成文が存在しない
-- [ ] メトリクスに本文由来情報がない
-- [ ] OPENAI_DISABLED=true で外部呼び出しされない
+- [x] request/response body をログしていない
+- [x] 例外ログに本文が混入しない（バリデーション含む）
+- [x] DBに本文/生成文が存在しない
+- [x] メトリクスに本文由来情報がない
+- [x] OPENAI_DISABLED=true で外部呼び出しされない
+
+**監査実施日**: 2026-03-07  
+**監査結果**: 全項目合格 ✅
+
+<details>
+<summary>監査詳細</summary>
+
+### ログ設定
+- `logging_conf.py` の `NoBodyFilter` が本文関連キーワードを `[REDACTED]` に置換
+- ブロック対象: body, request_body, response_body, content, payload, migration_code, text, history_text
+
+### APIエンドポイント
+- `/generate` で `req.history_text` は処理に使用されるのみ、ログ出力なし
+- 全エンドポイントで本文をログに記録していない
+
+### 例外ハンドリング
+- `errors.py` の `err()` 関数は code, message, detail のみ使用
+- 本文が混入する余地なし
+
+### DBモデル
+- User: メタ情報のみ（feature_tier, billing_tier）
+- PlanStatus: プラン情報のみ
+- UserSettings: settings_json（本文を含まない設定のみ）
+- UsageDaily: カウント情報のみ
+- TelemetryEvent: event_data は集計メタのみ
+
+### テレメトリ
+- スキーマに本文フィールド一切なし
+- GenerateRequestedEvent: 回数・設定有無・バージョンのみ
+- GenerateSucceededEvent: レイテンシ・フラグのみ
+- GenerateFailedEvent: エラーコードのみ（本文なし）
+- CandidateCopiedEvent: 候補IDのみ
+- AppOpenedEvent: メタ情報のみ
+
+### Frontend
+- SharedPreferences: 診断フラグとテレメトリキューのみ
+- FlutterSecureStorage: トークンと購入ステータスのみ
+- 共有受信: メモリ上のPayloadとして扱うのみ、永続保存なし
+- すべてのTelemetryEventに本文フィールドなし
+
+</details>
 
 ---
 
 ## 16. 実装状況（Implementation Status）
 
-**最終更新**: 2026-03-05
+**最終更新**: 2026-03-07
 
 ### 16.1 完了済み機能（✅）
 
@@ -418,7 +459,7 @@ backend/
 ### 16.3 未実装・残作業（🔜）
 
 #### Phase 1 完了目標
-- 🔜 本文ゼロ最終監査（ログ・DB・例外メッセージ）
+- ✅ 本文ゼロ最終監査（ログ・DB・例外メッセージ）— 完了 2026-03-07
 - 🔜 Alembic マイグレーション設定（Phase 2 での PostgreSQL 移行準備）
 - 🔜 本番環境設定（環境変数、Render デプロイ準備）
 - 🔜 全 acceptance test クリア（backend_impl, frontend_impl）
@@ -430,10 +471,11 @@ backend/
 
 ### 16.4 進捗率
 
-- **Phase 1 実装進捗**: ~95%
+- **Phase 1 実装進捗**: ~97%
 - **Core API**: 100% 完了
 - **Telemetry**: 100% 完了
 - **Followup**: 100% 完了
+- **本文ゼロ監査**: 100% 完了 ✅
 - **Documentation**: 100% 完了
-- **残作業**: 本番デプロイ準備、最終監査
+- **残作業**: 本番デプロイ準備、最終acceptance test
 
