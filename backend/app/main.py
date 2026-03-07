@@ -35,6 +35,7 @@ from app.api.v1.diagnosis import router as diagnosis_router
 from app.api.v1.generate import router as generate_router
 from app.api.v1.migration import router as migration_router
 from app.api.v1.telemetry import router as telemetry_router
+from app.api.v1.billing import router as billing_router
 
 
 configure_logging()
@@ -67,6 +68,7 @@ app.include_router(diagnosis_router, prefix="/api/v1")
 app.include_router(generate_router, prefix="/api/v1")
 app.include_router(migration_router, prefix="/api/v1")
 app.include_router(telemetry_router, prefix="/api/v1")
+app.include_router(billing_router, prefix="/api/v1")
 
 _static_dir = pathlib.Path(__file__).resolve().parents[1] / "static"
 _legal_dir = _static_dir / "legal"

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -7,6 +9,7 @@ import '../domain/persona_diagnosis.dart';
 import '../domain/persona_type_helper.dart';
 import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
+import '../infrastructure/billing_proof.dart';
 import '../infrastructure/purchase_service.dart';
 import 'about_privacy_screen.dart';
 import 'diagnosis_screen.dart';
@@ -39,6 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _saving = false;
   ApiError? _error;
   final TextEditingController _ngPhraseController = TextEditingController();
+  StreamSubscription<BillingProof>? _billingProofSubscription;
 
   // NGタグの定義
   static const Map<String, String> _ngTagLabels = {
@@ -53,11 +57,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    _billingProofSubscription = widget.purchaseService.billingProofStream
+        .listen(_verifyBillingProof);
     _loadSettings();
   }
 
   @override
   void dispose() {
+    _billingProofSubscription?.cancel();
     _ngPhraseController.dispose();
     super.dispose();
   }
@@ -785,6 +792,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('削除に失敗しました: ${e.errorCode}')));
+    }
+  }
+
+  Future<void> _verifyBillingProof(BillingProof proof) async {
+    try {
+      await widget.apiClient.verifyBilling(
+        platform: proof.platform,
+        productId: proof.productId,
+        purchaseToken: proof.purchaseToken,
+      );
+      if (!mounted) return;
+      setState(() {});
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('課金状態をサーバーに反映しました')));
+    } on ApiError catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('課金状態の反映に失敗しました: ${e.errorCode}')));
     }
   }
 }

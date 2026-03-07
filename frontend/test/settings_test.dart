@@ -137,6 +137,13 @@ class MockApiClient implements AppApiClient {
   }
 
   @override
+  Future<void> verifyBilling({
+    required String platform,
+    required String productId,
+    required String purchaseToken,
+  }) async {}
+
+  @override
   Future<void> deleteAccount() async {}
 }
 

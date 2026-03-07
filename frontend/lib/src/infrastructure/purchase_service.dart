@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
+import 'billing_proof.dart';
+
 /// 課金状態（アプリ内管理用）
 enum AppPurchaseStatus { free, pro, pending, error }
 
@@ -25,6 +27,8 @@ class PurchaseService {
   static const String _storageKeyPurchaseStatus = 'purchase_status';
 
   StreamSubscription<List<PurchaseDetails>>? _subscription;
+  final StreamController<BillingProof> _billingProofController =
+      StreamController<BillingProof>.broadcast();
   AppPurchaseStatus _currentStatus = AppPurchaseStatus.free;
 
   /// 初期化（アプリ起動時に呼ぶ）
@@ -44,6 +48,7 @@ class PurchaseService {
   /// 終了処理
   void dispose() {
     _subscription?.cancel();
+    _billingProofController.close();
   }
 
   /// 現在の購入状態を取得
@@ -51,6 +56,9 @@ class PurchaseService {
 
   /// Pro版かどうか
   bool get isPro => _currentStatus == AppPurchaseStatus.pro;
+
+  /// backend検証用の課金証跡を通知するストリーム
+  Stream<BillingProof> get billingProofStream => _billingProofController.stream;
 
   /// 購入可能かチェック
   Future<bool> isAvailable() async {
@@ -109,6 +117,23 @@ class PurchaseService {
         // 購入成功または復元成功
         _currentStatus = AppPurchaseStatus.pro;
         _savePurchaseStatus(AppPurchaseStatus.pro);
+
+        final productId = purchase.productID;
+        final platform = Platform.isIOS ? 'ios' : 'android';
+        final purchaseToken =
+            purchase.verificationData.serverVerificationData.isNotEmpty
+            ? purchase.verificationData.serverVerificationData
+            : purchase.verificationData.localVerificationData;
+
+        if (purchaseToken.isNotEmpty) {
+          _billingProofController.add(
+            BillingProof(
+              platform: platform,
+              productId: productId,
+              purchaseToken: purchaseToken,
+            ),
+          );
+        }
 
         // 購入完了処理（ストアへの確認）
         if (purchase.pendingCompletePurchase) {

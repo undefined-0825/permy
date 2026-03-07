@@ -103,6 +103,17 @@ class MigrationCompleteResponse(BaseModel):
     access_token: str
 
 
+class BillingVerifyRequest(BaseModel):
+    platform: Literal["ios", "android"]
+    product_id: str = Field(..., min_length=1, max_length=128)
+    purchase_token: str = Field(..., min_length=1, max_length=4096)
+
+
+class BillingVerifyResponse(BaseModel):
+    plan: Literal["free", "pro"]
+    verified: bool
+
+
 # Telemetry Schemas（本文ゼロ厳守）
 class TelemetryEventBase(BaseModel):
     """クライアントから送信される共通フィールド"""

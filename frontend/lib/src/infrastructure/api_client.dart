@@ -26,6 +26,12 @@ abstract class AppApiClient {
 
   Future<AppVersionInfo> getAppVersionInfo();
 
+  Future<void> verifyBilling({
+    required String platform,
+    required String productId,
+    required String purchaseToken,
+  });
+
   Future<void> deleteAccount();
 }
 
@@ -298,6 +304,39 @@ class ApiClient implements AppApiClient {
       httpStatus: response.statusCode,
       body: _tryJson(response.body),
     );
+  }
+
+  @override
+  Future<void> verifyBilling({
+    required String platform,
+    required String productId,
+    required String purchaseToken,
+  }) async {
+    await bootstrapAuth();
+    return _runWithAuthRetry(() async {
+      final token = await tokenStore.read();
+      final response = await _httpClient.post(
+        Uri.parse('$baseUrl/api/v1/billing/verify'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'platform': platform,
+          'product_id': productId,
+          'purchase_token': purchaseToken,
+        }),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return;
+      }
+
+      throw ApiError.fromBody(
+        httpStatus: response.statusCode,
+        body: _tryJson(response.body),
+      );
+    });
   }
 
   @override
