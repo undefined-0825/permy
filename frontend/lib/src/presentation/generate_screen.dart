@@ -448,7 +448,8 @@ class _GenerateScreenState extends State<GenerateScreen>
       final updated = Map<String, dynamic>.from(snapshot.settings);
 
       if (followup.key == 'ng_tags' || followup.key == 'ng_free_phrases') {
-        final values = (updated[followup.key] as List<dynamic>?)
+        final values =
+            (updated[followup.key] as List<dynamic>?)
                 ?.map((e) => e.toString())
                 .toList() ??
             <String>[];
@@ -463,9 +464,9 @@ class _GenerateScreenState extends State<GenerateScreen>
       await widget.apiClient.updateSettings(updated, snapshot.etag);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('情報を反映したよ。もう一度生成してみてね')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('情報を反映したよ。もう一度生成してみてね')));
     } on ApiError catch (error) {
       if (!mounted) return;
       setState(() {

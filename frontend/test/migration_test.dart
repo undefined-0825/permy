@@ -113,5 +113,31 @@ void main() {
       expect(find.text('移行コードを入力'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
     });
+
+    testWidgets('発行済みコードを共有できる', (WidgetTester tester) async {
+      final mockApi = MockMigrationApiClient();
+      String? sharedText;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MigrationScreen(
+            apiClient: mockApi,
+            shareCodeHandler: (text) async {
+              sharedText = text;
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('この端末から移行コードを発行'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('共有する'));
+      await tester.pumpAndSettle();
+
+      expect(sharedText, isNotNull);
+      expect(sharedText, contains('123456789012'));
+      expect(find.text('共有シートを開きました'), findsOneWidget);
+    });
   });
 }

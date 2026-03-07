@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/theme.dart';
 import '../domain/models.dart';
@@ -7,9 +8,14 @@ import '../infrastructure/api_client.dart';
 import 'widgets/primary_button.dart';
 
 class MigrationScreen extends StatefulWidget {
-  const MigrationScreen({required this.apiClient, super.key});
+  const MigrationScreen({
+    required this.apiClient,
+    this.shareCodeHandler,
+    super.key,
+  });
 
   final AppApiClient apiClient;
+  final Future<void> Function(String text)? shareCodeHandler;
 
   @override
   State<MigrationScreen> createState() => _MigrationScreenState();
@@ -109,12 +115,40 @@ class _MigrationScreenState extends State<MigrationScreen> {
     });
   }
 
-  void _shareCode() {
+  Future<void> _shareCode() async {
     HapticFeedback.selectionClick();
-    // OS 共有（実装例）
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('共有機能は後日実装予定')));
+
+    if (_migrationCode.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('共有するコードがありません')));
+      return;
+    }
+
+    final shareText =
+        'Permy 端末移行コード\n'
+        'コード: $_migrationCode\n'
+        '有効期限: $_expiresAt';
+
+    try {
+      if (widget.shareCodeHandler != null) {
+        await widget.shareCodeHandler!(shareText);
+      } else {
+        await SharePlus.instance.share(
+          ShareParams(text: shareText, subject: 'Permy 端末移行コード'),
+        );
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('共有シートを開きました')));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('共有に失敗しました')));
+    }
   }
 
   @override
