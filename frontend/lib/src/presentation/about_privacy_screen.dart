@@ -149,20 +149,18 @@ class AboutPrivacyScreen extends StatelessWidget {
                                 final Uri emailUri = Uri(
                                   scheme: 'mailto',
                                   path: 'sukima.lab.nakanoya@gmail.com',
-                                  queryParameters: {
-                                    'subject': 'Permy お問い合わせ',
-                                  },
+                                  queryParameters: {'subject': 'Permy お問い合わせ'},
                                 );
                                 try {
                                   if (await canLaunchUrl(emailUri)) {
                                     await launchUrl(emailUri);
                                   } else {
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         const SnackBar(
-                                          content: Text(
-                                            'メールアプリが見つかりません',
-                                          ),
+                                          content: Text('メールアプリが見つかりません'),
                                         ),
                                       );
                                     }
@@ -171,9 +169,7 @@ class AboutPrivacyScreen extends StatelessWidget {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text(
-                                          'メールアプリの起動に失敗しました',
-                                        ),
+                                        content: Text('メールアプリの起動に失敗しました'),
                                       ),
                                     );
                                   }
