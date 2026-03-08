@@ -475,8 +475,8 @@ class _ChoiceCardState extends State<_ChoiceCard> {
         splashColor: const Color(0xFFF3F4F6),
         highlightColor: const Color(0xFFF3F4F6),
         child: Container(
-          height: 72,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          height: 88,
+          padding: const EdgeInsets.symmetric(horizontal: 18),
           decoration: BoxDecoration(
             color: _isHovering ? const Color(0xFFF3F4F6) : Colors.transparent,
             border: Border(
@@ -487,40 +487,40 @@ class _ChoiceCardState extends State<_ChoiceCard> {
             children: [
               // 選択肢画像
               Container(
-                width: 40,
-                height: 40,
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
                   color: const Color(0xFFFCE7F3),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                   child: Image.asset(
                     'assets/images/diagnosis_choices/${widget.choiceId}.png',
-                    width: 40,
-                    height: 40,
+                    width: 52,
+                    height: 52,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       // 画像が存在しない場合はアイコンで代用
                       return const Icon(
                         Icons.image_outlined,
-                        size: 20,
+                        size: 24,
                         color: Color(0xFFFBCFE8),
                       );
                     },
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 18),
               // テキスト
               Expanded(
                 child: Text(
                   widget.label,
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 17,
                     fontWeight: FontWeight.normal,
                     color: Color(0xFF374151),
-                    height: 1.6,
+                    height: 1.45,
                   ),
                 ),
               ),
@@ -529,7 +529,7 @@ class _ChoiceCardState extends State<_ChoiceCard> {
                 const Icon(
                   Icons.check_circle,
                   color: Color(0xFFFF69B4),
-                  size: 24,
+                  size: 26,
                 ),
             ],
           ),
