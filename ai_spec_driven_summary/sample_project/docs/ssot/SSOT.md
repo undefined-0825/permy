@@ -1,0 +1,190 @@
+# docs/ssot/SSOT.md — Project [ProjectName]（Copilot作業用 SSOT / 入口）
+
+**発行者：** ●●  
+**メール：** ●●@gmail.com  
+**Last Updated (JST):** 2026-03-06 (デザインコンセプトSSOT追加)
+
+---
+
+## 出力言語（MUST）
+- Copilot/AIの出力（回答・提●●・Spec文言・コメント）は日本語とする。
+- ユーザーが明示的に英語を要求した場合のみ英語を許可する。
+
+## 0. このSSOTの目的（MUST）
+- GitHub Copilot / AIが **迷わず**仕様を参照し、**勝手判断・仕様劣化・虚偽・混入ゴミ**を起こさないための「唯一の入口」とする。
+- 仕様の正は **docs配下のSpec**に固定し、過去のファイル・チャット内容・記憶に依存しない。
+
+---
+
+## 1. 最上位原則（MUST）
+### 1.1 変更管理（MUST）
+- Specは **Git管理**。変更は **必ずPR** 経由。
+- **私（[PM]）のレビュー承認がない限り、docs配下のSpecは commit しない**。
+- AIはローカル環境（`C:\dev\[ProjectName]`）を参照できない前提。見た前提の断定は禁止。
+
+### 1.2 仕様の唯一性（MUST）
+- 「仕様」「ルール」「世界観」「禁止事項」は **Specファイルのみが正**。
+- ●●中の説明・提●●は正ではない。Specに反映され、レビュー承認されたものだけが正。
+
+### 1.3 禁止（MUST）
+- 勝手判断（良かれと思って補完・推測で埋める）禁止。判断不能は必ず質問。
+- 虚偽報告（読んだ/検証した/出力したの断定）禁止。実施した手順・対象を併記できないなら「未確認」と書く。
+- 仕様劣化（同じ概念の別名・別値・参照揺れ）禁止。
+- /spec/ファイルの更新が必要な場合は、修正前に[PM]さんに確認を取ってから修正すること。
+- Spec●●へ **内部マーカー/混入ゴミ**を入れない（例：`filecite...`、turn番号等）。
+
+### 1.4 Spec管理のメタルール（MUST / 2026-03-06追加）
+- 同じ内容を複数のSpecファイルに重複記載しない（重複禁止）。
+- Spec修正時は、先に「どこに何を書くか」を決め、1箇所にのみ記載する。
+- 配置原則は次の通り：
+  - `project_rules.md`：失敗事例の要約のみ（詳細実装は参照）
+  - `engineering_conventions.md`：横断的な実装規約のみ
+  - `frontend_impl.md` / `backend_impl.md`：領域固有の詳細実装ルール
+  - `SSOT.md`：このメタルール自体
+- 重複記載を避けるため、他Specからは「ファイル名 + セクション参照」でリンクする。
+
+---
+
+## 2. 読む順序（SSOT参照優先順位 / MUST）
+Copilot・AI・開発者は必ずこの順で読む。
+
+1) `docs/spec/00_world/world_concept.md`（戦略・コンセプト・世界観定義）  
+2) `docs/spec/00_world/ui_animations.md`（UI演出SSOT：●●→●●反転、固定●●2文、●●シークエンス）  
+3) `docs/spec/01_rules/project_rules.md`（運用ルール/禁止事項/してはいけない推論/品質ゲート）  
+4) `docs/spec/01_rules/engineering_conventions.md`（実装規約：Flutter+FastAPI、可読性、テスト同時●●、●●ンプト構造化）  
+5) `docs/spec/01_rules/privacy_logging.md`（●●ゼロ：保存禁止/ログ禁止/例外時の扱い）  
+6) `docs/spec/10_product/ng_policy.md`（NG制御SSOT：STOP/REWRITE/WARN、優先順位）  
+7) `docs/spec/10_product/product_spec.md`（プロダクト仕様：●●/●●/●●/●●導線/●●/●●/コンボ/followup）  
+8) `docs/spec/20_backend/backend_spec.md`（バックエンド設計：API/認証/データモデル/●●ゼロ/レート制限/コストガード）  
+9) `docs/spec/21_backend_impl/backend_impl.md`（バックエンド実装仕様：DTO/●●/中ゲート/メタ/OPENAI_DISABLED）  
+10) `docs/spec/30_frontend/frontend_spec.md`（フロント設計：画面遷移/導線/文言/演出/●●禁止）  
+11) **`docs/spec/30_frontend/design_rule.md`（デザインコンセプト："Modern Seamless & Breathable"、Edge-less Flatレイアウト、●●系グラデーション、タイポグラフィ・カラーパレット・UIコンポーネント定義）**  
+12) `docs/spec/31_frontend_impl/frontend_impl.md`（フロント実装：状態/DTO/API呼び出し/NG UI/設定同期）  
+13) `docs/spec/31_frontend_impl/native_share_wrappers.md`（Android/iOS●●受信ラッパー：●●のみ、永続化禁止、受け渡しI/F）
+
+補助（必要時のみ）：
+- `docs/spec/01_rules/telemetry_policy.md`（●●ゼロの計測ポリシー：時間帯バケットUTC）
+- `docs/spec/20_backend/telemetry_schema.md`（テレメトリイベントスキーマ：hour_bucket_utc/dow_utc）
+- `docs/spec/40_tests/test_strategy.md`（テスト方針：CIはOpenAI禁止、ライブは手動・上限）
+- `docs/spec/41_ci/ci_policy.md`（CI方針：PR必須、OpenAI禁止、実行範囲）
+- `docs/spec/42_deploy/deploy_strategy.md`（現時点：自動デプロイなし）
+- `docs/spec/21_backend_impl/acceptance_tests_backend.md`（Backend受け入れテスト）
+- `docs/spec/31_frontend_impl/acceptance_tests_frontend.md`（Frontend受け入れテスト）
+- `docs/spec/40_tests/acceptance_tests.md`（総合E2E受け入れテスト）
+
+---
+
+## 3. ●●ジェクトの不変要件（MUST）
+### 3.1 対象・●●
+- 日本国内向け。Android / iPhone。
+- ●●：**●● ●●**。
+- ●●：**1日●●**。
+- Pro：**1日100回**（●●改定後も維持）。
+
+#### 3.1.1 対象OSの厳格化（MUST）
+- 本●●ジェクトのクライアント実装対象は **Android / iPhone（iOS） のみ**。
+- **Windows / macOS / Linux 向けのアプリ実装・コード●●・ビルド手順・設定（例：WinUI/WPF/UWP、MAUIのWindowsターゲット、Electron、.dmg/.msi、Desktop向けCI、OS別パス前提の実装）は提●●・実装ともに禁止**。
+- 例外は **サーバ/CI等の開発環境の補助**（例：PowerShellやbashでのローカル起動、lint、unit test）に限る。ただし、クライアント機能の実装がDesktop向けに拡張される提●●は禁止。
+
+### 3.2 ●●導線（MUST）
+- ●●は **●●「●●」→ `●●` ●●のみ**。
+- **手動●●は実装しない**。
+
+### 3.3 保存禁止（MUST）
+- ●●●●（●●txtの中身）/●●●●（●●●●）を **端末・サーバに保存しない**。
+- ログにも出さない（デバッグでも例外なし）。
+
+### 3.4 世界観・禁止語（MUST）
+- ●●●●の●●「●●」。一人称「●●」。
+- ●●表現（例：●●）禁止。
+- ●●設定用語（例：●●）禁止。
+- 演出：通常「淡い●●」→ ●●「●●」へ反転。●●「●●●●」「●●●●」。
+
+### 3.5 テスト/CI/コストガード（MUST）
+- 現時点は **CIのみ**（自動デプロイなし）。
+- CIでは OpenAI API を **呼ばない**（`OPENAI_DISABLED=true` 強制）。
+- OpenAIを叩くライブテストは **手動実行のみ**＋回数上限。
+
+### 3.6 テレメトリ（現時点スコープ / MUST）
+- ●●/●●は送らない。
+- 分析はUTC基準、**時間帯バケットのみ**：
+  - `hour_bucket_utc`（0..23）
+  - `dow_utc`（0..6）
+
+---
+
+## 4. Specファイルに「何を書くか」定義（MUST）
+### 4.1 world_concept.md（世界観）
+- ターゲット心理、世界観、●●●●、演出、禁止表現。
+- UIに出す固定●●・●●リストの“正”。
+
+### 4.2 project_rules.md（運用ルール）
+- 変更管理（PR/レビュー/承認）、勝手判断禁止、虚偽禁止、混入禁止。
+- 破壊的操作（削除/リネーム/大量置換）の前提手順。
+- “完成宣言”の条件（品質ゲート）。
+
+### 4.3 product_spec.md（プロダクト仕様）
+- ●●/●●/●●、●●/Pro差、アップセル方針。
+- ●●のI/O要件（●●、followupの扱い、NG優先順位）。
+- ●●タイプ●●（参照先）と、設定キーの正。
+- ユーザー向け文言（チュートリアル/●●など）の正。
+
+### 4.4 backend_spec.md（バックエンド設計）
+- API一覧・認証（匿名ID開始）、移行コード方針。
+- データモデル（●●保存禁止に抵触しない範囲）。
+- レート制限、コストガード、ログ方針（●●ゼロ）。
+- テレメトリのサーバ処理（スキーマ参照）。
+
+### 4.5 backend_impl.md（バックエンド実装仕様）
+- DTO/JSON Schema（Structured Outputsを使う場合の●●）。
+- 中ゲート（AIへ送らない条件）と、NG反映方法。
+- `meta`（●●/daily/request_id等）返却仕様。
+- OpenAIを呼ばないモード（CI/開発）の仕様。
+
+### 4.6 frontend_spec.md（フロント設計）
+- 画面遷移・Safe Area・UI要素。
+- `●●`●●導線（貼り付け無し）。
+- ●●演出（色反転/●●）と禁止語。
+- ●●カード仕様（タップで●●等）。
+
+### 4.7 design_rule.md（デザインコンセプトSSOT / 2026-03-06追加）
+- デザイン統一原則："Modern Seamless & Breathable"（Edge-less Flatスタイル）。
+- レイアウト構造（グラデーション背景、マージン、ヘッダー設計）、カラーパレット、タイポグラフィ、UIコンポーネント定義。
+- **全画面・全コンポーネント実装はこのデザインコンセプトに厳密に従う（MUST）**
+
+### 4.8 frontend_impl.md（フロント実装仕様）
+- 状態管理、DTO、API呼び出し。
+- Android/iOS●●受信ラッパー（`●●`）。
+- NG設定UI（ng_tags/ng_●●_phrases）同期、テレメトリ●●（●●無し）。
+
+### 4.9 telemetry_policy.md / telemetry_schema.md
+- 収集してよい情報/禁止情報。
+- イベントスキーマ、保持期間、集計（hourly rollup）。
+
+### 4.10 test_strategy.md / ci_policy.md / deploy_strategy.md
+- CIのみ（自動デプロイなし）を前提に、実行範囲とコストガードを定義。
+- OpenAIライブテストは手動のみ＆上限必須。
+
+---
+
+## 5. 品質ゲート（MUST）
+AIが「完成」「更新済み」と言う前に、以下が全て満たされていること。
+
+- Spec●●に `filecite` 等の混入が **0件**
+- 旧Spec（`docs/spec/_archive/`）への参照が **0件**
+- ●●/●●/禁止語/●●導線/保存禁止が **矛盾0件**
+- 変更は **PR提●●**として提示され、ユーザー承認なしに反映しない
+
+---
+
+## 6. アーカイブ運用（MUST）
+- 旧 `spec_*_vN.md` は `docs/spec/_archive/legacy_specs/` に隔離。
+- Copilotは `docs/spec/_archive/` を参照しない（参照禁止）。
+
+---
+
+## 7. “AIにやらせる範囲”の明確化（MUST）
+- AIは **実装を進めてよい**が、Spec変更は **提●●のみ**。
+- 指示されたことや、指摘されたことが **specと異なる** 、**specに記載されていない** 場合は追加・修正の提●●を行う。
+- AIはテストを **勝手に実行しない**（実行は開発者が行う）。
+- OpenAI●●が発生する処理は、CIでは絶対に実行しない。
