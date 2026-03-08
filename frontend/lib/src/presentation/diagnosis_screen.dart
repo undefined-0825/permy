@@ -484,7 +484,7 @@ class _ChoiceCardState extends State<_ChoiceCard> {
         splashColor: const Color(0xFFF3F4F6),
         highlightColor: const Color(0xFFF3F4F6),
         child: Container(
-          height: 88,
+          height: 96,
           padding: const EdgeInsets.symmetric(horizontal: 18),
           decoration: BoxDecoration(
             color: _isHovering ? const Color(0xFFF3F4F6) : Colors.transparent,
@@ -496,8 +496,8 @@ class _ChoiceCardState extends State<_ChoiceCard> {
             children: [
               // 選択肢画像
               Container(
-                width: 52,
-                height: 52,
+                width: 60,
+                height: 60,
                 decoration: BoxDecoration(
                   color: const Color(0xFFFCE7F3),
                   borderRadius: BorderRadius.circular(10),
@@ -506,8 +506,8 @@ class _ChoiceCardState extends State<_ChoiceCard> {
                   borderRadius: BorderRadius.circular(10),
                   child: Image.asset(
                     'assets/images/diagnosis_choices/${widget.choiceId}.png',
-                    width: 52,
-                    height: 52,
+                    width: 60,
+                    height: 60,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       // 画像が存在しない場合はアイコンで代用
@@ -526,7 +526,7 @@ class _ChoiceCardState extends State<_ChoiceCard> {
                 child: Text(
                   widget.label,
                   style: const TextStyle(
-                    fontSize: 17,
+                    fontSize: 19,
                     fontWeight: FontWeight.normal,
                     color: Color(0xFF374151),
                     height: 1.45,
