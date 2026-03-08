@@ -23,6 +23,7 @@ from fastapi.responses import FileResponse, JSONResponse
 
 
 from app.config import settings
+from app.db import ensure_schema
 from app.logging_conf import configure_logging
 from app.middleware.request_id import RequestIdMiddleware
 from app.middleware.no_cache import NoCacheMiddleware
@@ -69,6 +70,11 @@ app.include_router(generate_router, prefix="/api/v1")
 app.include_router(migration_router, prefix="/api/v1")
 app.include_router(telemetry_router, prefix="/api/v1")
 app.include_router(billing_router, prefix="/api/v1")
+
+
+@app.on_event("startup")
+async def startup_initialize_schema() -> None:
+    await ensure_schema()
 
 _static_dir = pathlib.Path(__file__).resolve().parents[1] / "static"
 _legal_dir = _static_dir / "legal"
