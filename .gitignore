@@ -100,7 +100,9 @@ build/
 
 # ---- Android (Gradle/Android Studio) ----
 **/android/.gradle/
+**/android/**/.gradle/
 **/android/local.properties
+**/android/**/local.properties
 **/android/**/build/
 **/android/**/.cxx/
 **/android/**/.idea/
