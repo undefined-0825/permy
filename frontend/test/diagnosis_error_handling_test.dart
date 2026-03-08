@@ -125,5 +125,61 @@ void main() {
       // VALIDATION_ERROR 用のメッセージを確認
       expect(find.text('うまく読めなかった。もう一度ためしてね'), findsWidgets);
     });
+
+    testWidgets('VALIDATION_FAILED エラー時の適切なメッセージ', (WidgetTester tester) async {
+      Future<DiagnosisResult> onCompletedWithValidationFailed(
+        List<DiagnosisAnswer> answers,
+      ) async {
+        throw ApiError(
+          httpStatus: 422,
+          errorCode: 'VALIDATION_FAILED',
+          message: 'Validation failed',
+        );
+      }
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DiagnosisScreen(onCompleted: onCompletedWithValidationFailed),
+        ),
+      );
+
+      for (var i = 0; i < diagnosisQuestions.length; i++) {
+        final question = diagnosisQuestions[i];
+        final choiceButton = find.text(question.choices.first.label);
+        await tester.tap(choiceButton);
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.text('うまく読めなかった。もう一度ためしてね'), findsWidgets);
+    });
+
+    testWidgets('SETTINGS_VERSION_CONFLICT エラー時の適切なメッセージ', (
+      WidgetTester tester,
+    ) async {
+      Future<DiagnosisResult> onCompletedWithConflict(
+        List<DiagnosisAnswer> answers,
+      ) async {
+        throw ApiError(
+          httpStatus: 409,
+          errorCode: 'SETTINGS_VERSION_CONFLICT',
+          message: 'Conflict',
+        );
+      }
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DiagnosisScreen(onCompleted: onCompletedWithConflict),
+        ),
+      );
+
+      for (var i = 0; i < diagnosisQuestions.length; i++) {
+        final question = diagnosisQuestions[i];
+        final choiceButton = find.text(question.choices.first.label);
+        await tester.tap(choiceButton);
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.text('保存が競合したみたい。もう一度ためしてね'), findsWidgets);
+    });
   });
 }

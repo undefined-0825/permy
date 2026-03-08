@@ -96,6 +96,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
       _currentQuestionIndex == diagnosisQuestions.length - 1;
 
   void _handleNext() {
+    if (_saving) return;
     HapticFeedback.mediumImpact();
     final currentQuestion = diagnosisQuestions[_currentQuestionIndex];
     if (_answers[currentQuestion.id] == null) {
@@ -160,7 +161,10 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
       case 'AUTH_REQUIRED':
         return '認証を更新したよ。もう一度ためしてね';
       case 'VALIDATION_ERROR':
+      case 'VALIDATION_FAILED':
         return 'うまく読めなかった。もう一度ためしてね';
+      case 'SETTINGS_VERSION_CONFLICT':
+        return '保存が競合したみたい。もう一度ためしてね';
       case 'RATE_LIMITED':
         return '少し混み合ってるみたい。少し待って、もう一度';
       case 'UPSTREAM_UNAVAILABLE':
@@ -203,6 +207,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                 choiceId: choice.id,
                 label: choice.label,
                 isSelected: isSelected,
+                enabled: !_saving,
                 onTap: () {
                   setState(() {
                     _answers[question.id] = choice.id;
@@ -445,12 +450,14 @@ class _ChoiceCard extends StatefulWidget {
     required this.choiceId,
     required this.label,
     required this.isSelected,
+    required this.enabled,
     required this.onTap,
   });
 
   final String choiceId;
   final String label;
   final bool isSelected;
+  final bool enabled;
   final VoidCallback onTap;
 
   @override
@@ -465,10 +472,12 @@ class _ChoiceCardState extends State<_ChoiceCard> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: InkWell(
-        onTap: () {
-          widget.onTap();
-          HapticFeedback.lightImpact();
-        },
+        onTap: widget.enabled
+            ? () {
+                widget.onTap();
+                HapticFeedback.lightImpact();
+              }
+            : null,
         onHover: (hovering) {
           setState(() => _isHovering = hovering);
         },

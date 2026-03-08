@@ -198,22 +198,40 @@ class ApiClient implements AppApiClient {
       );
     });
 
-    final current = await getSettings();
-    final updated = Map<String, dynamic>.from(current.settings)
-      ..['settings_schema_version'] =
-          (current.settings['settings_schema_version'] as num?)?.toInt() ?? 1
-      ..['persona_version'] = 3
-      ..['true_self_type'] = diagnosis.trueSelfType
-      ..['night_self_type'] = diagnosis.nightSelfType
-      ..['persona_goal_primary'] = diagnosis.personaGoalPrimary
-      ..['persona_goal_secondary'] = diagnosis.personaGoalSecondary
-      ..['style_assertiveness'] = diagnosis.styleAssertiveness
-      ..['style_warmth'] = diagnosis.styleWarmth
-      ..['style_risk_guard'] = diagnosis.styleRiskGuard;
-
-    await updateSettings(updated, current.etag);
+    await _saveDiagnosisSettingsWithRetry(diagnosis);
 
     return diagnosis;
+  }
+
+  Future<void> _saveDiagnosisSettingsWithRetry(
+    DiagnosisResult diagnosis,
+  ) async {
+    for (var attempt = 0; attempt < 2; attempt++) {
+      final current = await getSettings();
+      final updated = Map<String, dynamic>.from(current.settings)
+        ..['settings_schema_version'] =
+            (current.settings['settings_schema_version'] as num?)?.toInt() ?? 1
+        ..['persona_version'] = 3
+        ..['true_self_type'] = diagnosis.trueSelfType
+        ..['night_self_type'] = diagnosis.nightSelfType
+        ..['persona_goal_primary'] = diagnosis.personaGoalPrimary
+        ..['persona_goal_secondary'] = diagnosis.personaGoalSecondary
+        ..['style_assertiveness'] = diagnosis.styleAssertiveness
+        ..['style_warmth'] = diagnosis.styleWarmth
+        ..['style_risk_guard'] = diagnosis.styleRiskGuard;
+
+      try {
+        await updateSettings(updated, current.etag);
+        return;
+      } on ApiError catch (e) {
+        final isRetryableConflict =
+            e.errorCode == 'SETTINGS_VERSION_CONFLICT' ||
+            e.errorCode == 'VALIDATION_FAILED';
+        if (!isRetryableConflict || attempt == 1) {
+          rethrow;
+        }
+      }
+    }
   }
 
   @override
