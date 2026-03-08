@@ -130,6 +130,12 @@ ios/
 - `meta.plan` は `free|pro` の2値のみ。UI上は free/proとして扱う（pro_compは露出しない）。
 - エラーは `error_code` を最優先で分岐。
 
+### 4.4.1 Settings ETagのフォールバック（MUST）
+- `GET /me/settings` の `etag` は **`response.headers['etag']` を第一優先**で読む。
+- ヘッダが欠落している場合は **`response.body.etag` をフォールバック**として採用する。
+- `etag` が最終的に空のままなら `PUT /me/settings` を実行しない（`If-Match` 空送信禁止）。
+- 上記ケースでは `VALIDATION_FAILED` を再送で増幅させず、再取得またはリトライ導線を表示する。
+
 ### 4.5 起動時アップデート判定（MUST）
 - 起動時に端末のアプリバージョンを取得する（`package_info_plus`）。
 - `GET /api/v1/version` を呼び、以下で判定する。

@@ -140,6 +140,8 @@
   - 詳細ルール：`frontend_impl.md`「6.6 AppBar設計ルール（MUST）」を参照。
 - 失敗4：画面改修の完了条件が曖昧で、確認漏れが発生した。
   - 詳細ルール：`frontend_impl.md`「6.8 UI実装完了チェック（MUST）」を参照。
+- 失敗5：`/me/settings` の `ETag` ヘッダ欠落環境で `If-Match` が空になり、診断完了時に `VALIDATION_FAILED` が発生した。
+  - 詳細ルール：`backend_impl.md`「8.1.1 ETag伝達の冗長化（MUST）」、`frontend_impl.md`「4.4.1 Settings ETagのフォールバック（MUST）」を参照。
 
 ---
 

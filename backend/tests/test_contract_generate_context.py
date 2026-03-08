@@ -10,6 +10,7 @@ def test_generate_uses_settings_context_with_dummy_client(client):
 
     current = client.get("/api/v1/me/settings", headers=headers)
     assert current.status_code == 200
+    assert (current.json().get("etag") or "") != ""
     etag = current.headers.get("etag")
     settings = dict(current.json().get("settings") or {})
     settings.update(

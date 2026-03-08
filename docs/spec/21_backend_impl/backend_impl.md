@@ -165,6 +165,11 @@ backend/
 - `user_settings.etag` を保持（例：更新ごとにUUID、または更新時刻+hash）
 - GETで `ETag` を返し、PUTは `If-Match` 必須
 
+### 8.1.1 ETag伝達の冗長化（MUST）
+- `GET /me/settings` と `PUT /me/settings` のレスポンスは、`ETag` ヘッダに加えて **レスポンスボディにも `etag` を含める**。
+- 理由：CDN/Proxy/WAFでヘッダが欠落しても、クライアントが `If-Match` を組み立てられるようにするため。
+- 互換性：既存クライアントを壊さないよう、ヘッダ返却は維持したままボディ併記とする。
+
 ### 8.2 競合
 - `If-Match` が一致しない → `409 ETAG_MISMATCH`
 
@@ -256,6 +261,7 @@ backend/
 ### 12.2 最低限のユニット/統合テスト
 - auth: token発行/検証
 - settings: ETag一致/不一致
+- settings: `GET /me/settings` で `ETag` ヘッダと `body.etag` の両方が返ること
 - generate: 日次制限、レート制限、冪等キー競合
 - migration: 発行→消費→再利用不可、期限切れ
 

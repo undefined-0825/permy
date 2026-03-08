@@ -102,11 +102,13 @@ class ApiClient implements AppApiClient {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final body = _tryJson(response.body) ?? <String, dynamic>{};
         final settings = body['settings'];
+        final bodyEtag = body['etag']?.toString() ?? '';
+        final responseEtag = response.headers['etag'] ?? '';
         return SettingsSnapshot(
           settings: settings is Map<String, dynamic>
               ? Map<String, dynamic>.from(settings)
               : <String, dynamic>{},
-          etag: response.headers['etag'] ?? '',
+          etag: responseEtag.isNotEmpty ? responseEtag : bodyEtag,
         );
       }
 

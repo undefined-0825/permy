@@ -15,6 +15,7 @@ class AuthAnonymousResponse(BaseModel):
 
 class SettingsResponse(BaseModel):
     settings: dict
+    etag: str | None = None
 
 
 class SettingsUpdateRequest(BaseModel):

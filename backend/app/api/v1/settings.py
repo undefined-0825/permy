@@ -37,7 +37,7 @@ async def get_settings(
         await db.commit()
 
     response.headers["ETag"] = st.etag
-    return SettingsResponse(settings=st.settings_json)
+    return SettingsResponse(settings=st.settings_json, etag=st.etag)
 
 @router.put("/me/settings", response_model=SettingsResponse)
 async def put_settings(
@@ -73,4 +73,4 @@ async def put_settings(
     await db.commit()
 
     response.headers["ETag"] = new_etag
-    return SettingsResponse(settings=st.settings_json)
+    return SettingsResponse(settings=st.settings_json, etag=new_etag)
