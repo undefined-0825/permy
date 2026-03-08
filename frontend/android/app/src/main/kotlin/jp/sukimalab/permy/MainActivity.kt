@@ -1,4 +1,4 @@
-package com.example.sample_app
+package jp.sukimalab.permy
 
 import io.flutter.embedding.android.FlutterActivity
 
