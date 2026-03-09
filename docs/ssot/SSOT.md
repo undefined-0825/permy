@@ -1,8 +1,14 @@
 # docs/ssot/SSOT.md — Project Permy（Copilot作業用 SSOT / 入口）
 
-**Last Updated (JST):** 2026-03-02 04:05:00 +0900
+**発行者：** 隙間産業ラボ 中野家  
+**メール：** sukima.lab.nakanoya@gmail.com  
+**Last Updated (JST):** 2026-03-06 (デザインコンセプトSSOT追加)
 
 ---
+
+## 出力言語（MUST）
+- Copilot/AIの出力（回答・提案・Spec文言・コメント）は日本語とする。
+- ユーザーが明示的に英語を要求した場合のみ英語を許可する。
 
 ## 0. このSSOTの目的（MUST）
 - GitHub Copilot / AIが **迷わず**仕様を参照し、**勝手判断・仕様劣化・虚偽・混入ゴミ**を起こさないための「唯一の入口」とする。
@@ -24,7 +30,18 @@
 - 勝手判断（良かれと思って補完・推測で埋める）禁止。判断不能は必ず質問。
 - 虚偽報告（読んだ/検証した/出力したの断定）禁止。実施した手順・対象を併記できないなら「未確認」と書く。
 - 仕様劣化（同じ概念の別名・別値・参照揺れ）禁止。
+- /spec/ファイルの更新が必要な場合は、修正前にちょびさんに確認を取ってから修正すること。
 - Spec本文へ **内部マーカー/混入ゴミ**を入れない（例：`filecite...`、turn番号等）。
+
+### 1.4 Spec管理のメタルール（MUST / 2026-03-06追加）
+- 同じ内容を複数のSpecファイルに重複記載しない（重複禁止）。
+- Spec修正時は、先に「どこに何を書くか」を決め、1箇所にのみ記載する。
+- 配置原則は次の通り：
+  - `project_rules.md`：失敗事例の要約のみ（詳細実装は参照）
+  - `engineering_conventions.md`：横断的な実装規約のみ
+  - `frontend_impl.md` / `backend_impl.md`：領域固有の詳細実装ルール
+  - `SSOT.md`：このメタルール自体
+- 重複記載を避けるため、他Specからは「ファイル名 + セクション参照」でリンクする。
 
 ---
 
@@ -32,19 +49,28 @@
 Copilot・AI・開発者は必ずこの順で読む。
 
 1) `docs/spec/00_world/world_concept.md`（戦略・コンセプト・世界観定義）  
-2) `docs/spec/01_rules/project_rules.md`（運用ルール/禁止事項）  
-3) `docs/spec/10_product/product_spec.md`（プロダクト仕様：価格/プラン/UX/NG/診断/生成方針）  
-4) `docs/spec/20_backend/backend_spec.md`（バックエンド設計：API/認証/データモデル/保存禁止）  
-5) `docs/spec/21_backend_impl/backend_impl.md`（バックエンド実装仕様：DTO/生成/中ゲート/メタ）  
-6) `docs/spec/30_frontend/frontend_spec.md`（フロント設計：画面/導線/文言/演出）  
-7) `docs/spec/31_frontend_impl/frontend_impl.md`（フロント実装：状態/共有受信/コピー/NG UI）  
+2) `docs/spec/00_world/ui_animations.md`（UI演出SSOT：ピンク→黒反転、固定セリフ2文、変身シークエンス）  
+3) `docs/spec/01_rules/project_rules.md`（運用ルール/禁止事項/してはいけない推論/品質ゲート）  
+4) `docs/spec/01_rules/engineering_conventions.md`（実装規約：Flutter+FastAPI、可読性、テスト同時生成、プロンプト構造化）  
+5) `docs/spec/01_rules/privacy_logging.md`（本文ゼロ：保存禁止/ログ禁止/例外時の扱い）  
+6) `docs/spec/10_product/ng_policy.md`（NG制御SSOT：STOP/REWRITE/WARN、優先順位）  
+7) `docs/spec/10_product/product_spec.md`（プロダクト仕様：価格/プラン/回数制限/入力導線/診断/生成/コンボ/followup）  
+8) `docs/spec/20_backend/backend_spec.md`（バックエンド設計：API/認証/データモデル/本文ゼロ/レート制限/コストガード）  
+9) `docs/spec/21_backend_impl/backend_impl.md`（バックエンド実装仕様：DTO/生成/中ゲート/メタ/OPENAI_DISABLED）  
+10) `docs/spec/30_frontend/frontend_spec.md`（フロント設計：画面遷移/導線/文言/演出/貼り付け欄禁止）  
+11) **`docs/spec/30_frontend/design_rule.md`（デザインコンセプト："Modern Seamless & Breathable"、Edge-less Flatレイアウト、ピンク系グラデーション、タイポグラフィ・カラーパレット・UIコンポーネント定義）**  
+12) `docs/spec/31_frontend_impl/frontend_impl.md`（フロント実装：状態/DTO/API呼び出し/NG UI/設定同期）  
+13) `docs/spec/31_frontend_impl/native_share_wrappers.md`（Android/iOS共有受信ラッパー：.txtのみ、永続化禁止、受け渡しI/F）
 
 補助（必要時のみ）：
-- `docs/spec/40_tests/test_strategy.md`
-- `docs/spec/41_ci/ci_policy.md`
-- `docs/spec/42_deploy/deploy_strategy.md`
-- `docs/spec/01_rules/telemetry_policy.md`
-- `docs/spec/20_backend/telemetry_schema.md`
+- `docs/spec/01_rules/telemetry_policy.md`（本文ゼロの計測ポリシー：時間帯バケットUTC）
+- `docs/spec/20_backend/telemetry_schema.md`（テレメトリイベントスキーマ：hour_bucket_utc/dow_utc）
+- `docs/spec/40_tests/test_strategy.md`（テスト方針：CIはOpenAI禁止、ライブは手動・上限）
+- `docs/spec/41_ci/ci_policy.md`（CI方針：PR必須、OpenAI禁止、実行範囲）
+- `docs/spec/42_deploy/deploy_strategy.md`（現時点：自動デプロイなし）
+- `docs/spec/21_backend_impl/acceptance_tests_backend.md`（Backend受け入れテスト）
+- `docs/spec/31_frontend_impl/acceptance_tests_frontend.md`（Frontend受け入れテスト）
+- `docs/spec/40_tests/acceptance_tests.md`（総合E2E受け入れテスト）
 
 ---
 
@@ -54,6 +80,11 @@ Copilot・AI・開発者は必ずこの順で読む。
 - 価格：**月額 2,980円**。
 - Free：**1日3回**。
 - Pro：**1日100回**（価格改定後も維持）。
+
+#### 3.1.1 対象OSの厳格化（MUST）
+- 本プロジェクトのクライアント実装対象は **Android / iPhone（iOS） のみ**。
+- **Windows / macOS / Linux 向けのアプリ実装・コード生成・ビルド手順・設定（例：WinUI/WPF/UWP、MAUIのWindowsターゲット、Electron、.dmg/.msi、Desktop向けCI、OS別パス前提の実装）は提案・実装ともに禁止**。
+- 例外は **サーバ/CI等の開発環境の補助**（例：PowerShellやbashでのローカル起動、lint、unit test）に限る。ただし、クライアント機能の実装がDesktop向けに拡張される提案は禁止。
 
 ### 3.2 入力導線（MUST）
 - 入力は **LINE「トーク履歴送信」→ `.txt` 受領のみ**。
@@ -116,16 +147,21 @@ Copilot・AI・開発者は必ずこの順で読む。
 - 生成時演出（色反転/セリフ）と禁止語。
 - A/B/Cカード仕様（タップでコピー等）。
 
-### 4.7 frontend_impl.md（フロント実装仕様）
+### 4.7 design_rule.md（デザインコンセプトSSOT / 2026-03-06追加）
+- デザイン統一原則："Modern Seamless & Breathable"（Edge-less Flatスタイル）。
+- レイアウト構造（グラデーション背景、マージン、ヘッダー設計）、カラーパレット、タイポグラフィ、UIコンポーネント定義。
+- **全画面・全コンポーネント実装はこのデザインコンセプトに厳密に従う（MUST）**
+
+### 4.8 frontend_impl.md（フロント実装仕様）
 - 状態管理、DTO、API呼び出し。
 - Android/iOS共有受信ラッパー（`.txt`）。
 - NG設定UI（ng_tags/ng_free_phrases）同期、テレメトリ送信（本文無し）。
 
-### 4.8 telemetry_policy.md / telemetry_schema.md
+### 4.9 telemetry_policy.md / telemetry_schema.md
 - 収集してよい情報/禁止情報。
 - イベントスキーマ、保持期間、集計（hourly rollup）。
 
-### 4.9 test_strategy.md / ci_policy.md / deploy_strategy.md
+### 4.10 test_strategy.md / ci_policy.md / deploy_strategy.md
 - CIのみ（自動デプロイなし）を前提に、実行範囲とコストガードを定義。
 - OpenAIライブテストは手動のみ＆上限必須。
 
@@ -149,6 +185,6 @@ AIが「完成」「更新済み」と言う前に、以下が全て満たされ
 
 ## 7. “AIにやらせる範囲”の明確化（MUST）
 - AIは **実装を進めてよい**が、Spec変更は **提案のみ**。
+- 指示されたことや、指摘されたことが **specと異なる** 、**specに記載されていない** 場合は追加・修正の提案を行う。
 - AIはテストを **勝手に実行しない**（実行は開発者が行う）。
 - OpenAI課金が発生する処理は、CIでは絶対に実行しない。
-- AIは私と会話するときは日本語を使用すること。

@@ -1,0 +1,5 @@
+package jp.sukimalab.permy
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()

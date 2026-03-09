@@ -1,0 +1,81 @@
+# Render Blueprint for Permy Backend (Production Configuration)
+# PostgreSQL + Redis 本番構成
+
+services:
+  # Backend Web Service (FastAPI + Uvicorn)
+  - type: web
+    name: permy-backend
+    runtime: python
+    plan: starter  # 有料プラン（常時稼働）
+    region: singapore  # または oregon（レイテンシーとコストで選択）
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    autoDeploy: false  # MUST: 自動デプロイ無効（deploy_strategy.md に準拠）
+    envVars:
+      # Application Settings
+      - key: APP_ENV
+        value: production
+      - key: APP_NAME
+        value: permy-serverside
+      - key: APP_VERSION
+        value: 1.0.0
+      
+      # AI Provider
+      - key: AI_PROVIDER
+        value: openai
+      - key: OPENAI_API_KEY
+        sync: false  # Render Secret - Manual input required
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      
+      # Telemetry
+      - key: TELEMETRY_HASH_SECRET
+        sync: false  # Render Secret - Manual input required
+      
+      # Database (PostgreSQL via Render managed DB)
+      - key: DATABASE_URL
+        fromDatabase:
+          name: permy-db
+          property: connectionString
+      
+      # Redis (Render managed Redis)
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: permy-redis
+          property: connectionString
+      
+      # Rate Limiting & Security
+      - key: RL_AUTH_IP_LIMIT
+        value: 30
+      - key: RL_AUTH_DF_LIMIT
+        value: 10
+      - key: RL_GENERATE_MINUTE_LIMIT
+        value: 5
+      
+      # Daily Limits
+      - key: FREE_GENERATE_DAILY_LIMIT
+        value: 3
+      - key: PRO_GENERATE_DAILY_LIMIT
+        value: 100
+      
+      # Logging
+      - key: UVICORN_ACCESS_LOG
+        value: false
+
+  # Redis Service
+  - type: redis
+    name: permy-redis
+    plan: starter  # 有料プラン（1GB memory）
+    region: singapore  # Backend と同じリージョンを推奨
+    maxmemoryPolicy: allkeys-lru  # キャッシュ用LRU削除
+    ipAllowList: []  # 同じアカウント内のサービスのみアクセス可能（セキュリティ推奨）
+
+databases:
+  # PostgreSQL Database
+  - name: permy-db
+    databaseName: permy
+    user: permy
+    plan: basic-256mb  # Render Postgresの有効プラン名
+    region: singapore  # Backend と同じリージョンを推奨
