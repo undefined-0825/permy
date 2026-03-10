@@ -247,7 +247,7 @@ void main() {
     expect(find.text('情報を反映したよ。もう一度生成してみてね'), findsOneWidget);
   });
 
-  testWidgets('FreeでPro項目選択時に購買案内を表示する', (WidgetTester tester) async {
+  testWidgets('FreeでPlus項目選択時に購買案内を表示する', (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: GenerateScreen(
@@ -269,6 +269,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('有料版のみ'), findsOneWidget);
-    expect(find.text('このモードはProで使える機能だよ。'), findsOneWidget);
+    expect(find.text('このモードはPlusで使える機能だよ。'), findsOneWidget);
   });
 }

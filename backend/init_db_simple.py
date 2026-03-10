@@ -1,6 +1,7 @@
 """Initialize database tables."""
 import asyncio
 from app.db import engine, Base
+import app.models  # noqa: F401
 
 
 async def init_db():

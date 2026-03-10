@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// ペルミィ デザイン定義 (design_rule.md 準拠)
 /// - Modern Seamless & Breathable コンセプト
@@ -34,25 +35,25 @@ class PermyTypography {
   // プライマリタイトル: 18pt Bold
   static const TextStyle primaryTitle = TextStyle(
     fontSize: 18,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.w700,
     color: PermyColors.primaryTitle,
-    height: 1.4,
+    height: 1.35,
   );
 
-  // 本文: 15pt Regular
+  // 本文: 15pt Regular（読み疲れを抑えるため軽め）
   static const TextStyle body = TextStyle(
     fontSize: 15,
-    fontWeight: FontWeight.normal,
+    fontWeight: FontWeight.w400,
     color: PermyColors.bodyText,
-    height: 1.6,
+    height: 1.7,
   );
 
-  // メタ情報: 13pt Medium
+  // メタ情報: 13pt Regular（本文より一段弱め）
   static const TextStyle meta = TextStyle(
     fontSize: 13,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w400,
     color: PermyColors.metaText,
-    height: 1.4,
+    height: 1.55,
   );
 
   // アクセント数値: 20pt Semi-bold
@@ -66,14 +67,14 @@ class PermyTypography {
   // セクションヘッダー: 16pt Bold
   static const TextStyle sectionHeader = TextStyle(
     fontSize: 16,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.w700,
     color: PermyColors.primaryTitle,
   );
 
-  // ボタンラベル: 15pt Regular
+  // ボタンラベル: 15pt SemiBold（短時間での判読性を優先）
   static const TextStyle buttonLabel = TextStyle(
     fontSize: 15,
-    fontWeight: FontWeight.normal,
+    fontWeight: FontWeight.w600,
     color: PermyColors.white,
   );
 
@@ -87,7 +88,7 @@ class PermyTypography {
 
 class PermyTheme {
   static ThemeData get lightTheme {
-    return ThemeData(
+    final baseTheme = ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.light(
         primary: PermyColors.primaryPink,
@@ -104,13 +105,21 @@ class PermyTheme {
         elevation: 0,
         centerTitle: false,
         iconTheme: IconThemeData(color: PermyColors.primaryTitle),
+        titleTextStyle: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: PermyColors.primaryTitle,
+          letterSpacing: 0.1,
+        ),
       ),
 
       // Text Theme
       textTheme: TextTheme(
         headlineLarge: PermyTypography.primaryTitle,
+        titleLarge: PermyTypography.primaryTitle,
         headlineSmall: PermyTypography.sectionHeader,
         bodyLarge: PermyTypography.body,
+        bodySmall: PermyTypography.meta,
         bodyMedium: PermyTypography.small,
         labelLarge: PermyTypography.buttonLabel,
       ),
@@ -180,6 +189,13 @@ class PermyTheme {
       splashColor: PermyColors.highlight,
       highlightColor: PermyColors.highlight,
       hoverColor: PermyColors.highlight.withOpacity(0.5),
+    );
+
+    return baseTheme.copyWith(
+      textTheme: GoogleFonts.notoSansJpTextTheme(baseTheme.textTheme),
+      primaryTextTheme: GoogleFonts.notoSansJpTextTheme(
+        baseTheme.primaryTextTheme,
+      ),
     );
   }
 }

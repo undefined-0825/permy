@@ -391,9 +391,9 @@ class _GenerateScreenState extends State<GenerateScreen>
         return '少し混み合ってるみたい。少し待って、もう一度';
       case 'DAILY_LIMIT_REACHED':
       case 'DAILY_LIMIT_EXCEEDED':
-        return '今日はここまで。続きは明日か、Proで使える';
+        return '今日はここまで。続きは明日か、Plusで使える';
       case 'PLAN_REQUIRED':
-        return 'この機能はProで使えるよ';
+        return 'この機能はPlusで使えるよ';
       case 'OPENAI_DISABLED':
         return 'この環境では生成を止めているよ';
       case 'UPSTREAM_UNAVAILABLE':
@@ -410,7 +410,7 @@ class _GenerateScreenState extends State<GenerateScreen>
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('有料版のみ'),
-          content: const Text('このモードはProで使える機能だよ。'),
+          content: const Text('このモードはPlusで使える機能だよ。'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -606,7 +606,7 @@ class _ComboSelector extends StatelessWidget {
                   return DropdownMenuItem<int>(
                     value: index,
                     child: Text(
-                      isLocked ? '$label（Pro）' : label,
+                      isLocked ? '$label（Plus）' : label,
                       style: TextStyle(
                         color: isLocked
                             ? PermyColors.metaText

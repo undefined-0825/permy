@@ -114,22 +114,26 @@
 2) **Onboarding（初回チュートリアル）**
    - 「LINEからトーク履歴を送る→Permyで開く」手順を、短いステップで提示
    - プライバシー（本文非保存・送信はユーザー）を分かりやすく提示
-   - 完了後はGenerateへ
+  - 完了後は初回診断へ遷移
 
-3) **Generate（メイン画面）**
+3) **初回診断（Diagnosis）**
+  - 7問固定の診断を実施し、`POST /me/diagnosis` を呼ぶ
+  - 診断結果スライドで内容を確認後、Generateへ遷移
+
+4) **Generate（メイン画面）**
    - 共有受信したtxtを受け取ると自動でこの画面が開き、生成準備状態になる
    - 設定（purpose/combo/禁止事項等）は最小UIで選べる
    - 「生成」ボタン → 生成中演出 → A/B/C候補表示
 
-4) **Settings（ユーザー設定）**
+5) **Settings（ユーザー設定）**
    - バックエンドの `/me/settings` と同期（ETag対応）
    - 変更時はPUT、競合は再取得→再編集
 
-5) **Migration（端末移行）**
+6) **Migration（端末移行）**
    - 発行（/migration/issue）→ 12桁コード表示
    - 取込（/migration/consume）→ token更新
 
-6) **About/Privacy**
+7) **About/Privacy**
    - プライバシー方針（本文非保存）を明示
    - 問い合わせ導線（必要なら）
 

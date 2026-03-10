@@ -213,7 +213,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'LINEで、会話を長押し。\n【トーク履歴を送信】を選ぶ。\nテキストファイルでぼくに送ってね。',
+            'LINEでトーク履歴を送信して、\nこのアプリに共有して。\n.txtを受け取って返信案を作るよ。',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.normal,
@@ -277,7 +277,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'ぼくに䮵せて。\nあなただけの返信をつくる。\nさあ、変身しよう。',
+            'ぼくに任せて。\nあなただけの返信をつくる。\nさあ、始めよう。',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.normal,

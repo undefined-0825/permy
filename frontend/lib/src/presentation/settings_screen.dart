@@ -40,6 +40,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Map<String, dynamic> _settings = {};
   bool _loading = true;
   bool _saving = false;
+  bool _persisting = false;
+  bool _pendingPersist = false;
   ApiError? _error;
   final TextEditingController _ngPhraseController = TextEditingController();
   StreamSubscription<BillingProof>? _billingProofSubscription;
@@ -92,7 +94,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _saveSettings() async {
+  Future<void> _persistSettings({bool showSuccessMessage = false}) async {
     try {
       setState(() {
         _saving = true;
@@ -100,14 +102,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
       });
 
       await widget.apiClient.updateSettings(_settings, _currentETag);
+      final snapshot = await widget.apiClient.getSettings();
       if (!mounted) return;
       setState(() {
+        _settings = Map<String, dynamic>.from(snapshot.settings);
+        _currentETag = snapshot.etag;
         _saving = false;
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('設定を保存しました')));
+      if (showSuccessMessage) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('設定を反映しました')));
+      }
     } on ApiError catch (e) {
       if (!mounted) return;
       setState(() {
@@ -116,19 +123,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
       });
 
       if (e.errorCode == 'ETAG_MISMATCH') {
-        // 再取得を促す
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('設定が更新されていたので、最新状態を読み直したよ')),
+        );
+        await _loadSettings();
+      } else {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('設定が更新されました。再読込してください。')));
-        await _loadSettings();
+        ).showSnackBar(const SnackBar(content: Text('設定の反映に失敗したよ。もう一度ためしてね')));
       }
     }
   }
 
-  void _updateSetting(String key, dynamic value) {
+  void _scheduleAutoPersist() {
+    if (_persisting) {
+      _pendingPersist = true;
+      return;
+    }
+    unawaited(_persistSettingsLoop());
+  }
+
+  Future<void> _persistSettingsLoop() async {
+    _persisting = true;
+    do {
+      _pendingPersist = false;
+      await _persistSettings();
+    } while (_pendingPersist && mounted);
+    _persisting = false;
+  }
+
+  void _updateSetting(String key, dynamic value, {bool autoPersist = true}) {
     setState(() {
       _settings[key] = value;
     });
+    if (autoPersist) {
+      _scheduleAutoPersist();
+    }
   }
 
   Future<void> _startRediagnosis() async {
@@ -209,6 +239,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.65),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                _saving
+                                    ? Icons.sync
+                                    : Icons.check_circle_outline,
+                                size: 18,
+                                color: PermyColors.metaText,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _saving ? '変更を反映中...' : '変更は自動で反映されます',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: PermyColors.metaText,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
                         const SectionHeader(title: 'ペルソナ'),
                         const SizedBox(height: 12),
                         _buildPersonaInfo(),
@@ -267,78 +327,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           child: const Text('チュートリアルをもう一度確認する'),
                         ),
                         const SizedBox(height: 32),
-                        SectionHeader(title: 'Pro版（月額2,980円）'),
+                        SectionHeader(title: 'Plus版（月額2,980円）'),
                         const SizedBox(height: 12),
                         _buildPurchaseSection(),
                         const SizedBox(height: 32),
-                        SectionHeader(title: 'もっと知る'),
+                        SectionHeader(title: 'サポート・規約'),
                         const SizedBox(height: 12),
-                        PrimaryButton(
-                          onPressed: () {
-                            HapticFeedback.mediumImpact();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const TermsOfServiceScreen(),
-                              ),
-                            );
-                          },
-                          child: const Text('利用規約'),
-                        ),
-                        const SizedBox(height: 12),
-                        PrimaryButton(
-                          onPressed: () {
-                            HapticFeedback.mediumImpact();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const PrivacyPolicyScreen(),
-                              ),
-                            );
-                          },
-                          child: const Text('プライバシーポリシー'),
-                        ),
-                        const SizedBox(height: 12),
-                        PrimaryButton(
-                          onPressed: () {
-                            HapticFeedback.mediumImpact();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => const HelpScreen(),
-                              ),
-                            );
-                          },
-                          child: const Text('ヘルプ（使い方）'),
-                        ),
-                        const SizedBox(height: 12),
-                        PrimaryButton(
-                          onPressed: () {
-                            HapticFeedback.mediumImpact();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const AboutPrivacyScreen(),
-                              ),
-                            );
-                          },
-                          child: const Text('このアプリについて'),
-                        ),
-                        const SizedBox(height: 12),
-                        PrimaryButton(
-                          onPressed: () {
-                            HapticFeedback.mediumImpact();
-                            showLicensePage(
-                              context: context,
-                              applicationName: 'Permy',
-                              applicationIcon: Image.asset(
-                                'assets/images/icons/permy_icon.png',
-                                width: 48,
-                                height: 48,
-                              ),
-                            );
-                          },
-                          child: const Text('オープンソースライセンス'),
-                        ),
+                        _buildInfoLinks(),
                         const SizedBox(height: 32),
                         SectionHeader(title: 'アカウント管理'),
                         const SizedBox(height: 12),
@@ -349,17 +344,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           },
                           child: const Text('アカウントを削除する'),
                         ),
-                        const SizedBox(height: 32),
-                        PrimaryButton(
-                          onPressed: _saving
-                              ? null
-                              : () {
-                                  HapticFeedback.mediumImpact();
-                                  _saveSettings();
-                                },
-                          isLoading: _saving,
-                          child: const Text('保存'),
-                        ),
+                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
@@ -459,7 +444,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Pro版ではさらに 4種類の方針が選択できます',
+          'Plus版ではさらに 4種類の方針が選択できます',
           style: const TextStyle(fontSize: 12, color: PermyColors.bodyText),
         ),
       ],
@@ -646,7 +631,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Text(
-              'Pro版をご利用中です\n1日100回まで生成できます',
+              'Plus版をご利用中です\n1日100回まで生成できます',
               style: TextStyle(fontSize: 14),
               textAlign: TextAlign.center,
             ),
@@ -656,7 +641,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Text(
-                'Pro版の特典:',
+                'Plus版の特典:',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
@@ -670,7 +655,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   HapticFeedback.mediumImpact();
                   _purchasePro();
                 },
-                child: const Text('Proにアップグレード（月額2,980円）'),
+                child: const Text('Plusにアップグレード（月額2,980円）'),
               ),
             ],
           ),
@@ -691,6 +676,76 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: const Text('サブスクリプション管理'),
         ),
       ],
+    );
+  }
+
+  Widget _buildInfoLinks() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.55),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          _InfoLinkTile(
+            label: '利用規約',
+            onTap: () {
+              HapticFeedback.lightImpact();
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const TermsOfServiceScreen(),
+                ),
+              );
+            },
+          ),
+          _InfoLinkTile(
+            label: 'プライバシーポリシー',
+            onTap: () {
+              HapticFeedback.lightImpact();
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const PrivacyPolicyScreen(),
+                ),
+              );
+            },
+          ),
+          _InfoLinkTile(
+            label: 'ヘルプ（使い方）',
+            onTap: () {
+              HapticFeedback.lightImpact();
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const HelpScreen()),
+              );
+            },
+          ),
+          _InfoLinkTile(
+            label: 'このアプリについて',
+            onTap: () {
+              HapticFeedback.lightImpact();
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AboutPrivacyScreen(),
+                ),
+              );
+            },
+          ),
+          _InfoLinkTile(
+            label: 'オープンソースライセンス',
+            onTap: () {
+              HapticFeedback.lightImpact();
+              showLicensePage(
+                context: context,
+                applicationName: 'Permy',
+                applicationIcon: Image.asset(
+                  'assets/images/icons/permy_icon.png',
+                  width: 48,
+                  height: 48,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -857,6 +912,30 @@ class _SettingRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _InfoLinkTile extends StatelessWidget {
+  const _InfoLinkTile({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      dense: true,
+      title: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: PermyColors.bodyText,
+        ),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: PermyColors.metaText),
+      onTap: onTap,
     );
   }
 }

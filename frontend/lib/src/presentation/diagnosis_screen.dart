@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../domain/models.dart';
 import '../domain/persona_diagnosis.dart';
+import '../domain/persona_type_helper.dart';
 import 'persona_diagnosis_result_screen.dart';
 import 'widgets/primary_button.dart';
 
@@ -257,7 +258,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
             const SizedBox(height: 24),
             // タイトル
             const Text(
-              'あなたのペルソナが決まりました',
+              'きみのペルソナはこれ',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -269,14 +270,14 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
             // 普段の自分
             _buildResultSection(
               title: '普段の自分',
-              value: result.trueSelfType,
+              value: getTrueSelfTypeName(result.trueSelfType),
               description: '日常で大事にしていることを表しています',
             ),
             const SizedBox(height: 24),
             // 夜の私
             _buildResultSection(
               title: '夜の私',
-              value: result.nightSelfType,
+              value: getNightSelfTypeName(result.nightSelfType),
               description: 'LINE返信時のあなたのスタイルを表しています',
             ),
             const SizedBox(height: 24),
