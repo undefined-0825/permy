@@ -33,10 +33,16 @@ class GenerateScreen extends StatefulWidget {
 
 class _GenerateScreenState extends State<GenerateScreen>
     with WidgetsBindingObserver {
+  static const String _linePersona = 'ぼくはきみの分身・・・';
+  static const String _lineDelegate = 'ぼくに任せて・・・';
+
   StreamSubscription<SharePayload>? _shareSubscription;
+  Timer? _generationLineTimer;
   String? _sharedText;
   String? _sharedFileName;
   bool _loading = false;
+  bool _isGeneratingSequence = false;
+  int _generationLineIndex = 0;
   ApiError? _error;
   List<Candidate> _candidates = <Candidate>[];
   DailyInfo? _daily;
@@ -129,119 +135,143 @@ class _GenerateScreenState extends State<GenerateScreen>
       ),
       extendBodyBehindAppBar: true,
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [PermyColors.backgroundStart, PermyColors.backgroundEnd],
+            colors: _isGeneratingSequence
+                ? const [Color(0xFF101114), Color(0xFF000000)]
+                : const [
+                    PermyColors.backgroundStart,
+                    PermyColors.backgroundEnd,
+                  ],
           ),
         ),
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: Stack(
               children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text(
-                          'ぼくはきみの分身・・・',
-                          style: TextStyle(color: PermyColors.bodyText),
-                        ),
-                        const Text(
-                          'ぼくに任せて・・・',
-                          style: TextStyle(color: PermyColors.bodyText),
-                        ),
-                        const SizedBox(height: 12),
-                        _ShareStatusCard(
-                          fileName: _sharedFileName,
-                          hasText: _sharedText?.isNotEmpty ?? false,
-                        ),
-                        const SizedBox(height: 12),
-                        _ComboSelector(
-                          selectedCombo: _comboId,
-                          isPro: _plan == 'pro',
-                          onChanged: (int value) {
-                            final isPro = value >= 2; // combo 2-5 は Pro のみ
-                            if (isPro && _plan == 'free') {
-                              _showUpsellDialog();
-                            } else {
-                              setState(() {
-                                _comboId = value;
-                              });
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        PrimaryButton(
-                          onPressed: canGenerate ? _onGeneratePressed : null,
-                          isLoading: _loading,
-                          child: const Text('ぼくが返信案を考えるよ'),
-                        ),
-                        if (_daily != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            '今日の残り: ${_daily!.remaining}/${_daily!.limit}（${_plan.toUpperCase()}）',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.normal,
-                              color: PermyColors.metaText,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _ShareStatusCard(
+                              fileName: _sharedFileName,
+                              hasText: _sharedText?.isNotEmpty ?? false,
                             ),
-                          ),
-                        ],
-                        if (_plan == 'pro' && _metaPro != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            '推定メーター: $_metaPro%',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.normal,
-                              color: PermyColors.metaText,
+                            const SizedBox(height: 12),
+                            _ComboSelector(
+                              selectedCombo: _comboId,
+                              isPro: _plan == 'pro',
+                              onChanged: (int value) {
+                                final isPro = value >= 2; // combo 2-5 は Pro のみ
+                                if (isPro && _plan == 'free') {
+                                  _showUpsellDialog();
+                                } else {
+                                  setState(() {
+                                    _comboId = value;
+                                  });
+                                }
+                              },
                             ),
-                          ),
-                        ],
-                        if (_error != null) ...[
-                          const SizedBox(height: 8),
-                          _ErrorBanner(message: _errorMessage(_error!)),
-                        ],
-                        const SizedBox(height: 12),
-                        ...List.generate(_candidates.length, (index) {
-                          final candidate = _candidates[index];
-                          final isCopied = _copiedLabel == candidate.label;
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 400),
-                              decoration: BoxDecoration(
-                                color: isCopied
-                                    ? PermyColors.lightPink
-                                    : PermyColors.white,
-                                borderRadius: BorderRadius.circular(12),
+                            const SizedBox(height: 12),
+                            PrimaryButton(
+                              onPressed: canGenerate
+                                  ? _onGeneratePressed
+                                  : null,
+                              isLoading: _loading,
+                              child: const Text('ぼくが返信案を考えるよ'),
+                            ),
+                            if (_daily != null) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                '今日の残り: ${_daily!.remaining}/${_daily!.limit}（${_planLabel(_plan)}）',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.normal,
+                                  color: PermyColors.metaText,
+                                ),
                               ),
-                              child: OutlinedButton(
-                                onPressed: () => _copyCandidate(candidate),
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 6,
-                                    ),
-                                    child: Text(
-                                      '${candidate.label}: ${candidate.text}',
+                            ],
+                            if (_plan == 'pro' && _metaPro != null) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                '推定メーター: $_metaPro%',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.normal,
+                                  color: PermyColors.metaText,
+                                ),
+                              ),
+                            ],
+                            if (_error != null) ...[
+                              const SizedBox(height: 8),
+                              _ErrorBanner(message: _errorMessage(_error!)),
+                            ],
+                            const SizedBox(height: 12),
+                            ...List.generate(_candidates.length, (index) {
+                              final candidate = _candidates[index];
+                              final isCopied = _copiedLabel == candidate.label;
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 400),
+                                  decoration: BoxDecoration(
+                                    color: isCopied
+                                        ? PermyColors.lightPink
+                                        : PermyColors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: OutlinedButton(
+                                    onPressed: () => _copyCandidate(candidate),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 6,
+                                        ),
+                                        child: Text(
+                                          '${candidate.label}: ${candidate.text}',
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (_isGeneratingSequence)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Center(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          child: Text(
+                            _generationLineIndex == 0
+                                ? _linePersona
+                                : _lineDelegate,
+                            key: ValueKey<int>(_generationLineIndex),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
                             ),
-                          );
-                        }),
-                      ],
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
@@ -263,9 +293,21 @@ class _GenerateScreenState extends State<GenerateScreen>
 
     setState(() {
       _loading = true;
+      _isGeneratingSequence = true;
+      _generationLineIndex = 0;
       _error = null;
       _candidates = <Candidate>[];
     });
+    _generationLineTimer?.cancel();
+    _generationLineTimer = Timer(const Duration(milliseconds: 350), () {
+      if (!mounted || !_isGeneratingSequence) return;
+      setState(() {
+        _generationLineIndex = 1;
+      });
+    });
+    final minSequenceFuture = Future<void>.delayed(
+      const Duration(milliseconds: 700),
+    );
 
     final startTime = DateTime.now();
 
@@ -302,6 +344,7 @@ class _GenerateScreenState extends State<GenerateScreen>
         historyText: text,
         comboId: _comboId,
       );
+      await minSequenceFuture;
       final latencyMs = DateTime.now().difference(startTime).inMilliseconds;
 
       if (!mounted) return;
@@ -329,6 +372,7 @@ class _GenerateScreenState extends State<GenerateScreen>
         _showFollowupDialog(result.followup!);
       }
     } on ApiError catch (error) {
+      await minSequenceFuture;
       final latencyMs = DateTime.now().difference(startTime).inMilliseconds;
 
       // generate_failed イベント送信
@@ -347,11 +391,16 @@ class _GenerateScreenState extends State<GenerateScreen>
       });
     } finally {
       if (!mounted) return;
+      _generationLineTimer?.cancel();
       setState(() {
         _loading = false;
+        _isGeneratingSequence = false;
+        _generationLineIndex = 0;
       });
     }
   }
+
+  String _planLabel(String plan) => plan == 'pro' ? 'Plus' : 'Free';
 
   Future<void> _copyCandidate(Candidate candidate) async {
     HapticFeedback.selectionClick();
@@ -426,6 +475,7 @@ class _GenerateScreenState extends State<GenerateScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _shareSubscription?.cancel();
+    _generationLineTimer?.cancel();
     super.dispose();
   }
 

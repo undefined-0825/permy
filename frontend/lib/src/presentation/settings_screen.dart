@@ -42,6 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _saving = false;
   bool _persisting = false;
   bool _pendingPersist = false;
+  Timer? _autoPersistDebounce;
   ApiError? _error;
   final TextEditingController _ngPhraseController = TextEditingController();
   StreamSubscription<BillingProof>? _billingProofSubscription;
@@ -67,6 +68,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void dispose() {
     _billingProofSubscription?.cancel();
+    _autoPersistDebounce?.cancel();
     _ngPhraseController.dispose();
     super.dispose();
   }
@@ -136,11 +138,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _scheduleAutoPersist() {
-    if (_persisting) {
-      _pendingPersist = true;
-      return;
-    }
-    unawaited(_persistSettingsLoop());
+    _autoPersistDebounce?.cancel();
+    _autoPersistDebounce = Timer(const Duration(milliseconds: 450), () {
+      if (!mounted) return;
+      if (_persisting) {
+        _pendingPersist = true;
+        return;
+      }
+      unawaited(_persistSettingsLoop());
+    });
   }
 
   Future<void> _persistSettingsLoop() async {

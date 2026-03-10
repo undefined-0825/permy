@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/theme.dart';
 import 'widgets/primary_button.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -71,10 +72,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFE8D4F8), // 淡いパープル
-              Color(0xFFFCE4EC), // 淡いピンク
-            ],
+            colors: [PermyColors.backgroundStart, PermyColors.backgroundEnd],
           ),
         ),
         child: SafeArea(
@@ -245,7 +243,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'トークの本文は保存されません。\n生成した返信案だけ、\nあなたがコピーして送ります。\n完全にあなたが操作。',
+            'トークの本文は保存されません。\n返信案はあなたが選んでコピーして、\n送信はあなたの操作で行います。',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.normal,
@@ -277,7 +275,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'ぼくに任せて。\nあなただけの返信をつくる。\nさあ、始めよう。',
+            '準備ができたら始めよう。\nきみのやり方に合う返信を\nいっしょに作っていくよ。',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.normal,
