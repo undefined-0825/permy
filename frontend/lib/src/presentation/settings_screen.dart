@@ -212,13 +212,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       extendBodyBehindAppBar: true,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [PermyColors.backgroundStart, PermyColors.backgroundEnd],
-          ),
-        ),
         child: SafeArea(
           child: _loading
               ? const Center(child: CircularProgressIndicator())
@@ -408,8 +401,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _SettingRow(label: '普段の属性', value: trueTypeDisplay),
+                if (trueTypeValue != '診断待機中...')
+                  _SettingTypeImage(
+                    imagePath: getTrueSelfTypeImagePath(trueTypeValue),
+                  ),
                 const SizedBox(height: 12),
                 _SettingRow(label: '夜の属性', value: nightTypeDisplay),
+                if (nightTypeValue != '診断待機中...')
+                  _SettingTypeImage(
+                    imagePath: getNightSelfTypeImagePath(nightTypeValue),
+                  ),
                 if (trueTypeValue != '診断待機中...')
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
@@ -942,6 +943,38 @@ class _InfoLinkTile extends StatelessWidget {
       ),
       trailing: const Icon(Icons.chevron_right, color: PermyColors.metaText),
       onTap: onTap,
+    );
+  }
+}
+
+class _SettingTypeImage extends StatelessWidget {
+  const _SettingTypeImage({required this.imagePath});
+
+  final String? imagePath;
+
+  @override
+  Widget build(BuildContext context) {
+    if (imagePath == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: AspectRatio(
+          aspectRatio: 16 / 7,
+          child: Image.asset(
+            imagePath!,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
+              color: PermyColors.highlight,
+              alignment: Alignment.center,
+              child: const Icon(Icons.image_not_supported_outlined),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

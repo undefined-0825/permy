@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../core/theme.dart';
 import 'widgets/primary_button.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -68,13 +67,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
       extendBodyBehindAppBar: true,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [PermyColors.backgroundStart, PermyColors.backgroundEnd],
-          ),
-        ),
         child: SafeArea(
           child: Column(
             children: [

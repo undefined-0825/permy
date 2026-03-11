@@ -10,16 +10,6 @@ class AboutPrivacyScreen extends StatelessWidget {
     return Scaffold(
       extendBodyBehindAppBar: true,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFE8D4F8), // 淡いパープル
-              Color(0xFFFCE4EC), // 淡いピンク
-            ],
-          ),
-        ),
         child: CustomScrollView(
           slivers: [
             SliverAppBar.large(

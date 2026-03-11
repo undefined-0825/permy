@@ -135,16 +135,10 @@ class _GenerateScreenState extends State<GenerateScreen>
       ),
       extendBodyBehindAppBar: true,
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: _isGeneratingSequence
-                ? const [Color(0xFF101114), Color(0xFF000000)]
-                : const [
-                    PermyColors.backgroundStart,
-                    PermyColors.backgroundEnd,
-                  ],
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/backgrounds/background_pink.png'),
+            fit: BoxFit.cover,
           ),
         ),
         child: SafeArea(
@@ -152,6 +146,10 @@ class _GenerateScreenState extends State<GenerateScreen>
             padding: const EdgeInsets.all(16),
             child: Stack(
               children: [
+                if (_isGeneratingSequence)
+                  Positioned.fill(
+                    child: Container(color: const Color(0xF2000000)),
+                  ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [

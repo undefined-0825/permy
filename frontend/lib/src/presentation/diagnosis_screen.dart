@@ -34,16 +34,6 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFE8D4F8), // 淡いパープル
-              Color(0xFFFCE4EC), // 淡いピンク
-            ],
-          ),
-        ),
         child: CustomScrollView(
           slivers: [
             SliverAppBar.large(
@@ -272,6 +262,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
               title: '普段の自分',
               value: getTrueSelfTypeName(result.trueSelfType),
               description: '日常で大事にしていることを表しています',
+              imagePath: getTrueSelfTypeImagePath(result.trueSelfType),
             ),
             const SizedBox(height: 24),
             // 夜の私
@@ -279,6 +270,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
               title: '夜の私',
               value: getNightSelfTypeName(result.nightSelfType),
               description: 'LINE返信時のあなたのスタイルを表しています',
+              imagePath: getNightSelfTypeImagePath(result.nightSelfType),
             ),
             const SizedBox(height: 24),
             // スタイルスコア
@@ -320,6 +312,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
     required String title,
     required String value,
     required String description,
+    String? imagePath,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -348,6 +341,24 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
               color: Color(0xFF1A1C1E),
             ),
           ),
+          if (imagePath != null) ...[
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Image.asset(
+                  imagePath,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: const Color(0xFFF3F4F6),
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.image_not_supported_outlined),
+                  ),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 8),
           Text(
             description,

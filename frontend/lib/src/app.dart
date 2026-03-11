@@ -23,11 +23,23 @@ import 'presentation/onboarding_screen.dart';
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  static const String _backgroundImagePath =
+      'assets/images/backgrounds/background_pink.png';
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Permy',
       theme: PermyTheme.lightTheme,
+      builder: (context, child) {
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(_backgroundImagePath, fit: BoxFit.cover),
+            if (child != null) child,
+          ],
+        );
+      },
       home: const AppRoot(),
     );
   }

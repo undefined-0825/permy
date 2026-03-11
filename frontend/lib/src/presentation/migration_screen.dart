@@ -178,16 +178,6 @@ class _MigrationScreenState extends State<MigrationScreen> {
           ),
           SliverFillRemaining(
             child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    PermyColors.backgroundStart,
-                    PermyColors.backgroundEnd,
-                  ],
-                ),
-              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: _buildContent(),
