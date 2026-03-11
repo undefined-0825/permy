@@ -6,6 +6,7 @@ import '../domain/persona_diagnosis.dart';
 import '../domain/persona_type_helper.dart';
 import 'persona_diagnosis_result_screen.dart';
 import 'widgets/primary_button.dart';
+import 'widgets/top_brand_header.dart';
 
 class DiagnosisScreen extends StatefulWidget {
   const DiagnosisScreen({required this.onCompleted, super.key});
@@ -33,46 +34,46 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      body: Container(
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar.large(
-              title: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    'assets/images/icons/permy_icon.png',
-                    width: 40,
-                    height: 40,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(progress),
-                ],
-              ),
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              leading: SizedBox(
-                width: 36,
-                height: 36,
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(Icons.arrow_back, size: 20),
-                  onPressed: () {
-                    if (isShowingResult) {
-                      // 結果ページから戻る場合は質問ページに戻る
-                      setState(() {
-                        _diagnosisResult = null;
-                      });
-                    } else if (_currentQuestionIndex > 0) {
-                      setState(() => _currentQuestionIndex--);
-                    } else {
-                      Navigator.of(context).pop();
-                    }
-                  },
+      appBar: TopBrandHeader(
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Center(
+              child: Text(
+                progress,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF374151),
                 ),
               ),
             ),
+          ),
+        ],
+        leading: SizedBox(
+          width: 36,
+          height: 36,
+          child: IconButton(
+            padding: EdgeInsets.zero,
+            icon: const Icon(Icons.arrow_back, size: 20),
+            onPressed: () {
+              if (isShowingResult) {
+                // 結果ページから戻る場合は質問ページに戻る
+                setState(() {
+                  _diagnosisResult = null;
+                });
+              } else if (_currentQuestionIndex > 0) {
+                setState(() => _currentQuestionIndex--);
+              } else {
+                Navigator.of(context).pop();
+              }
+            },
+          ),
+        ),
+      ),
+      body: Container(
+        child: CustomScrollView(
+          slivers: [
             if (isShowingResult)
               _buildResultSlider()
             else

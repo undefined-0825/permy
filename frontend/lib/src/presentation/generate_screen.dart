@@ -12,6 +12,7 @@ import '../infrastructure/share_receiver.dart';
 import '../infrastructure/telemetry_queue.dart';
 import 'settings_screen.dart';
 import 'widgets/primary_button.dart';
+import 'widgets/top_brand_header.dart';
 
 class GenerateScreen extends StatefulWidget {
   const GenerateScreen({
@@ -101,22 +102,7 @@ class _GenerateScreenState extends State<GenerateScreen>
     final canGenerate = !_loading && (_sharedText?.trim().isNotEmpty ?? false);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(
-              'assets/images/icons/permy_icon.png',
-              width: 24,
-              height: 24,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(width: 8),
-            const Text('Permy'),
-          ],
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      appBar: TopBrandHeader(
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),

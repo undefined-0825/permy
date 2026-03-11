@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../domain/persona_type_helper.dart';
+import 'widgets/top_brand_header.dart';
 
 class PersonaDiagnosisResultScreen extends StatelessWidget {
   const PersonaDiagnosisResultScreen({
@@ -22,32 +23,25 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
+      appBar: const TopBrandHeader(),
       body: Container(
         child: CustomScrollView(
           slivers: [
-            SliverAppBar.large(
-              title: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    'assets/images/icons/permy_icon.png',
-                    width: 40,
-                    height: 40,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(width: 8),
-                  const Text('あなたのペルソナ'),
-                ],
-              ),
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-            ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text(
+                      'あなたのペルソナ',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1A1C1E),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     const Text(
                       '普段の自分',
                       style: TextStyle(

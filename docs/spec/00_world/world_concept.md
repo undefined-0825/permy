@@ -4,6 +4,13 @@
 > UI文言/画面設計/コピー/演出は本SSOTに従い、推測で補完しない。  
 > 未確定事項は「確認事項」に残し、勝手に固定しない。
 
+## Spec参照順（MUST）
+1. `docs/spec/00_world/world_concept.md`
+2. `docs/spec/10_product/product_spec.md`
+3. `docs/spec/40_design/permy_design_system_spec.md`
+4. `docs/spec/30_frontend/frontend_spec.md`
+5. `docs/spec/31_frontend_impl/frontend_impl.md`
+
 ---
 
 ## 1. この世界観の役割（MUST）

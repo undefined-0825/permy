@@ -3,6 +3,17 @@
 **Scope:** 本ドキュメントはフロントエンドの実装指針を定義する。  
 設計は `frontend.*`、バックエンド契約は `api_contract.*` と `error_codes.*` を正とする。
 
+## Spec参照順（MUST）
+1. `docs/spec/00_world/world_concept.md`
+2. `docs/spec/10_product/product_spec.md`
+3. `docs/spec/40_design/permy_design_system_spec.md`
+4. `docs/spec/30_frontend/frontend_spec.md`
+5. `docs/spec/31_frontend_impl/frontend_impl.md`
+
+## 参照前提（MUST）
+- frontend実装前に、`docs/spec/40_design/permy_design_system_spec.md` を必ず事前参照する。
+- 実装時のUI判断（余白、配色、タイポ、コンポーネント形状、画面ブロック構成）はデザインシステム準拠で行う。
+
 ---
 
 ## 0. 実装の大原則（MUST）

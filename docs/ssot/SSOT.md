@@ -2,7 +2,7 @@
 
 **発行者：** 隙間産業ラボ 中野家  
 **メール：** sukima.lab.nakanoya@gmail.com  
-**Last Updated (JST):** 2026-03-06 (デザインコンセプトSSOT追加)
+**Last Updated (JST):** 2026-03-12 (デザインシステム参照とspec番号体系更新)
 
 ---
 
@@ -60,19 +60,20 @@ Copilot・AI・開発者は必ずこの順で読む。
 8) `docs/spec/20_backend/backend_spec.md`（バックエンド設計：API/認証/データモデル/本文ゼロ/レート制限/コストガード）  
 9) `docs/spec/21_backend_impl/backend_impl.md`（バックエンド実装仕様：DTO/生成/中ゲート/メタ/OPENAI_DISABLED）  
 10) `docs/spec/30_frontend/frontend_spec.md`（フロント設計：画面遷移/導線/文言/演出/貼り付け欄禁止）  
-11) **`docs/spec/30_frontend/design_rule.md`（デザインコンセプト："Modern Seamless & Breathable"、Edge-less Flatレイアウト、ピンク系グラデーション、タイポグラフィ・カラーパレット・UIコンポーネント定義）**  
+11) **`docs/spec/40_design/permy_design_system_spec.md`（UIデザインシステムSSOT：レイアウト/余白/色/タイポ/コンポーネント/UX原則）**  
+  ※ frontendの設計・UIデザイン着手前に必ず事前参照する（MUST）  
 12) `docs/spec/31_frontend_impl/frontend_impl.md`（フロント実装：状態/DTO/API呼び出し/NG UI/設定同期）  
 13) `docs/spec/31_frontend_impl/native_share_wrappers.md`（Android/iOS共有受信ラッパー：.txtのみ、永続化禁止、受け渡しI/F）
 
 補助（必要時のみ）：
 - `docs/spec/01_rules/telemetry_policy.md`（本文ゼロの計測ポリシー：時間帯バケットUTC）
 - `docs/spec/20_backend/telemetry_schema.md`（テレメトリイベントスキーマ：hour_bucket_utc/dow_utc）
-- `docs/spec/40_tests/test_strategy.md`（テスト方針：CIはOpenAI禁止、ライブは手動・上限）
-- `docs/spec/41_ci/ci_policy.md`（CI方針：PR必須、OpenAI禁止、実行範囲）
-- `docs/spec/42_deploy/deploy_strategy.md`（現時点：自動デプロイなし）
+- `docs/spec/90_tests/test_strategy.md`（テスト方針：CIはOpenAI禁止、ライブは手動・上限）
+- `docs/spec/91_ci/ci_policy.md`（CI方針：PR必須、OpenAI禁止、実行範囲）
+- `docs/spec/92_deploy/deploy_strategy.md`（現時点：自動デプロイなし）
 - `docs/spec/21_backend_impl/acceptance_tests_backend.md`（Backend受け入れテスト）
 - `docs/spec/31_frontend_impl/acceptance_tests_frontend.md`（Frontend受け入れテスト）
-- `docs/spec/40_tests/acceptance_tests.md`（総合E2E受け入れテスト）
+- `docs/spec/90_tests/acceptance_tests.md`（総合E2E受け入れテスト）
 
 ---
 
@@ -155,10 +156,11 @@ Copilot・AI・開発者は必ずこの順で読む。
 - 生成時演出（色反転/セリフ）と禁止語。
 - A/B/Cカード仕様（タップでコピー等）。
 
-### 4.7 design_rule.md（デザインコンセプトSSOT / 2026-03-06追加）
+### 4.7 permy_design_system_spec.md（デザインシステムSSOT / 2026-03-12更新）
 - デザイン統一原則："Modern Seamless & Breathable"（Edge-less Flatスタイル）。
 - レイアウト構造（グラデーション背景、マージン、ヘッダー設計）、カラーパレット、タイポグラフィ、UIコンポーネント定義。
 - **全画面・全コンポーネント実装はこのデザインコンセプトに厳密に従う（MUST）**
+- **frontendの設計前に `docs/spec/40_design/permy_design_system_spec.md` を必ず事前参照してからUIデザインを行う（MUST）**
 
 ### 4.8 frontend_impl.md（フロント実装仕様）
 - 状態管理、DTO、API呼び出し。

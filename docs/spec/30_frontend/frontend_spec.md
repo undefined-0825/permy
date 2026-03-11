@@ -5,6 +5,17 @@
 価格・課金条件・世界観文言・禁止語などのプロダクト仕様は別Specを正とし、本Specでは重複記載しない（ズレ防止）。  
 ただし **UX設計の前提となる世界観の“振る舞い/トーン”** は、本SpecのUI方針として扱う。
 
+## Spec参照順（MUST）
+1. `docs/spec/00_world/world_concept.md`
+2. `docs/spec/10_product/product_spec.md`
+3. `docs/spec/40_design/permy_design_system_spec.md`
+4. `docs/spec/30_frontend/frontend_spec.md`
+5. `docs/spec/31_frontend_impl/frontend_impl.md`
+
+## 参照前提（MUST）
+- frontend設計・UIデザインに着手する前に、`docs/spec/40_design/permy_design_system_spec.md` を必ず事前参照する。
+- 余白、色、タイポグラフィ、コンポーネント規則は上記デザインシステムを正とし、本Specの記述は矛盾しない範囲で適用する。
+
 ---
 
 ## 0. コア前提（MUST）

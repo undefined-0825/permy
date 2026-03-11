@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 
+import 'widgets/top_brand_header.dart';
+
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ヘルプ（使い方）')),
+      appBar: const TopBrandHeader(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              'ヘルプ（使い方）',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+            SizedBox(height: 16),
             _SectionTitle('1. はじめに'),
             _BodyText(
               'Permyは、LINEのトーク履歴（.txt）をもとに返信案を提案するアプリです。返信の送信は自動で行われず、最終判断はあなた自身が行います。',

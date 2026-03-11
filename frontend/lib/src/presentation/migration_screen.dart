@@ -6,6 +6,7 @@ import '../../core/theme.dart';
 import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
 import 'widgets/primary_button.dart';
+import 'widgets/top_brand_header.dart';
 
 class MigrationScreen extends StatefulWidget {
   const MigrationScreen({
@@ -152,39 +153,10 @@ class _MigrationScreenState extends State<MigrationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar.large(
-            title: const Text('端末移行'),
-            flexibleSpace: FlexibleSpaceBar(
-              title: Padding(
-                padding: const EdgeInsets.only(left: 16, bottom: 16),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset(
-                      'assets/images/icons/permy_icon.png',
-                      width: 24,
-                      height: 24,
-                      fit: BoxFit.contain,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text('端末移行'),
-                  ],
-                ),
-              ),
-            ),
-            backgroundColor: Colors.transparent,
-          ),
-          SliverFillRemaining(
-            child: Container(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: _buildContent(),
-              ),
-            ),
-          ),
-        ],
+      appBar: const TopBrandHeader(),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: _buildContent(),
       ),
     );
   }
@@ -204,6 +176,16 @@ class _MigrationScreenState extends State<MigrationScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const Text(
+          '端末移行',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: PermyColors.primaryTitle,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 20),
         const Text(
           '端末を移行しますか？',
           style: PermyTypography.primaryTitle,
@@ -259,6 +241,16 @@ class _MigrationScreenState extends State<MigrationScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const Text(
+            '端末移行',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: PermyColors.primaryTitle,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
           const Text(
             '移行コードが発行されました',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -342,6 +334,16 @@ class _MigrationScreenState extends State<MigrationScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const Text(
+            '端末移行',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: PermyColors.primaryTitle,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
           const Text(
             '移行コードを入力',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

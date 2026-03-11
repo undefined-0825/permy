@@ -14,7 +14,7 @@
 - プライバシー/ログ：`docs/spec/01_rules/privacy_logging.md`
 - フロント設計：`docs/spec/30_frontend/frontend_spec.md`
 - フロント実装規約：`docs/spec/01_rules/engineering_conventions.md`
-- テスト方針：`docs/spec/40_tests/test_strategy.md`
+- テスト方針：`docs/spec/90_tests/test_strategy.md`
 
 ---
 

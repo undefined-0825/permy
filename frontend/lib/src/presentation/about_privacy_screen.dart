@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'widgets/top_brand_header.dart';
+
 class AboutPrivacyScreen extends StatelessWidget {
   const AboutPrivacyScreen({super.key});
 
@@ -9,32 +11,25 @@ class AboutPrivacyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
+      appBar: const TopBrandHeader(),
       body: Container(
         child: CustomScrollView(
           slivers: [
-            SliverAppBar.large(
-              title: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    'assets/images/icons/permy_icon.png',
-                    width: 40,
-                    height: 40,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(width: 8),
-                  const Text('このアプリについて'),
-                ],
-              ),
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-            ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text(
+                      'このアプリについて',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1A1C1E),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     // Permyについて
                     const Text(
                       'Permyについて',

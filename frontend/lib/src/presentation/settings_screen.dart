@@ -20,6 +20,7 @@ import 'persona_diagnosis_result_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'terms_of_service_screen.dart';
 import 'widgets/primary_button.dart';
+import 'widgets/top_brand_header.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
@@ -193,23 +194,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(
-              'assets/images/icons/permy_icon.png',
-              width: 24,
-              height: 24,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(width: 8),
-            const Text('設定'),
-          ],
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
+      appBar: const TopBrandHeader(),
       extendBodyBehindAppBar: true,
       body: Container(
         child: SafeArea(
@@ -238,6 +223,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        const Text(
+                          '設定',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: PermyColors.primaryTitle,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,

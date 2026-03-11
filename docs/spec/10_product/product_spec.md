@@ -7,9 +7,17 @@
 
 ---
 
-## 0. 参照優先順位（MUST）
+## 0. Spec参照順（MUST）
+- 1. `docs/spec/00_world/world_concept.md`
+- 2. `docs/spec/10_product/product_spec.md`
+- 3. `docs/spec/40_design/permy_design_system_spec.md`
+- 4. `docs/spec/30_frontend/frontend_spec.md`
+- 5. `docs/spec/31_frontend_impl/frontend_impl.md`
+
+## 0.1 参照優先順位（MUST）
 - 参照起点：`docs/ssot/SSOT.md`
 - 世界観SSOT：`docs/spec/00_world/world_concept.md`
+- デザインシステムSSOT：`docs/spec/40_design/permy_design_system_spec.md`
 - 運用・禁止：`docs/spec/01_rules/project_rules.md`
 - プライバシー/ログ：`docs/spec/01_rules/privacy_logging.md`
 - NG制御SSOT：`docs/spec/10_product/ng_policy.md`

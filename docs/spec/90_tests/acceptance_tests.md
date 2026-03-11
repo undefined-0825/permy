@@ -1,4 +1,4 @@
-# docs/spec/40_tests/acceptance_tests.md — 総合受け入れテスト（MUST）
+# docs/spec/90_tests/acceptance_tests.md — 総合受け入れテスト（MUST）
 **Last Updated (JST):** 2026-03-03 11:45:00 +0900
 
 > 目的：Permy（Flutter + FastAPI）が「中核体験」と「最上位制約（本文ゼロ・txt導線固定・回数制限）」を満たしていることを、手戻りなく確認する。  
@@ -16,8 +16,8 @@
 - `docs/spec/10_product/ng_policy.md`
 - `docs/spec/21_backend_impl/acceptance_tests_backend.md`
 - `docs/spec/31_frontend_impl/acceptance_tests_frontend.md`
-- `docs/spec/40_tests/test_strategy.md`
-- `docs/spec/41_ci/ci_policy.md`
+- `docs/spec/90_tests/test_strategy.md`
+- `docs/spec/91_ci/ci_policy.md`
 
 ---
 
