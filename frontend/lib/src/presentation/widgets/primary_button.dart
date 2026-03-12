@@ -38,7 +38,7 @@ class PrimaryButton extends StatelessWidget {
         boxShadow: isEnabled
             ? [
                 BoxShadow(
-                  color: const Color(0xFFFFB3C1).withOpacity(0.3),
+                  color: const Color(0xFFFFB3C1).withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),

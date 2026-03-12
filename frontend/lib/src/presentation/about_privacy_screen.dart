@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:sample_app/core/theme/app_colors.dart';
+import 'package:sample_app/core/theme/app_radius.dart';
+import 'package:sample_app/core/utils/haptics.dart';
 import 'widgets/top_brand_header.dart';
 
 class AboutPrivacyScreen extends StatelessWidget {
@@ -118,9 +122,9 @@ class AboutPrivacyScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFFFFF).withOpacity(0.9),
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
-                        borderRadius: BorderRadius.circular(8),
+                        color: AppColors.white.withValues(alpha: 0.9),
+                        border: Border.all(color: AppColors.separator),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
                       padding: const EdgeInsets.all(12),
                       child: Row(
@@ -130,7 +134,7 @@ class AboutPrivacyScreen extends StatelessWidget {
                           Expanded(
                             child: GestureDetector(
                               onTap: () async {
-                                HapticFeedback.lightImpact();
+                                unawaited(Haptics.lightImpact());
                                 final Uri emailUri = Uri(
                                   scheme: 'mailto',
                                   path: 'sukima.lab.nakanoya@gmail.com',

@@ -229,7 +229,7 @@ ios/
 
 **適用ルール**：
 - 診断画面・生成画面・Settings等、全画面で統一使用
-- 将来的に `lib/core/theme.dart` で ThemeData 定義予定（現在は各Widget内でハードコード）
+- UIテーマ定義は `lib/core/theme/app_theme.dart` を正とし、画面側の配色・余白・タイポは `permy_design_system_spec.md` 準拠で継続的に洗練する
 - Material Design 3 準拠、ColorScheme 活用を推奨
 
 **デザイン意図（world_concept 参照）**：

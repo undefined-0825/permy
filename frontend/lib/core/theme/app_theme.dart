@@ -118,7 +118,7 @@ class AppTheme {
       primaryTextTheme: GoogleFonts.notoSansJpTextTheme(
         baseTheme.primaryTextTheme,
       ),
-      hoverColor: AppColors.highlight.withOpacity(0.5),
+      hoverColor: AppColors.highlight.withValues(alpha: 0.5),
     );
   }
 }

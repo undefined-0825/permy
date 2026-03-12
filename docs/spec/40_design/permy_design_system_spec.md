@@ -10,6 +10,10 @@ Project: ペルミィ (Permy) Purpose:
 4. `docs/spec/30_frontend/frontend_spec.md`
 5. `docs/spec/31_frontend_impl/frontend_impl.md`
 
+## 運用方針（MUST）
+- 今後のUI設計・実装の洗練は、本Spec（`permy_design_system_spec.md`）を唯一のベースとして進める。
+- 画面ごとの個別判断でデザインルールを増やさず、必要な変更は本Specへ集約してから反映する。
+
 ------------------------------------------------------------------------
 
 # 1. Design Philosophy

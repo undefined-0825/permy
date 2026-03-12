@@ -171,7 +171,7 @@ class _PersonaTypeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF).withOpacity(0.9),
+        color: const Color(0xFFFFFFFF).withValues(alpha: 0.9),
         border: Border.all(color: const Color(0xFFE5E7EB)),
         borderRadius: BorderRadius.circular(12),
       ),

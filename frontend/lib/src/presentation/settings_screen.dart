@@ -1,10 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:sample_app/core/theme/app_colors.dart';
+import 'package:sample_app/core/theme/app_radius.dart';
+import 'package:sample_app/core/theme/app_spacing.dart';
+import 'package:sample_app/core/theme/app_text_styles.dart';
+import 'package:sample_app/core/utils/haptics.dart';
+import 'package:sample_app/core/widgets/app_button.dart';
+import 'package:sample_app/core/widgets/app_list_item.dart';
+import 'package:sample_app/core/widgets/app_scaffold.dart';
+import 'package:sample_app/core/widgets/app_section_header.dart';
 import '../domain/persona_diagnosis.dart';
 import '../domain/persona_type_helper.dart';
 import '../domain/models.dart';
@@ -19,7 +26,6 @@ import 'onboarding_screen.dart';
 import 'persona_diagnosis_result_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'terms_of_service_screen.dart';
-import 'widgets/primary_button.dart';
 import 'widgets/top_brand_header.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -193,158 +199,136 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       appBar: const TopBrandHeader(),
-      extendBodyBehindAppBar: true,
-      body: Container(
-        child: SafeArea(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('エラー: ${_error!.errorCode}'),
-                      const SizedBox(height: 16),
-                      PrimaryButton(
-                        onPressed: () {
-                          HapticFeedback.mediumImpact();
-                          _loadSettings();
-                        },
-                        child: const Text('再読込'),
-                      ),
-                    ],
+      scrollable: true,
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('エラー: ${_error!.errorCode}'),
+                  const SizedBox(height: AppSpacing.md),
+                  AppButton(
+                    text: '再読込',
+                    onPressed: () {
+                      _loadSettings();
+                    },
                   ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                ],
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    '設定',
+                    style: AppTextStyles.primaryTitle,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.sm,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                    ),
+                    child: Row(
                       children: [
-                        const Text(
-                          '設定',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primaryTitle,
-                          ),
-                          textAlign: TextAlign.center,
+                        Icon(
+                          _saving ? Icons.sync : Icons.check_circle_outline,
+                          size: 18,
+                          color: AppColors.metaText,
                         ),
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.65),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                _saving
-                                    ? Icons.sync
-                                    : Icons.check_circle_outline,
-                                size: 18,
-                                color: AppColors.metaText,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                _saving ? '変更を反映中...' : '変更は自動で反映されます',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.metaText,
-                                ),
-                              ),
-                            ],
-                          ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          _saving ? '変更を反映中...' : '変更は自動で反映されます',
+                          style: AppTextStyles.small,
                         ),
-                        const SizedBox(height: 24),
-                        const SectionHeader(title: 'ペルソナ'),
-                        const SizedBox(height: 12),
-                        _buildPersonaInfo(),
-                        const SizedBox(height: 32),
-                        const SectionHeader(title: 'ペルソナ再診断'),
-                        const SizedBox(height: 12),
-                        PrimaryButton(
-                          onPressed: () {
-                            HapticFeedback.mediumImpact();
-                            _startRediagnosis();
-                          },
-                          child: const Text('再診断する'),
-                        ),
-                        const SizedBox(height: 32),
-                        SectionHeader(title: '生成設定'),
-                        const SizedBox(height: 12),
-                        _buildComboSetting(),
-                        const SizedBox(height: 32),
-                        SectionHeader(title: 'NG設定'),
-                        const SizedBox(height: 12),
-                        _buildNGSetting(),
-                        const SizedBox(height: 32),
-                        SectionHeader(title: '端末移行'),
-                        const SizedBox(height: 12),
-                        PrimaryButton(
-                          onPressed: () {
-                            HapticFeedback.mediumImpact();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => MigrationScreen(
-                                  apiClient: widget.apiClient,
-                                ),
-                              ),
-                            );
-                          },
-                          child: const Text('端末移行の設定'),
-                        ),
-                        const SizedBox(height: 32),
-                        SectionHeader(title: 'チュートリアル'),
-                        const SizedBox(height: 12),
-                        PrimaryButton(
-                          onPressed: () {
-                            HapticFeedback.mediumImpact();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (onboardingContext) =>
-                                    OnboardingScreen(
-                                      onCompleted: () {
-                                        if (!onboardingContext.mounted) return;
-                                        Navigator.of(onboardingContext).pop();
-                                      },
-                                    ),
-                              ),
-                            );
-                          },
-                          child: const Text('チュートリアルをもう一度確認する'),
-                        ),
-                        const SizedBox(height: 32),
-                        SectionHeader(title: 'Plus版（月額2,980円）'),
-                        const SizedBox(height: 12),
-                        _buildPurchaseSection(),
-                        const SizedBox(height: 32),
-                        SectionHeader(title: 'サポート・規約'),
-                        const SizedBox(height: 12),
-                        _buildInfoLinks(),
-                        const SizedBox(height: 32),
-                        SectionHeader(title: 'アカウント管理'),
-                        const SizedBox(height: 12),
-                        PrimaryButton(
-                          onPressed: () {
-                            HapticFeedback.mediumImpact();
-                            _confirmDeleteAccount();
-                          },
-                          child: const Text('アカウントを削除する'),
-                        ),
-                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
-                ),
-        ),
-      ),
+                  const SizedBox(height: AppSpacing.lg),
+                  const AppSectionHeader(title: 'ペルソナ'),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildPersonaInfo(),
+                  const SizedBox(height: AppSpacing.xl),
+                  const AppSectionHeader(title: 'ペルソナ再診断'),
+                  const SizedBox(height: AppSpacing.sm),
+                  AppButton(
+                    text: '再診断する',
+                    onPressed: () {
+                      _startRediagnosis();
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  const AppSectionHeader(title: '生成設定'),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildComboSetting(),
+                  const SizedBox(height: AppSpacing.xl),
+                  const AppSectionHeader(title: 'NG設定'),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildNGSetting(),
+                  const SizedBox(height: AppSpacing.xl),
+                  const AppSectionHeader(title: '端末移行'),
+                  const SizedBox(height: AppSpacing.sm),
+                  AppButton(
+                    text: '端末移行の設定',
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              MigrationScreen(apiClient: widget.apiClient),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  const AppSectionHeader(title: 'チュートリアル'),
+                  const SizedBox(height: AppSpacing.sm),
+                  AppButton(
+                    text: 'チュートリアルをもう一度確認する',
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (onboardingContext) => OnboardingScreen(
+                            onCompleted: () {
+                              if (!onboardingContext.mounted) return;
+                              Navigator.of(onboardingContext).pop();
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  const AppSectionHeader(title: 'Plus版（月額2,980円）'),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildPurchaseSection(),
+                  const SizedBox(height: AppSpacing.xl),
+                  const AppSectionHeader(title: 'サポート・規約'),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildInfoLinks(),
+                  const SizedBox(height: AppSpacing.xl),
+                  const AppSectionHeader(title: 'アカウント管理'),
+                  const SizedBox(height: AppSpacing.sm),
+                  AppButton(
+                    text: 'アカウントを削除する',
+                    onPressed: () {
+                      _confirmDeleteAccount();
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+              ),
+            ),
     );
   }
 
@@ -366,7 +350,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         GestureDetector(
           onTap: trueTypeValue != '診断待機中...' && nightTypeValue != '診断待機中...'
               ? () {
-                  HapticFeedback.lightImpact();
+                  unawaited(Haptics.lightImpact());
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => PersonaDiagnosisResultScreen(
@@ -388,10 +372,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               : null,
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
               color: trueTypeValue != '診断待機中...' ? AppColors.highlight : null,
             ),
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppSpacing.inputVertical),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -400,7 +384,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _SettingTypeImage(
                     imagePath: getTrueSelfTypeImagePath(trueTypeValue),
                   ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.inputVertical),
                 _SettingRow(label: '夜の属性', value: nightTypeDisplay),
                 if (nightTypeValue != '診断待機中...')
                   _SettingTypeImage(
@@ -408,11 +392,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 if (trueTypeValue != '診断待機中...')
                   Padding(
-                    padding: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.only(top: AppSpacing.sm),
                     child: Text(
                       'タップして詳しく見る →',
-                      style: const TextStyle(
-                        fontSize: 12,
+                      style: AppTextStyles.small.copyWith(
                         color: AppColors.primaryPink,
                       ),
                     ),
@@ -432,7 +415,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Text('生成方針'),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         SegmentedButton<int>(
           segments: const [
             ButtonSegment(value: 0, label: Text('来店約束')),
@@ -440,14 +423,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
           selected: <int>{currentCombo},
           onSelectionChanged: (Set<int> newSelection) {
-            HapticFeedback.selectionClick();
+            unawaited(Haptics.selection());
             _updateSetting('combo_id', newSelection.first);
           },
         ),
-        const SizedBox(height: 8),
-        const Text(
+        const SizedBox(height: AppSpacing.sm),
+        Text(
           'Plus版ではさらに 4種類の方針が選択できます',
-          style: const TextStyle(fontSize: 12, color: AppColors.bodyText),
+          style: AppTextStyles.small.copyWith(color: AppColors.bodyText),
         ),
       ],
     );
@@ -468,21 +451,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'NGタグ（複数選択可）',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 8),
+        const Text('NGタグ（複数選択可）', style: AppTextStyles.body),
+        const SizedBox(height: AppSpacing.sm),
         Wrap(
-          spacing: 8,
-          runSpacing: 4,
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.xs,
           children: _ngTagLabels.entries.map((entry) {
             final isSelected = ngTags.contains(entry.key);
             return FilterChip(
               label: Text(entry.value),
               selected: isSelected,
               onSelected: (selected) {
-                HapticFeedback.selectionClick();
+                unawaited(Haptics.selection());
                 final updatedTags = List<String>.from(ngTags);
                 if (selected) {
                   updatedTags.add(entry.key);
@@ -494,12 +474,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             );
           }).toList(),
         ),
-        const SizedBox(height: 24),
-        const Text(
-          '禁止フレーズ（自由入力、最大10件）',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.lg),
+        const Text('禁止フレーズ（自由入力、最大10件）', style: AppTextStyles.body),
+        const SizedBox(height: AppSpacing.sm),
         Row(
           children: [
             Expanded(
@@ -509,15 +486,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   hintText: '例: 会いたい',
                   border: OutlineInputBorder(),
                   contentPadding: EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
+                    horizontal: AppSpacing.inputVertical,
+                    vertical: AppSpacing.sm,
                   ),
                 ),
                 maxLength: 64,
                 onSubmitted: (_) => _addNgPhrase(),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             IconButton(
               icon: const Icon(Icons.add_circle),
               onPressed: ngFreePhrases.length >= 10 ? null : _addNgPhrase,
@@ -526,36 +503,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
         if (ngFreePhrases.length >= 10)
-          const Padding(
-            padding: EdgeInsets.only(top: 4),
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xs),
             child: Text(
               '※ 最大10件まで登録できます',
-              style: TextStyle(fontSize: 12, color: Colors.red),
+              style: AppTextStyles.small.copyWith(color: AppColors.error),
             ),
           ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.inputVertical),
         if (ngFreePhrases.isEmpty)
-          const Text(
+          Text(
             '禁止フレーズが登録されていません',
-            style: TextStyle(fontSize: 12, color: AppColors.bodyText),
+            style: AppTextStyles.small.copyWith(color: AppColors.bodyText),
           )
         else
           ...ngFreePhrases.asMap().entries.map((entry) {
             final index = entry.key;
             final phrase = entry.value;
             return Padding(
-              padding: const EdgeInsets.only(bottom: 4),
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
               child: Row(
                 children: [
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
+                        horizontal: AppSpacing.inputVertical,
+                        vertical: AppSpacing.sm,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.lightPink.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(8),
+                        color: AppColors.lightPink.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
                       child: Text(phrase),
                     ),
@@ -563,10 +540,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   IconButton(
                     icon: const Icon(Icons.delete_outline, size: 20),
                     onPressed: () {
-                      HapticFeedback.lightImpact();
+                      unawaited(Haptics.lightImpact());
                       _removeNgPhrase(index);
                     },
-                    color: Colors.grey,
+                    color: AppColors.metaText,
                   ),
                 ],
               ),
@@ -600,7 +577,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
-    HapticFeedback.lightImpact();
+    unawaited(Haptics.lightImpact());
     ngFreePhrases.add(phrase);
     _updateSetting('ng_free_phrases', ngFreePhrases);
     _ngPhraseController.clear();
@@ -627,14 +604,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         if (isPro)
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: AppColors.highlight,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: const Text(
               'Plus版をご利用中です\n1日100回まで生成できます',
-              style: TextStyle(fontSize: 14),
+              style: AppTextStyles.body,
               textAlign: TextAlign.center,
             ),
           )
@@ -642,40 +619,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'Plus版の特典:',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
+              const Text('Plus版の特典:', style: AppTextStyles.body),
+              const SizedBox(height: AppSpacing.sm),
               const Text(
                 '• 1日100回まで生成可能（Freeは3回）\n• 推定メーター表示\n• すべての生成方針が選択可能',
-                style: TextStyle(fontSize: 14, color: AppColors.bodyText),
+                style: AppTextStyles.body,
               ),
-              const SizedBox(height: 16),
-              PrimaryButton(
+              const SizedBox(height: AppSpacing.md),
+              AppButton(
+                text: 'Plusにアップグレード（月額2,980円）',
                 onPressed: () {
-                  HapticFeedback.mediumImpact();
                   _purchasePro();
                 },
-                child: const Text('Plusにアップグレード（月額2,980円）'),
               ),
             ],
           ),
-        const SizedBox(height: 12),
-        PrimaryButton(
+        const SizedBox(height: AppSpacing.inputVertical),
+        AppButton(
+          text: '購入を復元',
           onPressed: () {
-            HapticFeedback.mediumImpact();
             _restorePurchases();
           },
-          child: const Text('購入を復元'),
         ),
-        const SizedBox(height: 12),
-        PrimaryButton(
+        const SizedBox(height: AppSpacing.inputVertical),
+        AppButton(
+          text: 'サブスクリプション管理',
           onPressed: () {
-            HapticFeedback.mediumImpact();
             _openSubscriptionManagement();
           },
-          child: const Text('サブスクリプション管理'),
         ),
       ],
     );
@@ -684,15 +655,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildInfoLinks() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.55),
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.white.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: Column(
         children: [
           _InfoLinkTile(
             label: '利用規約',
             onTap: () {
-              HapticFeedback.lightImpact();
+              unawaited(Haptics.lightImpact());
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const TermsOfServiceScreen(),
@@ -703,7 +674,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _InfoLinkTile(
             label: 'プライバシーポリシー',
             onTap: () {
-              HapticFeedback.lightImpact();
+              unawaited(Haptics.lightImpact());
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const PrivacyPolicyScreen(),
@@ -714,7 +685,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _InfoLinkTile(
             label: 'ヘルプ（使い方）',
             onTap: () {
-              HapticFeedback.lightImpact();
+              unawaited(Haptics.lightImpact());
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const HelpScreen()),
               );
@@ -723,7 +694,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _InfoLinkTile(
             label: 'このアプリについて',
             onTap: () {
-              HapticFeedback.lightImpact();
+              unawaited(Haptics.lightImpact());
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const AboutPrivacyScreen(),
@@ -734,7 +705,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _InfoLinkTile(
             label: 'オープンソースライセンス',
             onTap: () {
-              HapticFeedback.lightImpact();
+              unawaited(Haptics.lightImpact());
               showLicensePage(
                 context: context,
                 applicationName: 'Permy',
@@ -824,7 +795,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('削除する'),
           ),
         ],
@@ -873,24 +844,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-class SectionHeader extends StatelessWidget {
-  const SectionHeader({required this.title, super.key});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: AppColors.primaryTitle,
-      ),
-    );
-  }
-}
-
 class _SettingRow extends StatelessWidget {
   const _SettingRow({required this.label, required this.value});
 
@@ -900,17 +853,14 @@ class _SettingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.inputVertical),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.bodyText)),
+          Text(label, style: AppTextStyles.body),
           Text(
             value,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: AppColors.bodyText,
-            ),
+            style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -926,17 +876,10 @@ class _InfoLinkTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      dense: true,
-      title: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: AppColors.bodyText,
-        ),
-      ),
+    return AppListItem(
+      title: label,
       trailing: const Icon(Icons.chevron_right, color: AppColors.metaText),
+      showSeparator: true,
       onTap: onTap,
     );
   }
@@ -954,15 +897,15 @@ class _SettingTypeImage extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
         child: AspectRatio(
           aspectRatio: 16 / 7,
           child: Image.asset(
             imagePath!,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(
+            errorBuilder: (_, error, stackTrace) => Container(
               color: AppColors.highlight,
               alignment: Alignment.center,
               child: const Icon(Icons.image_not_supported_outlined),

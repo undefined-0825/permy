@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:sample_app/core/theme/app_colors.dart';
 import 'package:sample_app/core/theme/app_text_styles.dart';
+import 'package:sample_app/core/utils/haptics.dart';
 import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
 import 'widgets/primary_button.dart';
@@ -109,7 +112,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
   }
 
   void _copyCodeToClipboard() {
-    HapticFeedback.selectionClick();
+    unawaited(Haptics.selection());
     Clipboard.setData(ClipboardData(text: _migrationCode)).then((_) {
       ScaffoldMessenger.of(
         context,
@@ -118,7 +121,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
   }
 
   Future<void> _shareCode() async {
-    HapticFeedback.selectionClick();
+    unawaited(Haptics.selection());
 
     if (_migrationCode.isEmpty) {
       ScaffoldMessenger.of(
@@ -155,10 +158,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const TopBrandHeader(),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: _buildContent(),
-      ),
+      body: Padding(padding: const EdgeInsets.all(16), child: _buildContent()),
     );
   }
 
@@ -203,7 +203,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
           onPressed: _loading
               ? null
               : () {
-                  HapticFeedback.mediumImpact();
+                  unawaited(Haptics.mediumImpact());
                   _handleIssueMigration();
                 },
           isLoading: _loading,
@@ -212,7 +212,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
         const SizedBox(height: 16),
         OutlinedButton(
           onPressed: () {
-            HapticFeedback.selectionClick();
+            unawaited(Haptics.selection());
             setState(() {
               _currentStep = 2;
             });
@@ -261,7 +261,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.white.withOpacity(0.9),
+              color: AppColors.white.withValues(alpha: 0.9),
               border: Border.all(color: AppColors.separator),
               borderRadius: BorderRadius.circular(8),
             ),
@@ -315,7 +315,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
           const SizedBox(height: 24),
           OutlinedButton(
             onPressed: () {
-              HapticFeedback.selectionClick();
+              unawaited(Haptics.selection());
               setState(() {
                 _currentStep = 0;
                 _migrationCode = '';
@@ -363,10 +363,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
               hintText: '000000000000',
               border: UnderlineInputBorder(),
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(
-                  color: AppColors.primaryPink,
-                  width: 2,
-                ),
+                borderSide: BorderSide(color: AppColors.primaryPink, width: 2),
               ),
             ),
             keyboardType: TextInputType.number,
@@ -379,7 +376,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
             onPressed: _loading
                 ? null
                 : () {
-                    HapticFeedback.mediumImpact();
+                    unawaited(Haptics.mediumImpact());
                     _handleConsumeMigration();
                   },
             isLoading: _loading,
@@ -388,7 +385,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
           const SizedBox(height: 12),
           OutlinedButton(
             onPressed: () {
-              HapticFeedback.selectionClick();
+              unawaited(Haptics.selection());
               setState(() {
                 _currentStep = 0;
                 _codeInputController.clear();
