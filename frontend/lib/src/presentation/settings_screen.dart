@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/theme.dart';
+import 'package:sample_app/core/theme/app_colors.dart';
 import '../domain/persona_diagnosis.dart';
 import '../domain/persona_type_helper.dart';
 import '../domain/models.dart';
@@ -228,7 +228,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
-                            color: PermyColors.primaryTitle,
+                            color: AppColors.primaryTitle,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -249,14 +249,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     ? Icons.sync
                                     : Icons.check_circle_outline,
                                 size: 18,
-                                color: PermyColors.metaText,
+                                color: AppColors.metaText,
                               ),
                               const SizedBox(width: 8),
                               Text(
                                 _saving ? '変更を反映中...' : '変更は自動で反映されます',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: PermyColors.metaText,
+                                  color: AppColors.metaText,
                                 ),
                               ),
                             ],
@@ -389,7 +389,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              color: trueTypeValue != '診断待機中...' ? PermyColors.highlight : null,
+              color: trueTypeValue != '診断待機中...' ? AppColors.highlight : null,
             ),
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -413,7 +413,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'タップして詳しく見る →',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: PermyColors.primaryPink,
+                        color: AppColors.primaryPink,
                       ),
                     ),
                   ),
@@ -447,7 +447,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 8),
         const Text(
           'Plus版ではさらに 4種類の方針が選択できます',
-          style: const TextStyle(fontSize: 12, color: PermyColors.bodyText),
+          style: const TextStyle(fontSize: 12, color: AppColors.bodyText),
         ),
       ],
     );
@@ -521,7 +521,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             IconButton(
               icon: const Icon(Icons.add_circle),
               onPressed: ngFreePhrases.length >= 10 ? null : _addNgPhrase,
-              color: PermyColors.primaryPink,
+              color: AppColors.primaryPink,
             ),
           ],
         ),
@@ -537,7 +537,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         if (ngFreePhrases.isEmpty)
           const Text(
             '禁止フレーズが登録されていません',
-            style: TextStyle(fontSize: 12, color: PermyColors.bodyText),
+            style: TextStyle(fontSize: 12, color: AppColors.bodyText),
           )
         else
           ...ngFreePhrases.asMap().entries.map((entry) {
@@ -554,7 +554,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: PermyColors.lightPink.withOpacity(0.3),
+                        color: AppColors.lightPink.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(phrase),
@@ -629,7 +629,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: PermyColors.highlight,
+              color: AppColors.highlight,
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Text(
@@ -649,7 +649,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 8),
               const Text(
                 '• 1日100回まで生成可能（Freeは3回）\n• 推定メーター表示\n• すべての生成方針が選択可能',
-                style: TextStyle(fontSize: 14, color: PermyColors.bodyText),
+                style: TextStyle(fontSize: 14, color: AppColors.bodyText),
               ),
               const SizedBox(height: 16),
               PrimaryButton(
@@ -885,7 +885,7 @@ class SectionHeader extends StatelessWidget {
       style: const TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: PermyColors.primaryTitle,
+        color: AppColors.primaryTitle,
       ),
     );
   }
@@ -904,12 +904,12 @@ class _SettingRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: PermyColors.bodyText)),
+          Text(label, style: const TextStyle(color: AppColors.bodyText)),
           Text(
             value,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: PermyColors.bodyText,
+              color: AppColors.bodyText,
             ),
           ),
         ],
@@ -933,10 +933,10 @@ class _InfoLinkTile extends StatelessWidget {
         style: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: PermyColors.bodyText,
+          color: AppColors.bodyText,
         ),
       ),
-      trailing: const Icon(Icons.chevron_right, color: PermyColors.metaText),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.metaText),
       onTap: onTap,
     );
   }
@@ -963,7 +963,7 @@ class _SettingTypeImage extends StatelessWidget {
             imagePath!,
             fit: BoxFit.cover,
             errorBuilder: (_, __, ___) => Container(
-              color: PermyColors.highlight,
+              color: AppColors.highlight,
               alignment: Alignment.center,
               child: const Icon(Icons.image_not_supported_outlined),
             ),

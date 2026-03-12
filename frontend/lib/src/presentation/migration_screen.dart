@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../core/theme.dart';
+import 'package:sample_app/core/theme/app_colors.dart';
+import 'package:sample_app/core/theme/app_text_styles.dart';
 import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
 import 'widgets/primary_button.dart';
@@ -181,20 +182,20 @@ class _MigrationScreenState extends State<MigrationScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w700,
-            color: PermyColors.primaryTitle,
+            color: AppColors.primaryTitle,
           ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 20),
         const Text(
           '端末を移行しますか？',
-          style: PermyTypography.primaryTitle,
+          style: AppTextStyles.primaryTitle,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),
         const Text(
           'このアプリのアカウント情報を別の端末に移行できます。',
-          style: PermyTypography.body,
+          style: AppTextStyles.body,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 32),
@@ -223,12 +224,12 @@ class _MigrationScreenState extends State<MigrationScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: PermyColors.lightPink,
+              color: AppColors.lightPink,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               _error!.message,
-              style: const TextStyle(color: PermyColors.error),
+              style: const TextStyle(color: AppColors.error),
             ),
           ),
         ],
@@ -246,7 +247,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: PermyColors.primaryTitle,
+              color: AppColors.primaryTitle,
             ),
             textAlign: TextAlign.center,
           ),
@@ -260,15 +261,15 @@ class _MigrationScreenState extends State<MigrationScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: PermyColors.white.withOpacity(0.9),
-              border: Border.all(color: PermyColors.separator),
+              color: AppColors.white.withOpacity(0.9),
+              border: Border.all(color: AppColors.separator),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
               children: [
                 const Text(
                   '12桁のコード',
-                  style: TextStyle(fontSize: 12, color: PermyColors.bodyText),
+                  style: TextStyle(fontSize: 12, color: AppColors.bodyText),
                 ),
                 const SizedBox(height: 8),
                 SelectableText(
@@ -285,7 +286,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
                   '有効期限: $_expiresAt',
                   style: const TextStyle(
                     fontSize: 12,
-                    color: PermyColors.bodyText,
+                    color: AppColors.bodyText,
                   ),
                 ),
               ],
@@ -339,7 +340,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: PermyColors.primaryTitle,
+              color: AppColors.primaryTitle,
             ),
             textAlign: TextAlign.center,
           ),
@@ -363,7 +364,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
               border: UnderlineInputBorder(),
               focusedBorder: UnderlineInputBorder(
                 borderSide: BorderSide(
-                  color: PermyColors.primaryPink,
+                  color: AppColors.primaryPink,
                   width: 2,
                 ),
               ),
@@ -401,12 +402,12 @@ class _MigrationScreenState extends State<MigrationScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: PermyColors.lightPink,
+                color: AppColors.lightPink,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 _error!.message,
-                style: const TextStyle(color: PermyColors.error),
+                style: const TextStyle(color: AppColors.error),
               ),
             ),
           ],

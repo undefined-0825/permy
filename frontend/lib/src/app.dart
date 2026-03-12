@@ -7,7 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../core/theme.dart';
+import '../core/theme/app_theme.dart';
 import 'domain/app_versioning.dart';
 import 'domain/persona_diagnosis.dart';
 import 'domain/telemetry_event.dart';
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Permy',
-      theme: PermyTheme.lightTheme,
+      theme: AppTheme.lightTheme,
       builder: (context, child) {
         return Stack(
           fit: StackFit.expand,

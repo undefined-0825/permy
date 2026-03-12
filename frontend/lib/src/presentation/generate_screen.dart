@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../core/theme.dart';
+import 'package:sample_app/core/theme/app_colors.dart';
 import '../domain/models.dart';
 import '../domain/telemetry_event.dart';
 import '../infrastructure/api_client.dart';
@@ -178,7 +178,7 @@ class _GenerateScreenState extends State<GenerateScreen>
                                 style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.normal,
-                                  color: PermyColors.metaText,
+                                  color: AppColors.metaText,
                                 ),
                               ),
                             ],
@@ -189,7 +189,7 @@ class _GenerateScreenState extends State<GenerateScreen>
                                 style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.normal,
-                                  color: PermyColors.metaText,
+                                  color: AppColors.metaText,
                                 ),
                               ),
                             ],
@@ -207,8 +207,8 @@ class _GenerateScreenState extends State<GenerateScreen>
                                   duration: const Duration(milliseconds: 400),
                                   decoration: BoxDecoration(
                                     color: isCopied
-                                        ? PermyColors.lightPink
-                                        : PermyColors.white,
+                                        ? AppColors.lightPink
+                                        : AppColors.white,
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: OutlinedButton(
@@ -555,7 +555,7 @@ class _ShareStatusCard extends StatelessWidget {
         decoration: const BoxDecoration(
           color: Colors.transparent,
           border: Border(
-            bottom: BorderSide(color: PermyColors.separator, width: 0.5),
+            bottom: BorderSide(color: AppColors.separator, width: 0.5),
           ),
         ),
         child: Column(
@@ -566,7 +566,7 @@ class _ShareStatusCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
-                color: PermyColors.primaryTitle,
+                color: AppColors.primaryTitle,
               ),
             ),
             const SizedBox(height: 4),
@@ -575,7 +575,7 @@ class _ShareStatusCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.normal,
-                color: PermyColors.metaText,
+                color: AppColors.metaText,
               ),
             ),
           ],
@@ -614,7 +614,7 @@ class _ComboSelector extends StatelessWidget {
         decoration: const BoxDecoration(
           color: Colors.transparent,
           border: Border(
-            bottom: BorderSide(color: PermyColors.separator, width: 0.5),
+            bottom: BorderSide(color: AppColors.separator, width: 0.5),
           ),
         ),
         child: Column(
@@ -625,7 +625,7 @@ class _ComboSelector extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
-                color: PermyColors.primaryTitle,
+                color: AppColors.primaryTitle,
               ),
             ),
             const SizedBox(height: 12),
@@ -643,8 +643,8 @@ class _ComboSelector extends StatelessWidget {
                       isLocked ? '$label（Plus）' : label,
                       style: TextStyle(
                         color: isLocked
-                            ? PermyColors.metaText
-                            : PermyColors.bodyText,
+                            ? AppColors.metaText
+                            : AppColors.bodyText,
                         fontSize: 15,
                       ),
                     ),
@@ -674,7 +674,7 @@ class _ErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: PermyColors.lightPink,
+        color: AppColors.lightPink,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(padding: const EdgeInsets.all(10), child: Text(message)),
