@@ -4,14 +4,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:sample_app/core/theme/app_colors.dart';
+import 'package:sample_app/core/theme/app_radius.dart';
+import 'package:sample_app/core/theme/app_spacing.dart';
+import 'package:sample_app/core/theme/app_text_styles.dart';
+import 'package:sample_app/core/utils/haptics.dart';
+import 'package:sample_app/core/widgets/app_button.dart';
+import 'package:sample_app/core/widgets/app_scaffold.dart';
+import 'package:sample_app/core/widgets/app_section_header.dart';
 import '../domain/models.dart';
+import '../domain/persona_type_helper.dart';
 import '../domain/telemetry_event.dart';
 import '../infrastructure/api_client.dart';
 import '../infrastructure/purchase_service.dart';
 import '../infrastructure/share_receiver.dart';
 import '../infrastructure/telemetry_queue.dart';
 import 'settings_screen.dart';
-import 'widgets/primary_button.dart';
 import 'widgets/top_brand_header.dart';
 
 class GenerateScreen extends StatefulWidget {
@@ -51,6 +58,8 @@ class _GenerateScreenState extends State<GenerateScreen>
   int? _metaPro;
   int _comboId = 0;
   String? _copiedLabel;
+  String _trueTypeLabel = '診断待機中...';
+  String _nightTypeLabel = '診断待機中...';
 
   @override
   void initState() {
@@ -61,6 +70,7 @@ class _GenerateScreenState extends State<GenerateScreen>
 
   Future<void> _bootstrap() async {
     await widget.apiClient.bootstrapAuth();
+    unawaited(_loadPersonaSummary());
     final initialPayload = await widget.shareReceiver.getInitialPayload();
     if (initialPayload != null && mounted) {
       setState(() {
@@ -76,6 +86,25 @@ class _GenerateScreenState extends State<GenerateScreen>
         _error = null;
       });
     });
+  }
+
+  Future<void> _loadPersonaSummary() async {
+    try {
+      final snapshot = await widget.apiClient.getSettings();
+      if (!mounted) return;
+      final trueType = snapshot.settings['true_self_type']?.toString();
+      final nightType = snapshot.settings['night_self_type']?.toString();
+      setState(() {
+        _trueTypeLabel = (trueType == null || trueType.isEmpty)
+            ? '診断待機中...'
+            : getTrueSelfTypeName(trueType);
+        _nightTypeLabel = (nightType == null || nightType.isEmpty)
+            ? '診断待機中...'
+            : getNightSelfTypeName(nightType);
+      });
+    } catch (_) {
+      // ペルソナ取得失敗時は既定表示を維持
+    }
   }
 
   @override
@@ -101,7 +130,7 @@ class _GenerateScreenState extends State<GenerateScreen>
   Widget build(BuildContext context) {
     final canGenerate = !_loading && (_sharedText?.trim().isNotEmpty ?? false);
 
-    return Scaffold(
+    return AppScaffold(
       appBar: TopBrandHeader(
         actions: [
           IconButton(
@@ -119,117 +148,79 @@ class _GenerateScreenState extends State<GenerateScreen>
           ),
         ],
       ),
-      extendBodyBehindAppBar: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/backgrounds/background_pink.png'),
-            fit: BoxFit.cover,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(
+                    'assets/images/backgrounds/background_pink.png',
+                  ),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
             child: Stack(
               children: [
                 if (_isGeneratingSequence)
                   Positioned.fill(
-                    child: Container(color: const Color(0xF2000000)),
+                    child: Container(
+                      color: AppColors.generateBackground.withValues(
+                        alpha: 0.95,
+                      ),
+                    ),
                   ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    _PersonaSummaryCard(
+                      trueTypeLabel: _trueTypeLabel,
+                      nightTypeLabel: _nightTypeLabel,
+                      fileName: _sharedFileName,
+                      hasText: _sharedText?.isNotEmpty ?? false,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    _ComboSelector(
+                      selectedCombo: _comboId,
+                      isPro: _plan == 'pro',
+                      onChanged: (int value) {
+                        final isPro = value >= 2; // combo 2-5 は Pro のみ
+                        if (isPro && _plan == 'free') {
+                          _showUpsellDialog();
+                        } else {
+                          setState(() {
+                            _comboId = value;
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    AppButton(
+                      text: _loading ? '生成中...' : 'ぼくが返信案を考えるよ',
+                      onPressed: canGenerate ? _onGeneratePressed : null,
+                    ),
+                    if (_daily != null || (_plan == 'pro' && _metaPro != null))
+                      _GenerateMetaInfo(
+                        daily: _daily,
+                        planLabel: _planLabel(_plan),
+                        metaPro: _plan == 'pro' ? _metaPro : null,
+                      ),
+                    if (_error != null) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      _ErrorBanner(message: _errorMessage(_error!)),
+                    ],
+                    const SizedBox(height: AppSpacing.sm),
                     Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _ShareStatusCard(
-                              fileName: _sharedFileName,
-                              hasText: _sharedText?.isNotEmpty ?? false,
-                            ),
-                            const SizedBox(height: 12),
-                            _ComboSelector(
-                              selectedCombo: _comboId,
-                              isPro: _plan == 'pro',
-                              onChanged: (int value) {
-                                final isPro = value >= 2; // combo 2-5 は Pro のみ
-                                if (isPro && _plan == 'free') {
-                                  _showUpsellDialog();
-                                } else {
-                                  setState(() {
-                                    _comboId = value;
-                                  });
-                                }
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            PrimaryButton(
-                              onPressed: canGenerate
-                                  ? _onGeneratePressed
-                                  : null,
-                              isLoading: _loading,
-                              child: const Text('ぼくが返信案を考えるよ'),
-                            ),
-                            if (_daily != null) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                '今日の残り: ${_daily!.remaining}/${_daily!.limit}（${_planLabel(_plan)}）',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.normal,
-                                  color: AppColors.metaText,
-                                ),
-                              ),
-                            ],
-                            if (_plan == 'pro' && _metaPro != null) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                '推定メーター: $_metaPro%',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.normal,
-                                  color: AppColors.metaText,
-                                ),
-                              ),
-                            ],
-                            if (_error != null) ...[
-                              const SizedBox(height: 8),
-                              _ErrorBanner(message: _errorMessage(_error!)),
-                            ],
-                            const SizedBox(height: 12),
-                            ...List.generate(_candidates.length, (index) {
-                              final candidate = _candidates[index];
-                              final isCopied = _copiedLabel == candidate.label;
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 8),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 400),
-                                  decoration: BoxDecoration(
-                                    color: isCopied
-                                        ? AppColors.lightPink
-                                        : AppColors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: OutlinedButton(
-                                    onPressed: () => _copyCandidate(candidate),
-                                    child: Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 6,
-                                        ),
-                                        child: Text(
-                                          '${candidate.label}: ${candidate.text}',
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
+                      child: _ResultArea(
+                        isLoading: _loading,
+                        canGenerate: canGenerate,
+                        candidates: _candidates,
+                        copiedLabel: _copiedLabel,
+                        onCopyCandidate: _copyCandidate,
                       ),
                     ),
                   ],
@@ -245,10 +236,9 @@ class _GenerateScreenState extends State<GenerateScreen>
                                 ? _linePersona
                                 : _lineDelegate,
                             key: ValueKey<int>(_generationLineIndex),
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: AppTextStyles.primaryTitle.copyWith(
+                              color: AppColors.white,
                               fontSize: 20,
-                              fontWeight: FontWeight.w700,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -259,13 +249,13 @@ class _GenerateScreenState extends State<GenerateScreen>
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
   Future<void> _onGeneratePressed() async {
-    HapticFeedback.mediumImpact();
+    unawaited(Haptics.mediumImpact());
     final text = _sharedText?.trim();
     if (text == null || text.isEmpty) return;
 
@@ -387,7 +377,7 @@ class _GenerateScreenState extends State<GenerateScreen>
   String _planLabel(String plan) => plan == 'pro' ? 'Plus' : 'Free';
 
   Future<void> _copyCandidate(Candidate candidate) async {
-    HapticFeedback.selectionClick();
+    unawaited(Haptics.selection());
     await Clipboard.setData(ClipboardData(text: candidate.text));
 
     // candidate_copied イベント送信
@@ -474,7 +464,7 @@ class _GenerateScreenState extends State<GenerateScreen>
               .map(
                 (choice) => TextButton(
                   onPressed: () {
-                    HapticFeedback.selectionClick();
+                    unawaited(Haptics.selection());
                     _saveFollowupChoice(followup, choice);
                   },
                   child: Text(choice.label),
@@ -535,52 +525,71 @@ class _GenerateScreenState extends State<GenerateScreen>
   }
 }
 
-class _ShareStatusCard extends StatelessWidget {
-  const _ShareStatusCard({required this.fileName, required this.hasText});
+class _PersonaSummaryCard extends StatelessWidget {
+  const _PersonaSummaryCard({
+    required this.trueTypeLabel,
+    required this.nightTypeLabel,
+    required this.fileName,
+    required this.hasText,
+  });
 
+  final String trueTypeLabel;
+  final String nightTypeLabel;
   final String? fileName;
   final bool hasText;
 
   @override
   Widget build(BuildContext context) {
-    final title = hasText ? '受け取り完了' : '共有待ち';
-    final description = hasText
+    final shareDescription = hasText
         ? (fileName == null ? '.txtを受け取ったよ' : '$fileName を受け取ったよ')
         : 'LINEでトーク履歴を送信して、このアプリに共有して';
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: const BoxDecoration(
-          color: Colors.transparent,
-          border: Border(
-            bottom: BorderSide(color: AppColors.separator, width: 0.5),
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('現在のペルソナ情報', style: AppTextStyles.sectionHeader),
+          const SizedBox(height: AppSpacing.xs),
+          _PersonaValueRow(label: '普段の属性', value: trueTypeLabel),
+          const SizedBox(height: AppSpacing.xs),
+          _PersonaValueRow(label: '夜の属性', value: nightTypeLabel),
+          if (!hasText) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(shareDescription, style: AppTextStyles.small),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PersonaValueRow extends StatelessWidget {
+  const _PersonaValueRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: Text(label, style: AppTextStyles.meta)),
+        Expanded(
+          child: Text(
+            value,
+            style: AppTextStyles.body,
+            textAlign: TextAlign.right,
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primaryTitle,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              description,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.normal,
-                color: AppColors.metaText,
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }
@@ -607,58 +616,254 @@ class _ComboSelector extends StatelessWidget {
       ('落とす（恋愛寄せ）', true), // 5: Pro
     ];
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: const BoxDecoration(
-          color: Colors.transparent,
-          border: Border(
-            bottom: BorderSide(color: AppColors.separator, width: 0.5),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('生成方針', style: AppTextStyles.sectionHeader),
+        const SizedBox(height: AppSpacing.xs),
+        SizedBox(
+          width: double.infinity,
+          child: DropdownButton<int>(
+            value: selectedCombo,
+            isExpanded: true,
+            items: List.generate(combos.length, (index) {
+              final (label, isProOnly) = combos[index];
+              final isLocked = isProOnly && !isPro;
+              return DropdownMenuItem<int>(
+                value: index,
+                child: Text(
+                  isLocked ? '$label（Plus）' : label,
+                  style: AppTextStyles.body.copyWith(
+                    color: isLocked ? AppColors.metaText : AppColors.bodyText,
+                  ),
+                ),
+              );
+            }),
+            onChanged: (int? value) {
+              if (value != null) {
+                unawaited(Haptics.selection());
+                onChanged(value);
+              }
+            },
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      ],
+    );
+  }
+}
+
+class _GenerateMetaInfo extends StatelessWidget {
+  const _GenerateMetaInfo({
+    required this.daily,
+    required this.planLabel,
+    required this.metaPro,
+  });
+
+  final DailyInfo? daily;
+  final String planLabel;
+  final int? metaPro;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (daily != null)
             Text(
-              '生成方針',
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primaryTitle,
-              ),
+              '今日の残り: ${daily!.remaining}/${daily!.limit}（$planLabel）',
+              style: AppTextStyles.meta,
             ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: DropdownButton<int>(
-                value: selectedCombo,
-                isExpanded: true,
-                items: List.generate(combos.length, (index) {
-                  final (label, isProOnly) = combos[index];
-                  final isLocked = isProOnly && !isPro;
-                  return DropdownMenuItem<int>(
-                    value: index,
-                    child: Text(
-                      isLocked ? '$label（Plus）' : label,
-                      style: TextStyle(
-                        color: isLocked
-                            ? AppColors.metaText
-                            : AppColors.bodyText,
-                        fontSize: 15,
-                      ),
+          if (metaPro != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text('推定メーター: $metaPro%', style: AppTextStyles.meta),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ResultArea extends StatelessWidget {
+  const _ResultArea({
+    required this.isLoading,
+    required this.canGenerate,
+    required this.candidates,
+    required this.copiedLabel,
+    required this.onCopyCandidate,
+  });
+
+  final bool isLoading;
+  final bool canGenerate;
+  final List<Candidate> candidates;
+  final String? copiedLabel;
+  final ValueChanged<Candidate> onCopyCandidate;
+
+  @override
+  Widget build(BuildContext context) {
+    assert(candidates.isEmpty || candidates.length == 3);
+    const fixedLabels = <String>['A', 'B', 'C'];
+    final stateMessage = isLoading
+        ? '生成中...'
+        : canGenerate
+        ? 'ここに返信案が表示されるよ'
+        : 'まずLINEのトーク履歴を共有してね';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.inputVertical,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const AppSectionHeader(title: '返信案'),
+          const SizedBox(height: AppSpacing.xs),
+          Expanded(
+            child: ListView.builder(
+              itemCount: fixedLabels.length,
+              itemBuilder: (context, index) {
+                if (candidates.isNotEmpty) {
+                  final candidate = candidates[index];
+                  final isCopied = copiedLabel == candidate.label;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: _ResultCandidateCard(
+                      candidate: candidate,
+                      isCopied: isCopied,
+                      onCopy: () => onCopyCandidate(candidate),
                     ),
                   );
-                }),
-                onChanged: (int? value) {
-                  if (value != null) {
-                    HapticFeedback.selectionClick();
-                    onChanged(value);
-                  }
-                },
-              ),
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: _ResultPlaceholderCard(
+                    label: fixedLabels[index],
+                    message: stateMessage,
+                  ),
+                );
+              },
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ResultPlaceholderCard extends StatelessWidget {
+  const _ResultPlaceholderCard({required this.label, required this.message});
+
+  final String label;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.xs,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.separator,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              child: Text('$label案', style: AppTextStyles.small),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(child: Text(message, style: AppTextStyles.meta)),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ResultCandidateCard extends StatelessWidget {
+  const _ResultCandidateCard({
+    required this.candidate,
+    required this.isCopied,
+    required this.onCopy,
+  });
+
+  final Candidate candidate;
+  final bool isCopied;
+  final VoidCallback onCopy;
+
+  String _labelTitle(String label) {
+    switch (label) {
+      case 'A':
+        return 'A案';
+      case 'B':
+        return 'B案';
+      case 'C':
+        return 'C案';
+      default:
+        return label;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: isCopied ? AppColors.lightPink : AppColors.white,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        onTap: onCopy,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryPink,
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                    ),
+                    child: Text(
+                      _labelTitle(candidate.label),
+                      style: AppTextStyles.small.copyWith(
+                        color: AppColors.white,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    isCopied ? 'コピー済み' : 'タップでコピー',
+                    style: AppTextStyles.small.copyWith(
+                      color: isCopied
+                          ? AppColors.primaryPink
+                          : AppColors.metaText,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(candidate.text, style: AppTextStyles.body),
+            ],
+          ),
         ),
       ),
     );
@@ -675,9 +880,12 @@ class _ErrorBanner extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.lightPink,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
-      child: Padding(padding: const EdgeInsets.all(10), child: Text(message)),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: Text(message, style: AppTextStyles.small),
+      ),
     );
   }
 }

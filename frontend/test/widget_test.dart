@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sample_app/core/widgets/app_button.dart';
 import 'package:sample_app/src/domain/models.dart';
 import 'package:sample_app/src/domain/persona_diagnosis.dart';
 import 'package:sample_app/src/domain/telemetry_event.dart';
@@ -161,7 +163,24 @@ class _FakeShareInput implements ShareInput {
 }
 
 void main() {
-  testWidgets('共有前は共有待ち表示', (WidgetTester tester) async {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+          if (call.method == 'HapticFeedback.vibrate') {
+            return null;
+          }
+          return null;
+        });
+  });
+
+  tearDownAll(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, null);
+  });
+
+  testWidgets('共有前はResultエリアに待機表示を出す', (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: GenerateScreen(
@@ -175,7 +194,8 @@ void main() {
     await tester.pump();
 
     expect(find.byType(TextField), findsNothing);
-    expect(find.text('共有待ち'), findsOneWidget);
+    expect(find.text('返信案'), findsOneWidget);
+    expect(find.text('まずLINEのトーク履歴を共有してね'), findsNWidgets(3));
   });
 
   testWidgets('共有済みなら生成でA/B/Cを表示する', (WidgetTester tester) async {
@@ -191,27 +211,38 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
-
-    // スクロールしてボタンを見えるようにする
-    await tester.drag(
-      find.byType(SingleChildScrollView),
-      const Offset(0, -200),
-    );
-    await tester.pump();
-
-    await tester.tap(find.text('ぼくが返信案を考えるよ'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('A: 返信案A'), findsOneWidget);
-    expect(find.textContaining('B: 返信案B'), findsOneWidget);
-    expect(find.textContaining('C: 返信案C'), findsOneWidget);
+    final generateButton = find.widgetWithText(AppButton, 'ぼくが返信案を考えるよ');
+    await tester.ensureVisible(generateButton);
+    await tester.tap(generateButton);
+    await tester.pump(const Duration(milliseconds: 900));
+    await tester.pumpAndSettle();
+
+    expect(find.text('A案'), findsOneWidget);
+    expect(find.text('B案'), findsOneWidget);
+    expect(find.text('返信案A'), findsOneWidget);
+    expect(find.text('返信案B'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('C案'),
+      120,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('C案'), findsOneWidget);
+    expect(find.text('返信案C'), findsOneWidget);
   });
 
   testWidgets('Followup選択でsettingsを保存できる', (WidgetTester tester) async {
     final apiClient = _FakeApiClient(
       generateResult: GenerateResult(
-        candidates: [Candidate(label: 'A', text: '返信案A')],
+        candidates: [
+          Candidate(label: 'A', text: '返信案A'),
+          Candidate(label: 'B', text: '返信案B'),
+          Candidate(label: 'C', text: '返信案C'),
+        ],
         plan: 'free',
         daily: DailyInfo(limit: 3, used: 1, remaining: 2),
         followup: FollowupInfo(
@@ -234,9 +265,12 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    await tester.tap(find.text('ぼくが返信案を考えるよ'));
+    final generateButton = find.widgetWithText(AppButton, 'ぼくが返信案を考えるよ');
+    await tester.ensureVisible(generateButton);
+    await tester.tap(generateButton);
+    await tester.pump(const Duration(milliseconds: 800));
     await tester.pumpAndSettle();
 
     expect(find.text('情報補足'), findsOneWidget);
@@ -260,7 +294,7 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     final dropdown = tester.widget<DropdownButton<int>>(
       find.byType(DropdownButton<int>),

@@ -459,10 +459,12 @@ ios/
 ### 7.3 Generate（メイン）
 - sharedText state（メモリのみ）
 - settings state（GET/PUT同期）
+- レイアウトは「上部固定（ペルソナ要約+combo）/中央CTA/下部Expanded結果エリア」を基本とする
 - 「生成」ボタンで `/generate`
   - `Idempotency-Key` はUUID生成
 - 生成中：ローディング＋演出（色反転等）
-- 結果：A/B/Cカード
+- 結果：A/B/Cカード（固定3スロット）
+  - 未生成時/生成中は同じ結果領域でプレースホルダー表示
   - タップでClipboardへコピー
   - 0.4秒のハイライトフィードバック
 
@@ -473,8 +475,8 @@ ios/
   - `AUTH_INVALID` / `AUTH_REQUIRED`：「認証を更新したよ。もう一度ためしてね」
   - `SETTINGS_VERSION_CONFLICT` / `ETAG_MISMATCH`：「設定が更新されていたみたい。読み込み直してね」
   - `RATE_LIMITED`：「少し混み合ってるみたい。少し待って、もう一度」
-  - `DAILY_LIMIT_REACHED` / `DAILY_LIMIT_EXCEEDED`：「今日はここまで。続きは明日か、Proで使える」
-  - `PLAN_REQUIRED`：「この機能はProで使えるよ」
+  - `DAILY_LIMIT_REACHED` / `DAILY_LIMIT_EXCEEDED`：「今日はここまで。続きは明日か、Plusで使える」
+  - `PLAN_REQUIRED`：「この機能はPlusで使えるよ」
   - `OPENAI_DISABLED`：「この環境では生成を止めているよ」
   - `UPSTREAM_UNAVAILABLE` / `UPSTREAM_TIMEOUT`：「今は不安定みたい。少し待って、もう一度」
   - その他：「うまく読めなかった。もう一度共有して」
