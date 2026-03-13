@@ -98,17 +98,13 @@ class AboutPrivacyScreen extends StatelessWidget {
                             } else {
                               if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('メールアプリが見つかりません'),
-                                ),
+                                const SnackBar(content: Text('メールアプリが見つかりません')),
                               );
                             }
                           } catch (_) {
                             if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('メールアプリの起動に失敗しました'),
-                              ),
+                              const SnackBar(content: Text('メールアプリの起動に失敗しました')),
                             );
                           }
                         },
@@ -126,12 +122,17 @@ class AboutPrivacyScreen extends StatelessWidget {
               const SizedBox(height: AppSpacing.inputVertical),
               const Text('隙間産業ラボ 中野家', style: AppTextStyles.body),
               const SizedBox(height: AppSpacing.sm),
-              const Text('メール: sukima.lab.nakanoya@gmail.com', style: AppTextStyles.body),
+              const Text(
+                'メール: sukima.lab.nakanoya@gmail.com',
+                style: AppTextStyles.body,
+              ),
               const SizedBox(height: AppSpacing.xl),
               Center(
                 child: Text(
                   'Version 1.0.0',
-                  style: AppTextStyles.small.copyWith(color: AppColors.bodyText),
+                  style: AppTextStyles.small.copyWith(
+                    color: AppColors.bodyText,
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),

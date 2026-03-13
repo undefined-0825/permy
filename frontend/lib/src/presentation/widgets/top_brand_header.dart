@@ -11,6 +11,7 @@ class TopBrandHeader extends StatelessWidget implements PreferredSizeWidget {
   final Widget? leading;
 
   static const double _catSize = 64.0;
+  static const double _logoHeight = 56.0;
 
   @override
   Size get preferredSize => const Size.fromHeight(_catSize);
@@ -24,7 +25,8 @@ class TopBrandHeader extends StatelessWidget implements PreferredSizeWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             // constraints.maxWidth = 画面幅（AppBar制約なし）
-            final logoWidth = constraints.maxWidth * 0.55;
+            final logoMaxWidth = constraints.maxWidth * 0.55;
+            final effectiveLeading = leading ?? const BackButton();
             return SizedBox(
               height: _catSize,
               child: Stack(
@@ -33,7 +35,7 @@ class TopBrandHeader extends StatelessWidget implements PreferredSizeWidget {
                   Center(
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         SvgPicture.asset(
                           'assets/images/top/permy_cat_silhouette.svg',
@@ -41,22 +43,24 @@ class TopBrandHeader extends StatelessWidget implements PreferredSizeWidget {
                           height: _catSize,
                         ),
                         const SizedBox(width: AppSpacing.sm),
-                        Image.asset(
-                          'assets/images/top/logo.png',
-                          width: logoWidth,
-                          fit: BoxFit.fitWidth,
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: logoMaxWidth),
+                          child: Image.asset(
+                            'assets/images/top/logo.png',
+                            height: _logoHeight,
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       ],
                     ),
                   ),
                   // 左：leadingボタン
-                  if (leading != null)
-                    Positioned(
-                      left: 4,
-                      top: 0,
-                      bottom: 0,
-                      child: Center(child: leading!),
-                    ),
+                  Positioned(
+                    left: 4,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(child: effectiveLeading),
+                  ),
                   // 右：actionsボタン群
                   if (actions != null && actions!.isNotEmpty)
                     Positioned(

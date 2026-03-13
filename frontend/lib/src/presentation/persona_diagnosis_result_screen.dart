@@ -41,14 +41,18 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
               const AppSectionHeader(title: '普段の自分'),
               const SizedBox(height: AppSpacing.inputVertical),
               _PersonaTypeCard(
+                label: '普段の属性',
                 typeName: getTrueSelfTypeName(trueType),
+                imagePath: getTrueSelfTypeImagePath(trueType),
                 description: _getTrueTypeDescription(trueType),
               ),
               const SizedBox(height: AppSpacing.xl),
               const AppSectionHeader(title: '夜の私'),
               const SizedBox(height: AppSpacing.inputVertical),
               _PersonaTypeCard(
+                label: '夜の属性',
                 typeName: getNightSelfTypeName(nightType),
+                imagePath: getNightSelfTypeImagePath(nightType),
                 description: _getNightTypeDescription(nightType),
               ),
               const SizedBox(height: AppSpacing.xl),
@@ -76,15 +80,15 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
   String _getTrueTypeDescription(String type) {
     switch (type) {
       case 'Stability':
-        return 'バランスを大事にする。無理のない生活を心がけるタイプ。';
+        return '安定感と継続性を重視する。';
       case 'Independence':
-        return '自分のペースを守る。判断を自分で決めるタイプ。';
+        return '自分の判断軸で動ける。';
       case 'Approval':
-        return '人の評価を大事にする。信頼を集めることに価値を置くタイプ。';
+        return '信頼獲得を大切にする。';
       case 'Realism':
-        return '現実的に考える。長期的な得を見据えるタイプ。';
+        return '現実的に成果へつなげる。';
       case 'Romance':
-        return '感情を大事にする。直感を重視するタイプ。';
+        return '感情と直感を素直に活かす。';
       default:
         return 'ペルソナ種別が不明です。';
     }
@@ -93,15 +97,15 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
   String _getNightTypeDescription(String type) {
     switch (type) {
       case 'VisitPush':
-        return '次の約束を大事にする。関係を継続することを重視するタイプ。';
+        return '次の来店につながる提案が得意。';
       case 'Heal':
-        return '相手を癒すことを重視する。寄り添いが得意なタイプ。';
+        return '安心感を与える寄り添いが得意。';
       case 'LittleDevil':
-        return '駆け引きを楽しむ。軽快なテンポを作るタイプ。';
+        return '軽快な駆け引きで温度を上げる。';
       case 'BigClient':
-        return '重要顧客を見極める。戦略的に寄せるタイプ。';
+        return '重要顧客へ戦略的に寄せる。';
       case 'Balance':
-        return '全体バランスを重視する。状況に応じて柔軟に対応するタイプ。';
+        return '状況に応じて柔軟に最適化する。';
       default:
         return 'ペルソナ種別が不明です。';
     }
@@ -109,15 +113,21 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
 }
 
 class _PersonaTypeCard extends StatelessWidget {
-  const _PersonaTypeCard({required this.typeName, required this.description});
+  const _PersonaTypeCard({
+    required this.label,
+    required this.typeName,
+    required this.description,
+    this.imagePath,
+  });
 
+  final String label;
   final String typeName;
   final String description;
+  final String? imagePath;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(AppRadius.md),
@@ -126,12 +136,55 @@ class _PersonaTypeCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            typeName,
-            style: AppTextStyles.primaryTitle.copyWith(color: AppColors.secondaryPink),
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(AppRadius.md),
+              topRight: Radius.circular(AppRadius.md),
+            ),
+            child: AspectRatio(
+              aspectRatio: 16 / 10,
+              child: imagePath == null
+                  ? Container(
+                      color: AppColors.highlight,
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.image_not_supported_outlined,
+                        color: AppColors.metaText,
+                      ),
+                    )
+                  : Image.asset(
+                      imagePath!,
+                      fit: BoxFit.contain,
+                      alignment: Alignment.center,
+                      errorBuilder: (_, __, ___) => Container(
+                        color: AppColors.highlight,
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.image_not_supported_outlined,
+                          color: AppColors.metaText,
+                        ),
+                      ),
+                    ),
+            ),
           ),
-          const SizedBox(height: AppSpacing.inputVertical),
-          Text(description, style: AppTextStyles.body),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: AppTextStyles.small),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  typeName,
+                  style: AppTextStyles.primaryTitle.copyWith(
+                    color: AppColors.secondaryPink,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(description, style: AppTextStyles.meta),
+              ],
+            ),
+          ),
         ],
       ),
     );
