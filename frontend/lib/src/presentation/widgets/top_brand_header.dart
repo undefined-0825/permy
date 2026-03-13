@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:sample_app/core/theme/app_spacing.dart';
+
 /// 全画面共通ブランドヘッダー。Scaffold.appBar に直接セットする。
 class TopBrandHeader extends StatelessWidget implements PreferredSizeWidget {
   const TopBrandHeader({super.key, this.actions, this.leading});
@@ -38,7 +40,7 @@ class TopBrandHeader extends StatelessWidget implements PreferredSizeWidget {
                           width: _catSize,
                           height: _catSize,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.sm),
                         Image.asset(
                           'assets/images/top/logo.png',
                           width: logoWidth,
