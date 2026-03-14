@@ -5,6 +5,7 @@ import 'package:sample_app/core/theme/app_text_styles.dart';
 import 'package:sample_app/core/widgets/app_scaffold.dart';
 import 'package:sample_app/core/widgets/app_section_header.dart';
 
+import 'widgets/support_email_link.dart';
 import 'widgets/top_brand_header.dart';
 
 class HelpScreen extends StatelessWidget {
@@ -49,7 +50,7 @@ class HelpScreen extends StatelessWidget {
             SizedBox(height: AppSpacing.md),
             Divider(),
             SizedBox(height: AppSpacing.inputVertical),
-            _BodyText('お問い合わせ：sukima.lab.nakanoya@gmail.com'),
+            SupportEmailLink(prefix: 'お問い合わせ'),
           ],
         ),
       ),

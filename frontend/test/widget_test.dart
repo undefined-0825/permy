@@ -305,4 +305,25 @@ void main() {
     expect(find.text('有料版のみ'), findsOneWidget);
     expect(find.text('このモードはPlusで使える機能だよ。'), findsOneWidget);
   });
+
+  testWidgets('生成方針のPro項目にPlusバッジを表示する', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: _FakeApiClient(),
+          shareReceiver: _FakeShareInput(
+            SharePayload(text: '共有本文', fileName: 'line.txt'),
+          ),
+          telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(DropdownButton<int>));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Plus'), findsWidgets);
+  });
 }

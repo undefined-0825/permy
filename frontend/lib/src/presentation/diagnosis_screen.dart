@@ -473,7 +473,9 @@ class _ChoiceCardState extends State<_ChoiceCard> {
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
-              Expanded(child: Text(widget.label, style: AppTextStyles.body)),
+              Expanded(
+                child: Text(widget.label, style: AppTextStyles.sectionHeader),
+              ),
               if (widget.isSelected)
                 const Icon(
                   Icons.check_circle,

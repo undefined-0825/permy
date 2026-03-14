@@ -631,11 +631,37 @@ class _ComboSelector extends StatelessWidget {
               final isLocked = isProOnly && !isPro;
               return DropdownMenuItem<int>(
                 value: index,
-                child: Text(
-                  isLocked ? '$label（Plus）' : label,
-                  style: AppTextStyles.body.copyWith(
-                    color: isLocked ? AppColors.metaText : AppColors.bodyText,
-                  ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: AppTextStyles.body.copyWith(
+                          color: isLocked
+                              ? AppColors.metaText
+                              : AppColors.bodyText,
+                        ),
+                      ),
+                    ),
+                    if (isProOnly)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: AppSpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.plusBadgeBackground,
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                        ),
+                        child: Text(
+                          'Plus',
+                          style: AppTextStyles.small.copyWith(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               );
             }),

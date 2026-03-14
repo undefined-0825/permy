@@ -230,31 +230,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: AppTextStyles.primaryTitle,
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: AppSpacing.sm,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.white.withValues(alpha: 0.65),
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _saving ? Icons.sync : Icons.check_circle_outline,
-                          size: 18,
-                          color: AppColors.metaText,
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(
-                          _saving ? '変更を反映中...' : '変更は自動で反映されます',
-                          style: AppTextStyles.small,
-                        ),
-                      ],
-                    ),
-                  ),
                   const SizedBox(height: AppSpacing.lg),
                   const AppSectionHeader(title: 'ペルソナ'),
                   const SizedBox(height: AppSpacing.sm),
@@ -276,20 +251,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const AppSectionHeader(title: 'NG設定'),
                   const SizedBox(height: AppSpacing.sm),
                   _buildNGSetting(),
-                  const SizedBox(height: AppSpacing.xl),
-                  const AppSectionHeader(title: '端末移行'),
-                  const SizedBox(height: AppSpacing.sm),
-                  AppButton(
-                    text: '端末移行の設定',
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              MigrationScreen(apiClient: widget.apiClient),
-                        ),
-                      );
-                    },
-                  ),
                   const SizedBox(height: AppSpacing.xl),
                   const AppSectionHeader(title: 'チュートリアル'),
                   const SizedBox(height: AppSpacing.sm),
@@ -317,13 +278,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: AppSpacing.sm),
                   _buildInfoLinks(),
                   const SizedBox(height: AppSpacing.xl),
-                  const AppSectionHeader(title: 'アカウント管理'),
+                  const AppSectionHeader(title: 'サポート・規約・その他設定'),
                   const SizedBox(height: AppSpacing.sm),
-                  AppButton(
-                    text: 'アカウントを削除する',
-                    onPressed: () {
-                      _confirmDeleteAccount();
-                    },
+                  _buildAdvancedSettingsAccordion(),
+                  const SizedBox(height: AppSpacing.lg),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.sm,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _saving ? Icons.sync : Icons.check_circle_outline,
+                          size: 18,
+                          color: AppColors.metaText,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          _saving ? '変更を反映中...' : '変更は自動で反映されます',
+                          style: AppTextStyles.small,
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.md),
                 ],
@@ -453,24 +434,69 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         const Text('NGタグ（複数選択可）', style: AppTextStyles.body),
         const SizedBox(height: AppSpacing.sm),
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.xs,
+        Column(
           children: _ngTagLabels.entries.map((entry) {
             final isSelected = ngTags.contains(entry.key);
-            return FilterChip(
-              label: Text(entry.value),
-              selected: isSelected,
-              onSelected: (selected) {
-                unawaited(Haptics.selection());
-                final updatedTags = List<String>.from(ngTags);
-                if (selected) {
-                  updatedTags.add(entry.key);
-                } else {
-                  updatedTags.remove(entry.key);
-                }
-                _updateSetting('ng_tags', updatedTags);
-              },
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                onTap: () {
+                  unawaited(Haptics.selection());
+                  final updatedTags = List<String>.from(ngTags);
+                  if (isSelected) {
+                    updatedTags.remove(entry.key);
+                  } else {
+                    updatedTags.add(entry.key);
+                  }
+                  _updateSetting('ng_tags', updatedTags);
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.inputVertical,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.lightPink.withValues(alpha: 0.55)
+                        : AppColors.white.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                    border: Border.all(
+                      color: isSelected
+                          ? AppColors.secondaryPink
+                          : AppColors.separator,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 22,
+                        child: Icon(
+                          isSelected
+                              ? Icons.check_circle
+                              : Icons.radio_button_unchecked,
+                          size: 18,
+                          color: isSelected
+                              ? AppColors.secondaryPink
+                              : AppColors.metaText,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          entry.value,
+                          style: AppTextStyles.body.copyWith(
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             );
           }).toList(),
         ),
@@ -634,21 +660,64 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-        const SizedBox(height: AppSpacing.inputVertical),
-        AppButton(
-          text: '購入を復元',
-          onPressed: () {
-            _restorePurchases();
-          },
-        ),
-        const SizedBox(height: AppSpacing.inputVertical),
-        AppButton(
-          text: 'サブスクリプション管理',
-          onPressed: () {
-            _openSubscriptionManagement();
-          },
-        ),
       ],
+    );
+  }
+
+  Widget _buildAdvancedSettingsAccordion() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          title: const Text('サポート・規約・その他設定', style: AppTextStyles.body),
+          iconColor: AppColors.metaText,
+          collapsedIconColor: AppColors.metaText,
+          childrenPadding: const EdgeInsets.fromLTRB(
+            AppSpacing.sm,
+            0,
+            AppSpacing.sm,
+            AppSpacing.sm,
+          ),
+          children: [
+            AppButton(
+              text: '端末移行の設定',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        MigrationScreen(apiClient: widget.apiClient),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: AppSpacing.inputVertical),
+            AppButton(
+              text: '購入を復元',
+              onPressed: () {
+                _restorePurchases();
+              },
+            ),
+            const SizedBox(height: AppSpacing.inputVertical),
+            AppButton(
+              text: 'サブスクリプション管理',
+              onPressed: () {
+                _openSubscriptionManagement();
+              },
+            ),
+            const SizedBox(height: AppSpacing.inputVertical),
+            AppButton(
+              text: 'アカウントを削除する',
+              onPressed: () {
+                _confirmDeleteAccount();
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 

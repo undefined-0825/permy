@@ -1,15 +1,11 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'package:sample_app/core/theme/app_colors.dart';
-import 'package:sample_app/core/theme/app_radius.dart';
 import 'package:sample_app/core/theme/app_spacing.dart';
 import 'package:sample_app/core/theme/app_text_styles.dart';
-import 'package:sample_app/core/utils/haptics.dart';
 import 'package:sample_app/core/widgets/app_scaffold.dart';
 import 'package:sample_app/core/widgets/app_section_header.dart';
+import 'widgets/support_email_link.dart';
 import 'widgets/top_brand_header.dart';
 
 class AboutPrivacyScreen extends StatelessWidget {
@@ -72,60 +68,11 @@ class AboutPrivacyScreen extends StatelessWidget {
                 style: AppTextStyles.body,
               ),
               const SizedBox(height: AppSpacing.md),
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.9),
-                  border: Border.all(color: AppColors.separator),
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                ),
-                padding: const EdgeInsets.all(AppSpacing.inputVertical),
-                child: Row(
-                  children: [
-                    const Icon(Icons.mail_outline, size: 20),
-                    const SizedBox(width: AppSpacing.inputVertical),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () async {
-                          unawaited(Haptics.lightImpact());
-                          final emailUri = Uri(
-                            scheme: 'mailto',
-                            path: 'sukima.lab.nakanoya@gmail.com',
-                            queryParameters: const {'subject': 'Permy お問い合わせ'},
-                          );
-                          try {
-                            if (await canLaunchUrl(emailUri)) {
-                              await launchUrl(emailUri);
-                            } else {
-                              if (!context.mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('メールアプリが見つかりません')),
-                              );
-                            }
-                          } catch (_) {
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('メールアプリの起動に失敗しました')),
-                            );
-                          }
-                        },
-                        child: const Text(
-                          'sukima.lab.nakanoya@gmail.com',
-                          style: AppTextStyles.body,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              const SupportEmailLink(filled: true, showIcon: true),
               const SizedBox(height: AppSpacing.xl),
               const AppSectionHeader(title: '発行者'),
               const SizedBox(height: AppSpacing.inputVertical),
               const Text('隙間産業ラボ 中野家', style: AppTextStyles.body),
-              const SizedBox(height: AppSpacing.sm),
-              const Text(
-                'メール: sukima.lab.nakanoya@gmail.com',
-                style: AppTextStyles.body,
-              ),
               const SizedBox(height: AppSpacing.xl),
               Center(
                 child: Text(

@@ -180,6 +180,16 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> expandAdvancedSettings(WidgetTester tester) async {
+    final finder = find.descendant(
+      of: find.byType(ExpansionTile),
+      matching: find.text('サポート・規約・その他設定'),
+    );
+    await tester.ensureVisible(finder);
+    await tester.tap(finder);
+    await tester.pumpAndSettle();
+  }
+
   group('Settings Screen', () {
     testWidgets('設定を読み込んで表示できる', (WidgetTester tester) async {
       final mockApi = MockApiClient();
@@ -286,6 +296,7 @@ void main() {
 
       await tester.pumpAndSettle();
 
+      await expandAdvancedSettings(tester);
       await tapAppButton(tester, '端末移行の設定');
 
       expect(find.byType(MigrationScreen), findsOneWidget);
@@ -458,6 +469,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // アカウント削除ボタンまでスクロール
+      await expandAdvancedSettings(tester);
       await tapAppButton(tester, 'アカウントを削除する');
 
       // 確認ダイアログが表示されることを確認
@@ -482,6 +494,7 @@ void main() {
 
       await tester.pumpAndSettle();
 
+      await expandAdvancedSettings(tester);
       await tapAppButton(tester, 'アカウントを削除する');
 
       // キャンセルをタップ
