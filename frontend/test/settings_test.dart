@@ -281,7 +281,7 @@ void main() {
       expect(find.textContaining('/'), findsWidgets);
     });
 
-    testWidgets('端末移行ボタンで Migration 画面へ遷移できる', (WidgetTester tester) async {
+    testWidgets('端末移行リンクで Migration 画面へ遷移できる', (WidgetTester tester) async {
       final mockApi = MockApiClient();
       final mockPurchase = MockPurchaseService();
 
@@ -297,13 +297,13 @@ void main() {
       await tester.pumpAndSettle();
 
       await expandAdvancedSettings(tester);
-      await tapAppButton(tester, '端末移行の設定');
+      await tapAppListItem(tester, '端末移行の設定');
 
       expect(find.byType(MigrationScreen), findsOneWidget);
       expect(find.text('端末移行'), findsWidgets); // SliverAppBar.large() で複数表示
     });
 
-    testWidgets('このアプリについてボタンで About 画面へ遷移できる', (WidgetTester tester) async {
+    testWidgets('このアプリについてリンクで About 画面へ遷移できる', (WidgetTester tester) async {
       final mockApi = MockApiClient();
       final mockPurchase = MockPurchaseService();
 
@@ -318,13 +318,14 @@ void main() {
 
       await tester.pumpAndSettle();
 
+      await expandAdvancedSettings(tester);
       await tapAppListItem(tester, 'このアプリについて');
 
       expect(find.byType(AboutPrivacyScreen), findsOneWidget);
       expect(find.text('このアプリについて'), findsWidgets);
     });
 
-    testWidgets('利用規約ボタンで利用規約画面へ遷移できる', (WidgetTester tester) async {
+    testWidgets('利用規約リンクで利用規約画面へ遷移できる', (WidgetTester tester) async {
       final mockApi = MockApiClient();
       final mockPurchase = MockPurchaseService();
 
@@ -339,13 +340,14 @@ void main() {
 
       await tester.pumpAndSettle();
 
+      await expandAdvancedSettings(tester);
       await tapAppListItem(tester, '利用規約');
 
       expect(find.byType(TermsOfServiceScreen), findsOneWidget);
       expect(find.text('第1条（適用）'), findsOneWidget);
     });
 
-    testWidgets('プライバシーポリシーボタンで画面へ遷移できる', (WidgetTester tester) async {
+    testWidgets('プライバシーポリシーリンクで画面へ遷移できる', (WidgetTester tester) async {
       final mockApi = MockApiClient();
       final mockPurchase = MockPurchaseService();
 
@@ -360,13 +362,14 @@ void main() {
 
       await tester.pumpAndSettle();
 
+      await expandAdvancedSettings(tester);
       await tapAppListItem(tester, 'プライバシーポリシー');
 
       expect(find.byType(PrivacyPolicyScreen), findsOneWidget);
       expect(find.text('1. 基本方針'), findsOneWidget);
     });
 
-    testWidgets('ヘルプボタンでヘルプ画面へ遷移できる', (WidgetTester tester) async {
+    testWidgets('ヘルプリンクでヘルプ画面へ遷移できる', (WidgetTester tester) async {
       final mockApi = MockApiClient();
       final mockPurchase = MockPurchaseService();
 
@@ -381,13 +384,14 @@ void main() {
 
       await tester.pumpAndSettle();
 
+      await expandAdvancedSettings(tester);
       await tapAppListItem(tester, 'ヘルプ（使い方）');
 
       expect(find.byType(HelpScreen), findsOneWidget);
       expect(find.text('2. 基本の使い方'), findsOneWidget);
     });
 
-    testWidgets('オープンソースライセンスボタンでライセンスページへ遷移できる', (WidgetTester tester) async {
+    testWidgets('オープンソースライセンスリンクでライセンスページへ遷移できる', (WidgetTester tester) async {
       final mockApi = MockApiClient();
       final mockPurchase = MockPurchaseService();
 
@@ -402,6 +406,7 @@ void main() {
 
       await tester.pumpAndSettle();
 
+      await expandAdvancedSettings(tester);
       await tapAppListItem(tester, 'オープンソースライセンス');
 
       // LicensePage が表示されることを確認
@@ -453,7 +458,7 @@ void main() {
       expect(find.text('あなたのペルソナ'), findsWidgets); // SliverAppBar.large() で複数表示
     });
 
-    testWidgets('アカウント削除ボタンで確認ダイアログが表示される', (WidgetTester tester) async {
+    testWidgets('アカウント削除リンクで確認ダイアログが表示される', (WidgetTester tester) async {
       final mockApi = MockApiClient();
       final mockPurchase = MockPurchaseService();
 
@@ -470,7 +475,7 @@ void main() {
 
       // アカウント削除ボタンまでスクロール
       await expandAdvancedSettings(tester);
-      await tapAppButton(tester, 'アカウントを削除する');
+      await tapAppListItem(tester, 'アカウントを削除する');
 
       // 確認ダイアログが表示されることを確認
       expect(find.text('アカウントを削除しますか？'), findsOneWidget);
@@ -495,7 +500,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await expandAdvancedSettings(tester);
-      await tapAppButton(tester, 'アカウントを削除する');
+      await tapAppListItem(tester, 'アカウントを削除する');
 
       // キャンセルをタップ
       await tester.tap(find.text('キャンセル'));

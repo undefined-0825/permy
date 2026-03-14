@@ -36,12 +36,12 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: AppSpacing.md),
               const Text('あなたのペルソナ', style: AppTextStyles.primaryTitle),
               const SizedBox(height: AppSpacing.md),
               const AppSectionHeader(title: '普段の自分'),
               const SizedBox(height: AppSpacing.inputVertical),
               _PersonaTypeCard(
-                label: '普段の属性',
                 typeName: getTrueSelfTypeName(trueType),
                 imagePath: getTrueSelfTypeImagePath(trueType),
                 description: _getTrueTypeDescription(trueType),
@@ -50,13 +50,12 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
               const AppSectionHeader(title: '夜の私'),
               const SizedBox(height: AppSpacing.inputVertical),
               _PersonaTypeCard(
-                label: '夜の属性',
                 typeName: getNightSelfTypeName(nightType),
                 imagePath: getNightSelfTypeImagePath(nightType),
                 description: _getNightTypeDescription(nightType),
               ),
               const SizedBox(height: AppSpacing.xl),
-              const AppSectionHeader(title: 'スタイルスコア'),
+              const AppSectionHeader(title: 'ペルソナパラメータ'),
               const SizedBox(height: AppSpacing.md),
               _StyleScoreRow(label: '主張度', score: assertiveness),
               const SizedBox(height: AppSpacing.inputVertical),
@@ -114,13 +113,11 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
 
 class _PersonaTypeCard extends StatelessWidget {
   const _PersonaTypeCard({
-    required this.label,
     required this.typeName,
     required this.description,
     this.imagePath,
   });
 
-  final String label;
   final String typeName;
   final String description;
   final String? imagePath;
@@ -172,8 +169,6 @@ class _PersonaTypeCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: AppTextStyles.small),
-                const SizedBox(height: AppSpacing.xs),
                 Text(
                   typeName,
                   style: AppTextStyles.primaryTitle.copyWith(

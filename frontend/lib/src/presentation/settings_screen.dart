@@ -244,11 +244,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     },
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  const AppSectionHeader(title: '生成設定'),
+                  const AppSectionHeader(title: 'デフォルトの返信スタイル'),
                   const SizedBox(height: AppSpacing.sm),
                   _buildComboSetting(),
                   const SizedBox(height: AppSpacing.xl),
-                  const AppSectionHeader(title: 'NG設定'),
+                  const AppSectionHeader(title: '返信案のNG設定'),
                   const SizedBox(height: AppSpacing.sm),
                   _buildNGSetting(),
                   const SizedBox(height: AppSpacing.xl),
@@ -273,10 +273,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const AppSectionHeader(title: 'Plus版（月額2,980円）'),
                   const SizedBox(height: AppSpacing.sm),
                   _buildPurchaseSection(),
-                  const SizedBox(height: AppSpacing.xl),
-                  const AppSectionHeader(title: 'サポート・規約'),
-                  const SizedBox(height: AppSpacing.sm),
-                  _buildInfoLinks(),
                   const SizedBox(height: AppSpacing.xl),
                   const AppSectionHeader(title: 'サポート・規約・その他設定'),
                   const SizedBox(height: AppSpacing.sm),
@@ -395,8 +391,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text('生成方針'),
-        const SizedBox(height: AppSpacing.sm),
         SegmentedButton<int>(
           segments: const [
             ButtonSegment(value: 0, label: Text('来店約束')),
@@ -432,8 +426,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text('NGタグ（複数選択可）', style: AppTextStyles.body),
-        const SizedBox(height: AppSpacing.sm),
         Column(
           children: _ngTagLabels.entries.map((entry) {
             final isSelected = ngTags.contains(entry.key);
@@ -683,9 +675,67 @@ class _SettingsScreenState extends State<SettingsScreen> {
             AppSpacing.sm,
           ),
           children: [
-            AppButton(
-              text: '端末移行の設定',
-              onPressed: () {
+            _InfoLinkTile(
+              label: '利用規約',
+              onTap: () {
+                unawaited(Haptics.lightImpact());
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const TermsOfServiceScreen(),
+                  ),
+                );
+              },
+            ),
+            _InfoLinkTile(
+              label: 'プライバシーポリシー',
+              onTap: () {
+                unawaited(Haptics.lightImpact());
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const PrivacyPolicyScreen(),
+                  ),
+                );
+              },
+            ),
+            _InfoLinkTile(
+              label: 'ヘルプ（使い方）',
+              onTap: () {
+                unawaited(Haptics.lightImpact());
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const HelpScreen()),
+                );
+              },
+            ),
+            _InfoLinkTile(
+              label: 'このアプリについて',
+              onTap: () {
+                unawaited(Haptics.lightImpact());
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const AboutPrivacyScreen(),
+                  ),
+                );
+              },
+            ),
+            _InfoLinkTile(
+              label: 'オープンソースライセンス',
+              onTap: () {
+                unawaited(Haptics.lightImpact());
+                showLicensePage(
+                  context: context,
+                  applicationName: 'Permy',
+                  applicationIcon: Image.asset(
+                    'assets/images/icons/permy_icon.png',
+                    width: 48,
+                    height: 48,
+                  ),
+                );
+              },
+            ),
+            _InfoLinkTile(
+              label: '端末移行の設定',
+              onTap: () {
+                unawaited(Haptics.lightImpact());
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) =>
@@ -694,99 +744,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 );
               },
             ),
-            const SizedBox(height: AppSpacing.inputVertical),
-            AppButton(
-              text: '購入を復元',
-              onPressed: () {
+            _InfoLinkTile(
+              label: '購入を復元',
+              onTap: () {
+                unawaited(Haptics.lightImpact());
                 _restorePurchases();
               },
             ),
-            const SizedBox(height: AppSpacing.inputVertical),
-            AppButton(
-              text: 'サブスクリプション管理',
-              onPressed: () {
+            _InfoLinkTile(
+              label: 'サブスクリプション管理',
+              onTap: () {
+                unawaited(Haptics.lightImpact());
                 _openSubscriptionManagement();
               },
             ),
-            const SizedBox(height: AppSpacing.inputVertical),
-            AppButton(
-              text: 'アカウントを削除する',
-              onPressed: () {
+            _InfoLinkTile(
+              label: 'アカウントを削除する',
+              onTap: () {
+                unawaited(Haptics.lightImpact());
                 _confirmDeleteAccount();
               },
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildInfoLinks() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.white.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
-      child: Column(
-        children: [
-          _InfoLinkTile(
-            label: '利用規約',
-            onTap: () {
-              unawaited(Haptics.lightImpact());
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const TermsOfServiceScreen(),
-                ),
-              );
-            },
-          ),
-          _InfoLinkTile(
-            label: 'プライバシーポリシー',
-            onTap: () {
-              unawaited(Haptics.lightImpact());
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const PrivacyPolicyScreen(),
-                ),
-              );
-            },
-          ),
-          _InfoLinkTile(
-            label: 'ヘルプ（使い方）',
-            onTap: () {
-              unawaited(Haptics.lightImpact());
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const HelpScreen()),
-              );
-            },
-          ),
-          _InfoLinkTile(
-            label: 'このアプリについて',
-            onTap: () {
-              unawaited(Haptics.lightImpact());
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const AboutPrivacyScreen(),
-                ),
-              );
-            },
-          ),
-          _InfoLinkTile(
-            label: 'オープンソースライセンス',
-            onTap: () {
-              unawaited(Haptics.lightImpact());
-              showLicensePage(
-                context: context,
-                applicationName: 'Permy',
-                applicationIcon: Image.asset(
-                  'assets/images/icons/permy_icon.png',
-                  width: 48,
-                  height: 48,
-                ),
-              );
-            },
-          ),
-        ],
       ),
     );
   }
