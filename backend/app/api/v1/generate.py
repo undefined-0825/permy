@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
-from fastapi import APIRouter, Depends, Header, Request
+from fastapi import APIRouter, Depends, Header, Request, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -135,16 +135,13 @@ async def generate(
             timestamp=dt.datetime.now(dt.timezone.utc).isoformat(),
             meta_pro=None,
         )
+    except HTTPException:
+        # AIクライアントが投げた業務エラーコード（AI_UPSTREAM_ERROR等）はそのまま返す。
+        raise
     except Exception as e:
-        from fastapi.responses import JSONResponse
-        import traceback
-        return JSONResponse(
+        raise err(
+            "INTERNAL_ERROR",
+            "AI応答生成中にエラーが発生しました",
+            {"request_id": rid, "type": e.__class__.__name__},
             status_code=500,
-            content={
-                "error": {
-                    "code": "INTERNAL_ERROR",
-                    "message": "AI応答生成中にエラーが発生しました",
-                    "detail": {"exception": str(e), "trace": traceback.format_exc()}
-                }
-            }
         )

@@ -35,9 +35,10 @@ class _FakePurchaseService extends PurchaseService {
 }
 
 class _FakeApiClient implements AppApiClient {
-  _FakeApiClient({this.generateResult});
+  _FakeApiClient({this.generateResult, this.generateError});
 
   final GenerateResult? generateResult;
+  final ApiError? generateError;
   Map<String, dynamic> lastUpdatedSettings = <String, dynamic>{};
 
   @override
@@ -99,6 +100,10 @@ class _FakeApiClient implements AppApiClient {
     required String historyText,
     int comboId = 0,
   }) async {
+    if (generateError != null) {
+      throw generateError!;
+    }
+
     if (generateResult != null) {
       return generateResult!;
     }
@@ -220,8 +225,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('A案'), findsOneWidget);
-    expect(find.text('B案'), findsOneWidget);
     expect(find.text('返信案A'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('B案'),
+      120,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('B案'), findsOneWidget);
     expect(find.text('返信案B'), findsOneWidget);
 
     await tester.scrollUntilVisible(
@@ -233,6 +246,37 @@ void main() {
 
     expect(find.text('C案'), findsOneWidget);
     expect(find.text('返信案C'), findsOneWidget);
+  });
+
+  testWidgets('共有済みなら確認用トーク履歴テキストボックスを表示する', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: _FakeApiClient(),
+          shareReceiver: _FakeShareInput(
+            SharePayload(text: '共有本文1\n共有本文2', fileName: 'line.txt'),
+          ),
+          telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('共有されたトーク履歴（確認用）'), findsOneWidget);
+    expect(
+      find.byKey(const Key('shared_history_preview_textfield')),
+      findsNothing,
+    );
+
+    await tester.tap(find.text('共有されたトーク履歴（確認用）'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('shared_history_preview_textfield')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('共有本文1'), findsOneWidget);
   });
 
   testWidgets('Followup選択でsettingsを保存できる', (WidgetTester tester) async {
@@ -325,5 +369,39 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Plus'), findsWidgets);
+  });
+
+  testWidgets('生成失敗時にエラーコード付きメッセージボックスを表示する', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: _FakeApiClient(
+            generateError: ApiError(
+              errorCode: 'VALIDATION_FAILED',
+              message: 'history_text が長すぎます',
+              httpStatus: 422,
+            ),
+          ),
+          shareReceiver: _FakeShareInput(
+            SharePayload(text: '共有本文', fileName: 'line.txt'),
+          ),
+          telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final generateButton = find.widgetWithText(AppButton, 'ぼくが返信案を考えるよ');
+    await tester.ensureVisible(generateButton);
+    await tester.tap(generateButton);
+    await tester.pump(const Duration(milliseconds: 900));
+    await tester.pumpAndSettle();
+
+    expect(find.text('エラーが発生したよ'), findsOneWidget);
+    expect(find.text('エラーコード: VALIDATION_FAILED'), findsOneWidget);
+    expect(find.textContaining('history_text が長すぎます'), findsOneWidget);
   });
 }

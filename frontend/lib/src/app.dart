@@ -7,8 +7,11 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../core/theme/app_spacing.dart';
+import '../core/theme/app_text_styles.dart';
 import '../core/theme/app_theme.dart';
 import 'domain/app_versioning.dart';
+import 'domain/models.dart';
 import 'domain/persona_diagnosis.dart';
 import 'domain/telemetry_event.dart';
 import 'infrastructure/api_client.dart';
@@ -54,6 +57,10 @@ class AppRoot extends StatefulWidget {
 
 class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   static const String _defaultApiBaseUrl = 'https://permy-backend.onrender.com';
+  static const int _configuredTimeoutSeconds = int.fromEnvironment(
+    'API_TIMEOUT_SECONDS',
+    defaultValue: 0,
+  );
 
   late final ApiClient _apiClient;
   late final TelemetryQueue _telemetryQueue;
@@ -64,6 +71,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   bool _needsOnboarding = false;
   bool _needsDiagnosis = false;
   bool _initialDiagnosisFlowStarted = false;
+  ApiError? _bootstrapError;
 
   @override
   void initState() {
@@ -76,10 +84,14 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
     final apiBaseUrl = configuredApiBaseUrl.trim().isEmpty
         ? _defaultApiBaseUrl
         : configuredApiBaseUrl.trim();
+    final timeoutSeconds = _configuredTimeoutSeconds > 0
+        ? _configuredTimeoutSeconds
+        : (kDebugMode ? 15 : 30);
 
     _apiClient = ApiClient(
       baseUrl: apiBaseUrl,
       tokenStore: const SecureTokenStore(),
+      requestTimeout: Duration(seconds: timeoutSeconds),
       debugLog: (message) {
         if (kDebugMode) {
           debugPrint(message);
@@ -109,40 +121,82 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   }
 
   Future<void> _bootstrap() async {
-    await _apiClient.bootstrapAuth();
-    await _purchaseService.initialize();
+    try {
+      await _apiClient.bootstrapAuth();
+      await _purchaseService.initialize();
 
-    final packageInfo = await PackageInfo.fromPlatform();
-    final installedVersion = packageInfo.version;
+      final packageInfo = await PackageInfo.fromPlatform();
+      final installedVersion = packageInfo.version;
 
-    await _checkForAppUpdate(installedVersion);
+      await _checkForAppUpdate(installedVersion);
 
-    // app_opened イベント送信
-    _telemetryQueue.enqueue(
-      AppOpenedEvent(
-        appVersion: installedVersion,
-        os: _currentOsName(),
-        deviceClass: 'phone',
-      ),
-    );
+      // app_opened イベント送信
+      _telemetryQueue.enqueue(
+        AppOpenedEvent(
+          appVersion: installedVersion,
+          os: _currentOsName(),
+          deviceClass: 'phone',
+        ),
+      );
 
-    // 初回フラグをチェック
-    final prefs = await SharedPreferences.getInstance();
-    final hasCompletedOnboarding =
-        prefs.getBool('has_completed_onboarding') ?? false;
+      // 初回フラグをチェック
+      final prefs = await SharedPreferences.getInstance();
+      final hasCompletedOnboarding =
+          prefs.getBool('has_completed_onboarding') ?? false;
 
-    final settings = await _apiClient.getSettings();
-    final trueType = settings.settings['true_self_type']?.toString();
-    final nightType = settings.settings['night_self_type']?.toString();
+      final settings = await _apiClient.getSettings();
+      final trueType = settings.settings['true_self_type']?.toString();
+      final nightType = settings.settings['night_self_type']?.toString();
 
+      if (!mounted) return;
+      setState(() {
+        _needsOnboarding = !hasCompletedOnboarding;
+        _needsDiagnosis =
+            (trueType == null || trueType.isEmpty) ||
+            (nightType == null || nightType.isEmpty);
+        _bootstrapError = null;
+        _loading = false;
+      });
+    } on ApiError catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _bootstrapError = error;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _bootstrapError = ApiError(
+          errorCode: 'INTERNAL_ERROR',
+          message: '起動処理でエラーが発生したよ',
+          httpStatus: 500,
+        );
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _retryBootstrap() async {
     if (!mounted) return;
     setState(() {
-      _needsOnboarding = !hasCompletedOnboarding;
-      _needsDiagnosis =
-          (trueType == null || trueType.isEmpty) ||
-          (nightType == null || nightType.isEmpty);
-      _loading = false;
+      _loading = true;
+      _bootstrapError = null;
     });
+    await _bootstrap();
+  }
+
+  String _bootstrapErrorMessage(ApiError error) {
+    switch (error.errorCode) {
+      case 'UPSTREAM_TIMEOUT':
+        return '接続に時間がかかっているよ。ネットワークを確認して、再試行してね。';
+      case 'UPSTREAM_UNAVAILABLE':
+        return 'サーバーに接続できなかったよ。回線かDNS設定を確認してね。';
+      case 'AUTH_INVALID':
+      case 'AUTH_REQUIRED':
+        return '認証の初期化に失敗したよ。再試行してね。';
+      default:
+        return '起動時にエラーが発生したよ。再試行してね。';
+    }
   }
 
   String _currentOsName() {
@@ -257,6 +311,53 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
     if (_loading) {
       return const Scaffold(
         body: SafeArea(child: Center(child: CircularProgressIndicator())),
+      );
+    }
+
+    if (_bootstrapError != null) {
+      final error = _bootstrapError!;
+      return Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    '起動に失敗したよ',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.sectionHeader,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    _bootstrapErrorMessage(error),
+                    style: AppTextStyles.body,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'エラーコード: ${error.errorCode}',
+                    style: AppTextStyles.small,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    '詳細: ${error.message}',
+                    style: AppTextStyles.small,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  ElevatedButton(
+                    onPressed: _retryBootstrap,
+                    child: const Text('再試行'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       );
     }
 
