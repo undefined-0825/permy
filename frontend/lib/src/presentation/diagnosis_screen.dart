@@ -54,11 +54,11 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
           ),
         ],
         leading: SizedBox(
-          width: 36,
-          height: 36,
+          width: 40,
+          height: 40,
           child: IconButton(
             padding: EdgeInsets.zero,
-            icon: const Icon(Icons.arrow_back, size: 20),
+            icon: const Icon(Icons.arrow_back, size: 28),
             onPressed: () {
               if (isShowingResult) {
                 // 結果ページから戻る場合は質問ページに戻る
@@ -178,7 +178,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
             const SizedBox(height: AppSpacing.md),
             Text(
               question.title,
-              style: AppTextStyles.primaryTitle,
+              style: AppTextStyles.primaryTitle.copyWith(fontSize: 20),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xl),
@@ -301,16 +301,16 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
         children: [
           Text(
             title,
-            style: AppTextStyles.meta.copyWith(fontWeight: FontWeight.w600),
+            style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text(value, style: AppTextStyles.primaryTitle),
+          Text(value, style: AppTextStyles.primaryTitle.copyWith(fontSize: 20)),
           if (imagePath != null) ...[
             const SizedBox(height: AppSpacing.inputVertical),
             ClipRRect(
               borderRadius: BorderRadius.circular(AppRadius.sm),
               child: AspectRatio(
-                aspectRatio: 16 / 9,
+                aspectRatio: 4 / 3,
                 child: Image.asset(
                   imagePath,
                   fit: BoxFit.cover,
@@ -324,7 +324,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
             ),
           ],
           const SizedBox(height: AppSpacing.sm),
-          Text(description, style: AppTextStyles.small),
+          Text(description, style: AppTextStyles.meta),
         ],
       ),
     );
@@ -359,7 +359,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
       children: [
         Text(
           label,
-          style: AppTextStyles.meta.copyWith(
+          style: AppTextStyles.body.copyWith(
             color: AppColors.bodyText,
             fontWeight: FontWeight.w500,
           ),
@@ -438,7 +438,7 @@ class _ChoiceCardState extends State<_ChoiceCard> {
         splashColor: AppColors.highlight,
         highlightColor: AppColors.highlight,
         child: Container(
-          height: 96,
+          height: 112,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           decoration: BoxDecoration(
             color: _isHovering ? AppColors.highlight : Colors.transparent,
@@ -449,8 +449,8 @@ class _ChoiceCardState extends State<_ChoiceCard> {
           child: Row(
             children: [
               Container(
-                width: 60,
-                height: 60,
+                width: 72,
+                height: 72,
                 decoration: BoxDecoration(
                   color: AppColors.lightPink,
                   borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -459,8 +459,8 @@ class _ChoiceCardState extends State<_ChoiceCard> {
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                   child: Image.asset(
                     'assets/images/diagnosis_choices/${widget.choiceId}.png',
-                    width: 60,
-                    height: 60,
+                    width: 72,
+                    height: 72,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) {
                       return const Icon(
@@ -474,7 +474,7 @@ class _ChoiceCardState extends State<_ChoiceCard> {
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
-                child: Text(widget.label, style: AppTextStyles.sectionHeader),
+                child: Text(widget.label, style: AppTextStyles.primaryTitle),
               ),
               if (widget.isSelected)
                 const Icon(

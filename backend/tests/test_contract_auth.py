@@ -53,6 +53,24 @@ def test_auth_anonymous_missing_device_fingerprint_is_ok(client):
     assert "user_id" in res.json()
 
 
+def test_auth_anonymous_initial_settings_include_followup_defaults(client):
+    res = client.post("/api/v1/auth/anonymous")
+    assert res.status_code == 200
+    token = res.json()["access_token"]
+
+    settings = client.get(
+        "/api/v1/me/settings",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert settings.status_code == 200
+
+    body = settings.json()["settings"]
+    assert body["relationship_type"] == "new"
+    assert body["reply_length_pref"] == "standard"
+    assert body["ng_tags"] == []
+    assert body["ng_free_phrases"] == []
+
+
 def test_auth_anonymous_with_device_fingerprint(client):
     """
     X-Device-Fingerprint ヘッダ付きでも呼び出し可能

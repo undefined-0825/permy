@@ -10,11 +10,12 @@ class TopBrandHeader extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final Widget? leading;
 
-  static const double _catSize = 64.0;
-  static const double _logoHeight = 56.0;
+  static const double _catSize = 58.0;
+  static const double _logoHeight = 78.0;
+  static const double _headerHeight = 78.0;
 
   @override
-  Size get preferredSize => const Size.fromHeight(_catSize);
+  Size get preferredSize => const Size.fromHeight(_headerHeight);
 
   @override
   Widget build(BuildContext context) {
@@ -26,9 +27,15 @@ class TopBrandHeader extends StatelessWidget implements PreferredSizeWidget {
           builder: (context, constraints) {
             // constraints.maxWidth = 画面幅（AppBar制約なし）
             final logoMaxWidth = constraints.maxWidth * 0.55;
-            final effectiveLeading = leading ?? const BackButton();
+            final effectiveLeading =
+                leading ??
+                IconButton(
+                  iconSize: 28,
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => Navigator.maybePop(context),
+                );
             return SizedBox(
-              height: _catSize,
+              height: _headerHeight,
               child: Stack(
                 children: [
                   // 中央：猫＋ロゴ

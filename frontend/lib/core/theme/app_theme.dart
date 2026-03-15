@@ -60,8 +60,8 @@ class AppTheme {
 
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primaryPink,
-          side: const BorderSide(color: AppColors.primaryPink),
+          foregroundColor: AppColors.buttonBackground,
+          side: const BorderSide(color: AppColors.buttonBackground),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
@@ -74,7 +74,7 @@ class AppTheme {
 
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.primaryPink,
+          foregroundColor: AppColors.buttonBackground,
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.md,

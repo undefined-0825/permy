@@ -10,6 +10,7 @@ from app.models import User, UserSettings, PlanStatus, UsageDaily
 from app.schemas import AuthAnonymousResponse
 from app.security import create_session, get_auth_context, AuthContext, invalidate_all_sessions
 from app.ratelimit import fixed_window_limit
+from app.settings_defaults import with_default_settings
 from app.utils import etag_for_json
 
 router = APIRouter()
@@ -34,14 +35,19 @@ async def auth_anonymous(
     await db.flush()
 
     # feature_tier/billing_tier初期化（SSOT）
-    user.feature_tier = "free"
-    user.billing_tier = "free"
+    # beta_all_pro=True のテスト期間中は全員Proで作成する
+    if settings.beta_all_pro:
+        user.feature_tier = "plus"
+        user.billing_tier = "pro_comp"
+    else:
+        user.feature_tier = "free"
+        user.billing_tier = "free"
 
     # plan_status（後方互換のため残す）
-    db.add(PlanStatus(user_id=user.user_id, plan="free"))
+    db.add(PlanStatus(user_id=user.user_id, plan="pro" if settings.beta_all_pro else "free"))
 
     # 初期settings（未知フィールド許容のため JSONそのまま）
-    initial = {"settings_schema_version": 1, "persona_version": 2}
+    initial = with_default_settings({})
     etag = etag_for_json(initial)
     db.add(UserSettings(user_id=user.user_id, settings_json=initial, settings_schema_version=1, etag=etag))
 

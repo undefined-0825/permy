@@ -75,6 +75,7 @@ flutter:
     - assets/images/diagnosis_choices/
     - assets/images/personas/true_self/
     - assets/images/personas/night_self/
+    - assets/images/onboarding/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -51,6 +51,7 @@ class MockApiClient implements AppApiClient {
 
   final SettingsSnapshot? settingsSnapshot;
   final bool shouldFailUpdate;
+  Map<String, dynamic>? lastUpdatedSettings;
 
   @override
   Future<void> bootstrapAuth() async {}
@@ -65,12 +66,24 @@ class MockApiClient implements AppApiClient {
 
   @override
   Future<SettingsSnapshot> getSettings() async {
+    if (lastUpdatedSettings != null) {
+      return SettingsSnapshot(
+        settings: Map<String, dynamic>.from(lastUpdatedSettings!),
+        etag: 'test-etag-123',
+      );
+    }
+
     return settingsSnapshot ??
         SettingsSnapshot(
           settings: {
             'true_self_type': 'type_A',
             'night_self_type': 'type_B',
             'combo_id': 0,
+            'relationship_type': 'new',
+            'reply_length_pref': 'standard',
+            'ng_tags': <String>[],
+            'ng_free_phrases': <String>[],
+            'settings_schema_version': 1,
             'forbidden_type_ids': [],
           },
           etag: 'test-etag-123',
@@ -89,6 +102,7 @@ class MockApiClient implements AppApiClient {
         httpStatus: 409,
       );
     }
+    lastUpdatedSettings = Map<String, dynamic>.from(settings);
   }
 
   @override
@@ -236,6 +250,33 @@ void main() {
 
       // ボタンが存在することを確認（選択状態は Material Design で表示）
       expect(find.text('休眠復活'), findsOneWidget);
+    });
+
+    testWidgets('設定画面では返信の長さを変更でき、関係性は表示しない', (WidgetTester tester) async {
+      final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('お客様との関係'), findsNothing);
+      expect(find.text('標準'), findsOneWidget);
+
+      final longFinder = find.text('長め');
+      await tester.ensureVisible(longFinder);
+      await tester.tap(longFinder);
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(mockApi.lastUpdatedSettings?['reply_length_pref'], 'long');
     });
 
     testWidgets('読み込みエラー時の再読込ボタン', (WidgetTester tester) async {
