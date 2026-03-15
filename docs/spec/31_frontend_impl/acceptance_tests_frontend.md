@@ -14,7 +14,7 @@
 - プライバシー/ログ：`docs/spec/01_rules/privacy_logging.md`
 - フロント設計：`docs/spec/30_frontend/frontend_spec.md`
 - フロント実装規約：`docs/spec/01_rules/engineering_conventions.md`
-- テスト方針：`docs/spec/40_tests/test_strategy.md`
+- テスト方針：`docs/spec/90_tests/test_strategy.md`
 
 ---
 
@@ -267,7 +267,7 @@
 - 以下が表示される：
   1) 「普段の自分」セクション：True Self タイプと説明文
   2) 「夜の私」セクション：Night Self タイプと説明文
-  3) 「スタイルスコア」セクション：主張度/温かみ/リスク回避（LinearProgressIndicator付き）
+  3) 「ペルソナパラメータ」セクション：主張度/温かみ/リスク回避（LinearProgressIndicator付き）
 - 画面をスクロールして全内容が見える
 - BackボタンまたはAppBar戻るで Settings に復帰
 
@@ -278,13 +278,13 @@
 - Settings 画面が表示されている
 
 **When**
-- 「端末移行」セクションの「端末移行の設定」ボタンをタップ
+- 「サポート・規約・その他設定」アコーディオンを開き、「端末移行の設定」リンクをタップ
 
 **Then**
 - MigrationScreen が表示される
 
 **When**
-- Settings に戻って「もっと知る」セクションの「このアプリについて」をタップ
+- Settings に戻って同じアコーディオン内の「このアプリについて」リンクをタップ
 
 **Then**
 - AboutPrivacyScreen が表示される

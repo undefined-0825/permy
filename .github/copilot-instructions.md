@@ -25,3 +25,12 @@
 - You MUST follow:
   - `docs/spec/01_rules/project_rules.md`
   - `docs/spec/01_rules/engineering_conventions.md`
+
+## UI implementation rules
+- 新規UIを作る前に、既存画面の改善を優先する
+- 直値の色、余白、角丸、TextStyleを増やさない
+- 共通UIは core/theme と core/widgets を優先利用する
+- AppScaffold, AppSectionHeader, AppButton, AppListItem を優先する
+- UI変更時は、情報削減・余白整理・CTA強調を優先する
+- 派手な装飾追加で解決しない
+- 修正後は hierarchy / whitespace / CTA / consistency / cognitive load の5観点で自己レビューする

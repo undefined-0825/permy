@@ -40,12 +40,14 @@ class ApiClient implements AppApiClient {
     required this.baseUrl,
     required this.tokenStore,
     http.Client? httpClient,
+    this.debugLog,
   }) : _httpClient = httpClient ?? http.Client();
 
   final String baseUrl;
   final TokenStore tokenStore;
   final http.Client _httpClient;
   final Uuid _uuid = const Uuid();
+  final void Function(String message)? debugLog;
 
   @override
   Future<void> bootstrapAuth() async {
@@ -94,10 +96,12 @@ class ApiClient implements AppApiClient {
     await bootstrapAuth();
     return _runWithAuthRetry(() async {
       final token = await tokenStore.read();
+      _logHttpRequest('GET', '/api/v1/me/settings');
       final response = await _httpClient.get(
         Uri.parse('$baseUrl/api/v1/me/settings'),
         headers: {'Authorization': 'Bearer $token'},
       );
+      _logHttpResponse('GET', '/api/v1/me/settings', response.statusCode);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final body = _tryJson(response.body) ?? <String, dynamic>{};
@@ -127,6 +131,14 @@ class ApiClient implements AppApiClient {
     await bootstrapAuth();
     return _runWithAuthRetry(() async {
       final token = await tokenStore.read();
+      _logHttpRequest(
+        'PUT',
+        '/api/v1/me/settings',
+        extra: {
+          'ifMatchPresent': etag.isNotEmpty,
+          'settingsKeys': settings.keys.length,
+        },
+      );
       final response = await _httpClient.put(
         Uri.parse('$baseUrl/api/v1/me/settings'),
         headers: {
@@ -136,6 +148,7 @@ class ApiClient implements AppApiClient {
         },
         body: jsonEncode({'settings': settings}),
       );
+      _logHttpResponse('PUT', '/api/v1/me/settings', response.statusCode);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return;
@@ -156,6 +169,11 @@ class ApiClient implements AppApiClient {
 
     final diagnosis = await _runWithAuthRetry(() async {
       final token = await tokenStore.read();
+      _logHttpRequest(
+        'POST',
+        '/api/v1/me/diagnosis',
+        extra: {'answersCount': answers.length},
+      );
       final response = await _httpClient.post(
         Uri.parse('$baseUrl/api/v1/me/diagnosis'),
         headers: {
@@ -166,6 +184,7 @@ class ApiClient implements AppApiClient {
           'answers': answers.map((answer) => answer.toJson()).toList(),
         }),
       );
+      _logHttpResponse('POST', '/api/v1/me/diagnosis', response.statusCode);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final body = _tryJson(response.body) ?? <String, dynamic>{};
@@ -209,6 +228,9 @@ class ApiClient implements AppApiClient {
     DiagnosisResult diagnosis,
   ) async {
     for (var attempt = 0; attempt < 2; attempt++) {
+      _logClientEvent('save_diagnosis_settings_attempt', {
+        'attempt': attempt + 1,
+      });
       final current = await getSettings();
       final updated = Map<String, dynamic>.from(current.settings)
         ..['settings_schema_version'] =
@@ -224,11 +246,20 @@ class ApiClient implements AppApiClient {
 
       try {
         await updateSettings(updated, current.etag);
+        _logClientEvent('save_diagnosis_settings_success', {
+          'attempt': attempt + 1,
+        });
         return;
       } on ApiError catch (e) {
         final isRetryableConflict =
             e.errorCode == 'SETTINGS_VERSION_CONFLICT' ||
             e.errorCode == 'VALIDATION_FAILED';
+        _logClientEvent('save_diagnosis_settings_error', {
+          'attempt': attempt + 1,
+          'httpStatus': e.httpStatus,
+          'errorCode': e.errorCode,
+          'retryable': isRetryableConflict,
+        });
         if (!isRetryableConflict || attempt == 1) {
           rethrow;
         }
@@ -393,11 +424,13 @@ class ApiClient implements AppApiClient {
   }
 
   Future<void> _authenticateAnonymous() async {
+    _logHttpRequest('POST', '/api/v1/auth/anonymous');
     final response = await _httpClient.post(
       Uri.parse('$baseUrl/api/v1/auth/anonymous'),
       headers: {'Content-Type': 'application/json'},
       body: '{}',
     );
+    _logHttpResponse('POST', '/api/v1/auth/anonymous', response.statusCode);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final body = jsonDecode(response.body) as Map<String, dynamic>;
@@ -429,5 +462,36 @@ class ApiClient implements AppApiClient {
     } catch (_) {
       return null;
     }
+  }
+
+  void _logHttpRequest(
+    String method,
+    String path, {
+    Map<String, Object?>? extra,
+  }) {
+    final fields = <String, Object?>{
+      'stage': 'request',
+      'method': method,
+      'path': path,
+    };
+    if (extra != null) {
+      fields.addAll(extra);
+    }
+    _logClientEvent('http', fields);
+  }
+
+  void _logHttpResponse(String method, String path, int statusCode) {
+    _logClientEvent('http', {
+      'stage': 'response',
+      'method': method,
+      'path': path,
+      'status': statusCode,
+    });
+  }
+
+  void _logClientEvent(String event, Map<String, Object?> fields) {
+    if (debugLog == null) return;
+    final payload = <String, Object?>{'event': event, ...fields};
+    debugLog!('[ApiClient] ${jsonEncode(payload)}');
   }
 }

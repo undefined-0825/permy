@@ -3,15 +3,23 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../core/theme.dart';
+import 'package:sample_app/core/theme/app_colors.dart';
+import 'package:sample_app/core/theme/app_radius.dart';
+import 'package:sample_app/core/theme/app_spacing.dart';
+import 'package:sample_app/core/theme/app_text_styles.dart';
+import 'package:sample_app/core/utils/haptics.dart';
+import 'package:sample_app/core/widgets/app_button.dart';
+import 'package:sample_app/core/widgets/app_scaffold.dart';
+import 'package:sample_app/core/widgets/app_section_header.dart';
 import '../domain/models.dart';
+import '../domain/persona_type_helper.dart';
 import '../domain/telemetry_event.dart';
 import '../infrastructure/api_client.dart';
 import '../infrastructure/purchase_service.dart';
 import '../infrastructure/share_receiver.dart';
 import '../infrastructure/telemetry_queue.dart';
 import 'settings_screen.dart';
-import 'widgets/primary_button.dart';
+import 'widgets/top_brand_header.dart';
 
 class GenerateScreen extends StatefulWidget {
   const GenerateScreen({
@@ -33,10 +41,16 @@ class GenerateScreen extends StatefulWidget {
 
 class _GenerateScreenState extends State<GenerateScreen>
     with WidgetsBindingObserver {
+  static const String _linePersona = 'ぼくはきみの分身・・・';
+  static const String _lineDelegate = 'ぼくに任せて・・・';
+
   StreamSubscription<SharePayload>? _shareSubscription;
+  Timer? _generationLineTimer;
   String? _sharedText;
   String? _sharedFileName;
   bool _loading = false;
+  bool _isGeneratingSequence = false;
+  int _generationLineIndex = 0;
   ApiError? _error;
   List<Candidate> _candidates = <Candidate>[];
   DailyInfo? _daily;
@@ -44,6 +58,8 @@ class _GenerateScreenState extends State<GenerateScreen>
   int? _metaPro;
   int _comboId = 0;
   String? _copiedLabel;
+  String _trueTypeLabel = '診断待機中...';
+  String _nightTypeLabel = '診断待機中...';
 
   @override
   void initState() {
@@ -54,6 +70,7 @@ class _GenerateScreenState extends State<GenerateScreen>
 
   Future<void> _bootstrap() async {
     await widget.apiClient.bootstrapAuth();
+    unawaited(_loadPersonaSummary());
     final initialPayload = await widget.shareReceiver.getInitialPayload();
     if (initialPayload != null && mounted) {
       setState(() {
@@ -69,6 +86,25 @@ class _GenerateScreenState extends State<GenerateScreen>
         _error = null;
       });
     });
+  }
+
+  Future<void> _loadPersonaSummary() async {
+    try {
+      final snapshot = await widget.apiClient.getSettings();
+      if (!mounted) return;
+      final trueType = snapshot.settings['true_self_type']?.toString();
+      final nightType = snapshot.settings['night_self_type']?.toString();
+      setState(() {
+        _trueTypeLabel = (trueType == null || trueType.isEmpty)
+            ? '診断待機中...'
+            : getTrueSelfTypeName(trueType);
+        _nightTypeLabel = (nightType == null || nightType.isEmpty)
+            ? '診断待機中...'
+            : getNightSelfTypeName(nightType);
+      });
+    } catch (_) {
+      // ペルソナ取得失敗時は既定表示を維持
+    }
   }
 
   @override
@@ -94,23 +130,8 @@ class _GenerateScreenState extends State<GenerateScreen>
   Widget build(BuildContext context) {
     final canGenerate = !_loading && (_sharedText?.trim().isNotEmpty ?? false);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(
-              'assets/images/icons/permy_icon.png',
-              width: 24,
-              height: 24,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(width: 8),
-            const Text('Permy'),
-          ],
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+    return AppScaffold(
+      appBar: TopBrandHeader(
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -127,131 +148,114 @@ class _GenerateScreenState extends State<GenerateScreen>
           ),
         ],
       ),
-      extendBodyBehindAppBar: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [PermyColors.backgroundStart, PermyColors.backgroundEnd],
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(
+                    'assets/images/backgrounds/background_pink.png',
+                  ),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            child: Stack(
               children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text(
-                          'ぼくはきみの分身・・・',
-                          style: TextStyle(color: PermyColors.bodyText),
-                        ),
-                        const Text(
-                          'ぼくに任せて・・・',
-                          style: TextStyle(color: PermyColors.bodyText),
-                        ),
-                        const SizedBox(height: 12),
-                        _ShareStatusCard(
-                          fileName: _sharedFileName,
-                          hasText: _sharedText?.isNotEmpty ?? false,
-                        ),
-                        const SizedBox(height: 12),
-                        _ComboSelector(
-                          selectedCombo: _comboId,
-                          isPro: _plan == 'pro',
-                          onChanged: (int value) {
-                            final isPro = value >= 2; // combo 2-5 は Pro のみ
-                            if (isPro && _plan == 'free') {
-                              _showUpsellDialog();
-                            } else {
-                              setState(() {
-                                _comboId = value;
-                              });
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        PrimaryButton(
-                          onPressed: canGenerate ? _onGeneratePressed : null,
-                          isLoading: _loading,
-                          child: const Text('ぼくが返信案を考えるよ'),
-                        ),
-                        if (_daily != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            '今日の残り: ${_daily!.remaining}/${_daily!.limit}（${_plan.toUpperCase()}）',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.normal,
-                              color: PermyColors.metaText,
-                            ),
-                          ),
-                        ],
-                        if (_plan == 'pro' && _metaPro != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            '推定メーター: $_metaPro%',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.normal,
-                              color: PermyColors.metaText,
-                            ),
-                          ),
-                        ],
-                        if (_error != null) ...[
-                          const SizedBox(height: 8),
-                          _ErrorBanner(message: _errorMessage(_error!)),
-                        ],
-                        const SizedBox(height: 12),
-                        ...List.generate(_candidates.length, (index) {
-                          final candidate = _candidates[index];
-                          final isCopied = _copiedLabel == candidate.label;
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 400),
-                              decoration: BoxDecoration(
-                                color: isCopied
-                                    ? PermyColors.lightPink
-                                    : PermyColors.white,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: OutlinedButton(
-                                onPressed: () => _copyCandidate(candidate),
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 6,
-                                    ),
-                                    child: Text(
-                                      '${candidate.label}: ${candidate.text}',
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }),
-                      ],
+                if (_isGeneratingSequence)
+                  Positioned.fill(
+                    child: Container(
+                      color: AppColors.generateBackground.withValues(
+                        alpha: 0.95,
+                      ),
                     ),
                   ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _PersonaSummaryCard(
+                      trueTypeLabel: _trueTypeLabel,
+                      nightTypeLabel: _nightTypeLabel,
+                      fileName: _sharedFileName,
+                      hasText: _sharedText?.isNotEmpty ?? false,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    _ComboSelector(
+                      selectedCombo: _comboId,
+                      isPro: _plan == 'pro',
+                      onChanged: (int value) {
+                        final isPro = value >= 2; // combo 2-5 は Pro のみ
+                        if (isPro && _plan == 'free') {
+                          _showUpsellDialog();
+                        } else {
+                          setState(() {
+                            _comboId = value;
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    AppButton(
+                      text: _loading ? '生成中...' : 'ぼくが返信案を考えるよ',
+                      onPressed: canGenerate ? _onGeneratePressed : null,
+                    ),
+                    if (_daily != null || (_plan == 'pro' && _metaPro != null))
+                      _GenerateMetaInfo(
+                        daily: _daily,
+                        planLabel: _planLabel(_plan),
+                        metaPro: _plan == 'pro' ? _metaPro : null,
+                      ),
+                    if (_error != null) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      _ErrorBanner(message: _errorMessage(_error!)),
+                    ],
+                    const SizedBox(height: AppSpacing.sm),
+                    Expanded(
+                      child: _ResultArea(
+                        isLoading: _loading,
+                        canGenerate: canGenerate,
+                        candidates: _candidates,
+                        copiedLabel: _copiedLabel,
+                        onCopyCandidate: _copyCandidate,
+                      ),
+                    ),
+                  ],
                 ),
+                if (_isGeneratingSequence)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Center(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          child: Text(
+                            _generationLineIndex == 0
+                                ? _linePersona
+                                : _lineDelegate,
+                            key: ValueKey<int>(_generationLineIndex),
+                            style: AppTextStyles.primaryTitle.copyWith(
+                              color: AppColors.white,
+                              fontSize: 20,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
   Future<void> _onGeneratePressed() async {
-    HapticFeedback.mediumImpact();
+    unawaited(Haptics.mediumImpact());
     final text = _sharedText?.trim();
     if (text == null || text.isEmpty) return;
 
@@ -263,9 +267,21 @@ class _GenerateScreenState extends State<GenerateScreen>
 
     setState(() {
       _loading = true;
+      _isGeneratingSequence = true;
+      _generationLineIndex = 0;
       _error = null;
       _candidates = <Candidate>[];
     });
+    _generationLineTimer?.cancel();
+    _generationLineTimer = Timer(const Duration(milliseconds: 350), () {
+      if (!mounted || !_isGeneratingSequence) return;
+      setState(() {
+        _generationLineIndex = 1;
+      });
+    });
+    final minSequenceFuture = Future<void>.delayed(
+      const Duration(milliseconds: 700),
+    );
 
     final startTime = DateTime.now();
 
@@ -302,6 +318,7 @@ class _GenerateScreenState extends State<GenerateScreen>
         historyText: text,
         comboId: _comboId,
       );
+      await minSequenceFuture;
       final latencyMs = DateTime.now().difference(startTime).inMilliseconds;
 
       if (!mounted) return;
@@ -329,6 +346,7 @@ class _GenerateScreenState extends State<GenerateScreen>
         _showFollowupDialog(result.followup!);
       }
     } on ApiError catch (error) {
+      await minSequenceFuture;
       final latencyMs = DateTime.now().difference(startTime).inMilliseconds;
 
       // generate_failed イベント送信
@@ -347,14 +365,19 @@ class _GenerateScreenState extends State<GenerateScreen>
       });
     } finally {
       if (!mounted) return;
+      _generationLineTimer?.cancel();
       setState(() {
         _loading = false;
+        _isGeneratingSequence = false;
+        _generationLineIndex = 0;
       });
     }
   }
 
+  String _planLabel(String plan) => plan == 'pro' ? 'Plus' : 'Free';
+
   Future<void> _copyCandidate(Candidate candidate) async {
-    HapticFeedback.selectionClick();
+    unawaited(Haptics.selection());
     await Clipboard.setData(ClipboardData(text: candidate.text));
 
     // candidate_copied イベント送信
@@ -391,9 +414,9 @@ class _GenerateScreenState extends State<GenerateScreen>
         return '少し混み合ってるみたい。少し待って、もう一度';
       case 'DAILY_LIMIT_REACHED':
       case 'DAILY_LIMIT_EXCEEDED':
-        return '今日はここまで。続きは明日か、Proで使える';
+        return '今日はここまで。続きは明日か、Plusで使える';
       case 'PLAN_REQUIRED':
-        return 'この機能はProで使えるよ';
+        return 'この機能はPlusで使えるよ';
       case 'OPENAI_DISABLED':
         return 'この環境では生成を止めているよ';
       case 'UPSTREAM_UNAVAILABLE':
@@ -410,7 +433,7 @@ class _GenerateScreenState extends State<GenerateScreen>
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('有料版のみ'),
-          content: const Text('このモードはProで使える機能だよ。'),
+          content: const Text('このモードはPlusで使える機能だよ。'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -426,6 +449,7 @@ class _GenerateScreenState extends State<GenerateScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _shareSubscription?.cancel();
+    _generationLineTimer?.cancel();
     super.dispose();
   }
 
@@ -440,7 +464,7 @@ class _GenerateScreenState extends State<GenerateScreen>
               .map(
                 (choice) => TextButton(
                   onPressed: () {
-                    HapticFeedback.selectionClick();
+                    unawaited(Haptics.selection());
                     _saveFollowupChoice(followup, choice);
                   },
                   child: Text(choice.label),
@@ -501,52 +525,71 @@ class _GenerateScreenState extends State<GenerateScreen>
   }
 }
 
-class _ShareStatusCard extends StatelessWidget {
-  const _ShareStatusCard({required this.fileName, required this.hasText});
+class _PersonaSummaryCard extends StatelessWidget {
+  const _PersonaSummaryCard({
+    required this.trueTypeLabel,
+    required this.nightTypeLabel,
+    required this.fileName,
+    required this.hasText,
+  });
 
+  final String trueTypeLabel;
+  final String nightTypeLabel;
   final String? fileName;
   final bool hasText;
 
   @override
   Widget build(BuildContext context) {
-    final title = hasText ? '受け取り完了' : '共有待ち';
-    final description = hasText
+    final shareDescription = hasText
         ? (fileName == null ? '.txtを受け取ったよ' : '$fileName を受け取ったよ')
         : 'LINEでトーク履歴を送信して、このアプリに共有して';
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: const BoxDecoration(
-          color: Colors.transparent,
-          border: Border(
-            bottom: BorderSide(color: PermyColors.separator, width: 0.5),
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('現在のペルソナ情報', style: AppTextStyles.sectionHeader),
+          const SizedBox(height: AppSpacing.xs),
+          _PersonaValueRow(label: '普段の属性', value: trueTypeLabel),
+          const SizedBox(height: AppSpacing.xs),
+          _PersonaValueRow(label: '夜の属性', value: nightTypeLabel),
+          if (!hasText) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(shareDescription, style: AppTextStyles.small),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PersonaValueRow extends StatelessWidget {
+  const _PersonaValueRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: Text(label, style: AppTextStyles.meta)),
+        Expanded(
+          child: Text(
+            value,
+            style: AppTextStyles.body,
+            textAlign: TextAlign.right,
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: PermyColors.primaryTitle,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              description,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.normal,
-                color: PermyColors.metaText,
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }
@@ -573,58 +616,280 @@ class _ComboSelector extends StatelessWidget {
       ('落とす（恋愛寄せ）', true), // 5: Pro
     ];
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: const BoxDecoration(
-          color: Colors.transparent,
-          border: Border(
-            bottom: BorderSide(color: PermyColors.separator, width: 0.5),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '生成方針',
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: PermyColors.primaryTitle,
-              ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: DropdownButton<int>(
-                value: selectedCombo,
-                isExpanded: true,
-                items: List.generate(combos.length, (index) {
-                  final (label, isProOnly) = combos[index];
-                  final isLocked = isProOnly && !isPro;
-                  return DropdownMenuItem<int>(
-                    value: index,
-                    child: Text(
-                      isLocked ? '$label（Pro）' : label,
-                      style: TextStyle(
-                        color: isLocked
-                            ? PermyColors.metaText
-                            : PermyColors.bodyText,
-                        fontSize: 15,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('生成方針', style: AppTextStyles.sectionHeader),
+        const SizedBox(height: AppSpacing.xs),
+        SizedBox(
+          width: double.infinity,
+          child: DropdownButton<int>(
+            value: selectedCombo,
+            isExpanded: true,
+            items: List.generate(combos.length, (index) {
+              final (label, isProOnly) = combos[index];
+              final isLocked = isProOnly && !isPro;
+              return DropdownMenuItem<int>(
+                value: index,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: AppTextStyles.body.copyWith(
+                          color: isLocked
+                              ? AppColors.metaText
+                              : AppColors.bodyText,
+                        ),
                       ),
                     ),
-                  );
-                }),
-                onChanged: (int? value) {
-                  if (value != null) {
-                    HapticFeedback.selectionClick();
-                    onChanged(value);
-                  }
-                },
-              ),
+                    if (isProOnly)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: AppSpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.plusBadgeBackground,
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                        ),
+                        child: Text(
+                          'Plus',
+                          style: AppTextStyles.small.copyWith(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            }),
+            onChanged: (int? value) {
+              if (value != null) {
+                unawaited(Haptics.selection());
+                onChanged(value);
+              }
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _GenerateMetaInfo extends StatelessWidget {
+  const _GenerateMetaInfo({
+    required this.daily,
+    required this.planLabel,
+    required this.metaPro,
+  });
+
+  final DailyInfo? daily;
+  final String planLabel;
+  final int? metaPro;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (daily != null)
+            Text(
+              '今日の残り: ${daily!.remaining}/${daily!.limit}（$planLabel）',
+              style: AppTextStyles.meta,
             ),
+          if (metaPro != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text('推定メーター: $metaPro%', style: AppTextStyles.meta),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ResultArea extends StatelessWidget {
+  const _ResultArea({
+    required this.isLoading,
+    required this.canGenerate,
+    required this.candidates,
+    required this.copiedLabel,
+    required this.onCopyCandidate,
+  });
+
+  final bool isLoading;
+  final bool canGenerate;
+  final List<Candidate> candidates;
+  final String? copiedLabel;
+  final ValueChanged<Candidate> onCopyCandidate;
+
+  @override
+  Widget build(BuildContext context) {
+    assert(candidates.isEmpty || candidates.length == 3);
+    const fixedLabels = <String>['A', 'B', 'C'];
+    final stateMessage = isLoading
+        ? '生成中...'
+        : canGenerate
+        ? 'ここに返信案が表示されるよ'
+        : 'まずLINEのトーク履歴を共有してね';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.inputVertical,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const AppSectionHeader(title: '返信案'),
+          const SizedBox(height: AppSpacing.xs),
+          Expanded(
+            child: ListView.builder(
+              itemCount: fixedLabels.length,
+              itemBuilder: (context, index) {
+                if (candidates.isNotEmpty) {
+                  final candidate = candidates[index];
+                  final isCopied = copiedLabel == candidate.label;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: _ResultCandidateCard(
+                      candidate: candidate,
+                      isCopied: isCopied,
+                      onCopy: () => onCopyCandidate(candidate),
+                    ),
+                  );
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: _ResultPlaceholderCard(
+                    label: fixedLabels[index],
+                    message: stateMessage,
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ResultPlaceholderCard extends StatelessWidget {
+  const _ResultPlaceholderCard({required this.label, required this.message});
+
+  final String label;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.xs,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.separator,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              child: Text('$label案', style: AppTextStyles.small),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(child: Text(message, style: AppTextStyles.meta)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ResultCandidateCard extends StatelessWidget {
+  const _ResultCandidateCard({
+    required this.candidate,
+    required this.isCopied,
+    required this.onCopy,
+  });
+
+  final Candidate candidate;
+  final bool isCopied;
+  final VoidCallback onCopy;
+
+  String _labelTitle(String label) {
+    switch (label) {
+      case 'A':
+        return 'A案';
+      case 'B':
+        return 'B案';
+      case 'C':
+        return 'C案';
+      default:
+        return label;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: isCopied ? AppColors.lightPink : AppColors.white,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        onTap: onCopy,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryPink,
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                    ),
+                    child: Text(
+                      _labelTitle(candidate.label),
+                      style: AppTextStyles.small.copyWith(
+                        color: AppColors.white,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    isCopied ? 'コピー済み' : 'タップでコピー',
+                    style: AppTextStyles.small.copyWith(
+                      color: isCopied
+                          ? AppColors.primaryPink
+                          : AppColors.metaText,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(candidate.text, style: AppTextStyles.body),
+            ],
+          ),
         ),
       ),
     );
@@ -640,10 +905,13 @@ class _ErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: PermyColors.lightPink,
-        borderRadius: BorderRadius.circular(8),
+        color: AppColors.lightPink,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
-      child: Padding(padding: const EdgeInsets.all(10), child: Text(message)),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: Text(message, style: AppTextStyles.small),
+      ),
     );
   }
 }

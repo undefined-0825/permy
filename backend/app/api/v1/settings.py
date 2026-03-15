@@ -35,6 +35,17 @@ async def get_settings(
         )
         db.add(st)
         await db.commit()
+    elif not (st.etag or "").strip():
+        # 旧データ等でetagが欠損している場合は自動修復する
+        settings_json = dict(st.settings_json or {})
+        if "settings_schema_version" not in settings_json:
+            settings_json["settings_schema_version"] = st.settings_schema_version or 1
+        new_etag = etag_for_json(settings_json)
+        st.settings_json = settings_json
+        st.settings_schema_version = int(settings_json.get("settings_schema_version") or 1)
+        st.etag = new_etag
+        st.updated_at = dt.datetime.now(dt.timezone.utc)
+        await db.commit()
 
     response.headers["ETag"] = st.etag
     return SettingsResponse(settings=st.settings_json, etag=st.etag)

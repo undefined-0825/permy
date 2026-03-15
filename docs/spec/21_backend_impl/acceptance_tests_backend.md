@@ -12,8 +12,8 @@
 - プライバシー/ログ：`docs/spec/01_rules/privacy_logging.md`
 - NG制御：`docs/spec/10_product/ng_policy.md`
 - テレメトリ：`docs/spec/01_rules/telemetry_policy.md` / `docs/spec/20_backend/telemetry_schema.md`
-- CI方針：`docs/spec/41_ci/ci_policy.md`
-- テスト方針：`docs/spec/40_tests/test_strategy.md`
+- CI方針：`docs/spec/91_ci/ci_policy.md`
+- テスト方針：`docs/spec/90_tests/test_strategy.md`
 
 ---
 

@@ -1,10 +1,20 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'dart:async';
 
+import 'package:flutter/material.dart';
+
+import 'package:sample_app/core/theme/app_colors.dart';
+import 'package:sample_app/core/theme/app_radius.dart';
+import 'package:sample_app/core/theme/app_spacing.dart';
+import 'package:sample_app/core/theme/app_text_styles.dart';
+import 'package:sample_app/core/utils/haptics.dart';
+import 'package:sample_app/core/widgets/app_button.dart';
+import 'package:sample_app/core/widgets/app_scaffold.dart';
+import 'package:sample_app/core/widgets/app_section_header.dart';
 import '../domain/models.dart';
 import '../domain/persona_diagnosis.dart';
+import '../domain/persona_type_helper.dart';
 import 'persona_diagnosis_result_screen.dart';
-import 'widgets/primary_button.dart';
+import 'widgets/top_brand_header.dart';
 
 class DiagnosisScreen extends StatefulWidget {
   const DiagnosisScreen({required this.onCompleted, super.key});
@@ -30,65 +40,43 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
         ? '完了'
         : '${_currentQuestionIndex + 1}/${diagnosisQuestions.length}';
 
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFE8D4F8), // 淡いパープル
-              Color(0xFFFCE4EC), // 淡いピンク
-            ],
-          ),
-        ),
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar.large(
-              title: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    'assets/images/icons/permy_icon.png',
-                    width: 40,
-                    height: 40,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(progress),
-                ],
-              ),
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              leading: SizedBox(
-                width: 36,
-                height: 36,
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(Icons.arrow_back, size: 20),
-                  onPressed: () {
-                    if (isShowingResult) {
-                      // 結果ページから戻る場合は質問ページに戻る
-                      setState(() {
-                        _diagnosisResult = null;
-                      });
-                    } else if (_currentQuestionIndex > 0) {
-                      setState(() => _currentQuestionIndex--);
-                    } else {
-                      Navigator.of(context).pop();
-                    }
-                  },
-                ),
+    return AppScaffold(
+      appBar: TopBrandHeader(
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.inputVertical),
+            child: Center(
+              child: Text(
+                progress,
+                style: AppTextStyles.meta.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
-            if (isShowingResult)
-              _buildResultSlider()
-            else
-              _buildQuestionSlider(),
-          ],
+          ),
+        ],
+        leading: SizedBox(
+          width: 36,
+          height: 36,
+          child: IconButton(
+            padding: EdgeInsets.zero,
+            icon: const Icon(Icons.arrow_back, size: 20),
+            onPressed: () {
+              if (isShowingResult) {
+                // 結果ページから戻る場合は質問ページに戻る
+                setState(() {
+                  _diagnosisResult = null;
+                });
+              } else if (_currentQuestionIndex > 0) {
+                setState(() => _currentQuestionIndex--);
+              } else {
+                Navigator.of(context).pop();
+              }
+            },
+          ),
         ),
       ),
+      body: isShowingResult
+          ? _buildResultSlider(_diagnosisResult!)
+          : _buildQuestionSlider(),
     );
   }
 
@@ -97,7 +85,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
 
   void _handleNext() {
     if (_saving) return;
-    HapticFeedback.mediumImpact();
+    unawaited(Haptics.mediumImpact());
     final currentQuestion = diagnosisQuestions[_currentQuestionIndex];
     if (_answers[currentQuestion.id] == null) {
       ScaffoldMessenger.of(
@@ -181,26 +169,19 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
   Widget _buildQuestionSlider() {
     final question = diagnosisQuestions[_currentQuestionIndex];
 
-    return SliverToBoxAdapter(
+    return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 24),
-            // 質問文
+            const SizedBox(height: AppSpacing.md),
             Text(
               question.title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1C1E),
-                height: 1.4,
-              ),
+              style: AppTextStyles.primaryTitle,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 32),
-            // 選択肢カード
+            const SizedBox(height: AppSpacing.xl),
             ...question.choices.map((choice) {
               final isSelected = _answers[question.id] == choice.id;
               return _ChoiceCard(
@@ -212,7 +193,6 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                   setState(() {
                     _answers[question.id] = choice.id;
                   });
-                  // 選択肢を選んだら自動で次へ進む
                   Future.delayed(
                     const Duration(milliseconds: 300),
                     _handleNext,
@@ -220,23 +200,21 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                 },
               );
             }),
-            const SizedBox(height: 24),
-            // エラー表示
+            const SizedBox(height: AppSpacing.md),
             if (_error != null) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
               Text(
                 _error!,
-                style: const TextStyle(
-                  color: Color(0xFFEF4444),
-                  fontWeight: FontWeight.bold,
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.error,
+                  fontWeight: FontWeight.w700,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
-              PrimaryButton(
+              const SizedBox(height: AppSpacing.md),
+              AppButton(
+                text: _saving ? '処理中...' : 'もう一度',
                 onPressed: !_saving ? _handleNext : null,
-                isLoading: _saving,
-                child: const Text('もう一度'),
               ),
             ],
           ],
@@ -245,48 +223,41 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
     );
   }
 
-  Widget _buildResultSlider() {
-    final result = _diagnosisResult!;
-
-    return SliverToBoxAdapter(
+  Widget _buildResultSlider(DiagnosisResult result) {
+    return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 24),
-            // タイトル
+            const SizedBox(height: AppSpacing.md),
             const Text(
-              'あなたのペルソナが決まりました',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1C1E),
-              ),
+              'きみのペルソナはこれ',
+              style: AppTextStyles.primaryTitle,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 32),
-            // 普段の自分
+            const SizedBox(height: AppSpacing.xl),
             _buildResultSection(
               title: '普段の自分',
-              value: result.trueSelfType,
+              value: getTrueSelfTypeName(result.trueSelfType),
               description: '日常で大事にしていることを表しています',
+              imagePath: getTrueSelfTypeImagePath(result.trueSelfType),
             ),
-            const SizedBox(height: 24),
-            // 夜の私
+            const SizedBox(height: AppSpacing.lg),
             _buildResultSection(
               title: '夜の私',
-              value: result.nightSelfType,
+              value: getNightSelfTypeName(result.nightSelfType),
               description: 'LINE返信時のあなたのスタイルを表しています',
+              imagePath: getNightSelfTypeImagePath(result.nightSelfType),
             ),
-            const SizedBox(height: 24),
-            // スタイルスコア
+            const SizedBox(height: AppSpacing.lg),
             _buildStyleScores(result),
-            const SizedBox(height: 32),
-            // 詳しく見る ボタン
-            OutlinedButton(
+            const SizedBox(height: AppSpacing.xl),
+            AppButton(
+              text: '詳しく見る',
+              variant: AppButtonVariant.secondary,
               onPressed: () {
-                HapticFeedback.lightImpact();
+                unawaited(Haptics.lightImpact());
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => PersonaDiagnosisResultScreen(
@@ -299,16 +270,13 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                   ),
                 );
               },
-              child: const Text('詳しく見る'),
             ),
-            const SizedBox(height: 16),
-            // さっそく使ってみる ボタン
-            PrimaryButton(
+            const SizedBox(height: AppSpacing.md),
+            AppButton(
+              text: _saving ? '処理中...' : 'さっそく使ってみる',
               onPressed: !_saving ? _onResultConfirmed : null,
-              isLoading: _saving,
-              child: const Text('さっそく使ってみる'),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
           ],
         ),
       ),
@@ -319,43 +287,44 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
     required String title,
     required String value,
     required String description,
+    String? imagePath,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFFB3C1), width: 1),
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.primaryPink, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF6B7280),
-            ),
+            style: AppTextStyles.meta.copyWith(fontWeight: FontWeight.w600),
           ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1C1E),
+          const SizedBox(height: AppSpacing.sm),
+          Text(value, style: AppTextStyles.primaryTitle),
+          if (imagePath != null) ...[
+            const SizedBox(height: AppSpacing.inputVertical),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Image.asset(
+                  imagePath,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: AppColors.highlight,
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.image_not_supported_outlined),
+                  ),
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            description,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.normal,
-              color: Color(0xFF9CA3AF),
-            ),
-          ),
+          ],
+          const SizedBox(height: AppSpacing.sm),
+          Text(description, style: AppTextStyles.small),
         ],
       ),
     );
@@ -363,28 +332,21 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
 
   Widget _buildStyleScores(DiagnosisResult result) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFFB3C1), width: 1),
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.primaryPink, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'スタイルスコア',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF6B7280),
-            ),
-          ),
-          const SizedBox(height: 16),
+          const AppSectionHeader(title: 'スタイルスコア'),
+          const SizedBox(height: AppSpacing.md),
           _buildScoreRow('主張度', result.styleAssertiveness),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.inputVertical),
           _buildScoreRow('温かみ', result.styleWarmth),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.inputVertical),
           _buildScoreRow('リスク回避', result.styleRiskGuard),
         ],
       ),
@@ -397,41 +359,33 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 13,
+          style: AppTextStyles.meta.copyWith(
+            color: AppColors.bodyText,
             fontWeight: FontWeight.w500,
-            color: Color(0xFF374151),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xs),
         Row(
           children: [
             Expanded(
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
                 child: LinearProgressIndicator(
                   value: value / 100,
-                  minHeight: 8,
-                  backgroundColor: const Color(0xFFE5E7EB),
+                  minHeight: AppSpacing.sm,
+                  backgroundColor: AppColors.separator,
                   valueColor: AlwaysStoppedAnimation<Color>(
                     Color.lerp(
-                      const Color(0xFFFF69B4),
-                      const Color(0xFFFFB3C1),
+                      AppColors.secondaryPink,
+                      AppColors.primaryPink,
                       1 - (value / 100),
                     )!,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 8),
-            Text(
-              '$value%',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF6B7280),
-              ),
-            ),
+            const SizedBox(width: AppSpacing.sm),
+            Text('$value%', style: AppTextStyles.small),
           ],
         ),
       ],
@@ -470,74 +424,62 @@ class _ChoiceCardState extends State<_ChoiceCard> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: AppSpacing.inputVertical),
       child: InkWell(
         onTap: widget.enabled
             ? () {
                 widget.onTap();
-                HapticFeedback.lightImpact();
+                unawaited(Haptics.lightImpact());
               }
             : null,
         onHover: (hovering) {
           setState(() => _isHovering = hovering);
         },
-        splashColor: const Color(0xFFF3F4F6),
-        highlightColor: const Color(0xFFF3F4F6),
+        splashColor: AppColors.highlight,
+        highlightColor: AppColors.highlight,
         child: Container(
           height: 96,
-          padding: const EdgeInsets.symmetric(horizontal: 18),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           decoration: BoxDecoration(
-            color: _isHovering ? const Color(0xFFF3F4F6) : Colors.transparent,
+            color: _isHovering ? AppColors.highlight : Colors.transparent,
             border: Border(
-              bottom: BorderSide(color: const Color(0xFFE5E7EB), width: 0.5),
+              bottom: BorderSide(color: AppColors.separator, width: 0.5),
             ),
           ),
           child: Row(
             children: [
-              // 選択肢画像
               Container(
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFCE7F3),
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.lightPink,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
                   child: Image.asset(
                     'assets/images/diagnosis_choices/${widget.choiceId}.png',
                     width: 60,
                     height: 60,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      // 画像が存在しない場合はアイコンで代用
+                    errorBuilder: (_, __, ___) {
                       return const Icon(
                         Icons.image_outlined,
                         size: 24,
-                        color: Color(0xFFFBCFE8),
+                        color: AppColors.primaryPink,
                       );
                     },
                   ),
                 ),
               ),
-              const SizedBox(width: 18),
-              // テキスト
+              const SizedBox(width: AppSpacing.md),
               Expanded(
-                child: Text(
-                  widget.label,
-                  style: const TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.normal,
-                    color: Color(0xFF374151),
-                    height: 1.45,
-                  ),
-                ),
+                child: Text(widget.label, style: AppTextStyles.sectionHeader),
               ),
-              // チェックマーク
               if (widget.isSelected)
                 const Icon(
                   Icons.check_circle,
-                  color: Color(0xFFFF69B4),
+                  color: AppColors.secondaryPink,
                   size: 26,
                 ),
             ],

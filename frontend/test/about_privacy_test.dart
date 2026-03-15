@@ -15,8 +15,7 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: AboutPrivacyScreen()));
 
       expect(find.text('Permyについて'), findsOneWidget);
-      // SliverAppBar.large() 化により CustomScrollView を使用
-      expect(find.byType(CustomScrollView), findsOneWidget);
+      expect(find.byType(SingleChildScrollView), findsOneWidget);
     });
 
     testWidgets('プライバシーセクションが表示される', (WidgetTester tester) async {
@@ -30,7 +29,7 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: AboutPrivacyScreen()));
 
       expect(find.text('お問い合わせ'), findsOneWidget);
-      expect(find.text('sukima.lab.nakanoya@gmail.com'), findsWidgets);
+      expect(find.text('sukima.lab.nakanoya@gmail.com'), findsOneWidget);
     });
 
     testWidgets('発行者情報が表示される', (WidgetTester tester) async {

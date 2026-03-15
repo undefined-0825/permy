@@ -33,7 +33,7 @@ void main() {
       expect(find.text('癒しタイプ'), findsOneWidget);
     });
 
-    testWidgets('スタイルスコアが表示される', (WidgetTester tester) async {
+    testWidgets('ペルソナパラメータが表示される', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: PersonaDiagnosisResultScreen(
@@ -46,7 +46,7 @@ void main() {
         ),
       );
 
-      expect(find.text('スタイルスコア'), findsOneWidget);
+      expect(find.text('ペルソナパラメータ'), findsOneWidget);
       expect(find.text('主張度'), findsOneWidget);
       expect(find.text('温かみ'), findsOneWidget);
       expect(find.text('リスク回避'), findsOneWidget);

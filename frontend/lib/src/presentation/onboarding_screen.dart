@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-import 'widgets/primary_button.dart';
+import 'package:sample_app/core/theme/app_colors.dart';
+import 'package:sample_app/core/theme/app_spacing.dart';
+import 'package:sample_app/core/theme/app_text_styles.dart';
+import 'package:sample_app/core/utils/haptics.dart';
+import 'package:sample_app/core/widgets/app_button.dart';
+import 'package:sample_app/core/widgets/app_scaffold.dart';
+import 'widgets/top_brand_header.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onCompleted;
@@ -41,250 +46,132 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _skipOnboarding() {
-    HapticFeedback.selectionClick();
+    Haptics.selection();
     widget.onCompleted();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(
-              'assets/images/icons/permy_icon.png',
-              width: 24,
-              height: 24,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(width: 8),
-            const Text('チュートリアル'),
-          ],
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      extendBodyBehindAppBar: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFE8D4F8), // 淡いパープル
-              Color(0xFFFCE4EC), // 淡いピンク
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  onPageChanged: (index) {
-                    setState(() {
-                      _currentStep = index;
-                    });
-                  },
-                  children: [
-                    _buildStep1(),
-                    _buildStep2(),
-                    _buildStep3(),
-                    _buildStep4(),
-                  ],
+    return AppScaffold(
+      appBar: const TopBrandHeader(),
+      body: Column(
+        children: [
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentStep = index;
+                });
+              },
+              children: [
+                _buildStep(
+                  icon: Icons.message,
+                  title: 'ペルミィへようこそ',
+                  body: 'ぼくはきみの分身。\nLINEのトーク履歴から、\nぴったりな返信を作るよ。',
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        4,
-                        (index) => Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: index == _currentStep
-                                ? const Color(0xFF1A1C1E)
-                                : const Color(0xFF6B7280),
-                          ),
-                        ),
+                _buildStep(
+                  icon: Icons.share,
+                  title: 'トーク履歴を送ろう',
+                  body: 'LINEでトーク履歴を送信して、\nこのアプリに共有して。\n.txtを受け取って返信案を作るよ。',
+                ),
+                _buildStep(
+                  icon: Icons.lock_outline,
+                  title: 'プライバシー保護',
+                  body: 'トークの本文は保存されません。\n返信案はあなたが選んでコピーして、\n送信はあなたの操作で行います。',
+                ),
+                _buildStep(
+                  icon: Icons.star,
+                  title: 'さあ、始めよう',
+                  body: '準備ができたら始めよう。\nきみのやり方に合う返信を\nいっしょに作っていくよ。',
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    4,
+                    (index) => Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xs,
+                      ),
+                      width: AppSpacing.sm,
+                      height: AppSpacing.sm,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: index == _currentStep
+                            ? AppColors.primaryTitle
+                            : AppColors.metaText,
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        if (_currentStep > 0)
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () {
-                                _pageController.previousPage(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                );
-                              },
-                              child: const Text('戻る'),
-                            ),
-                          ),
-                        if (_currentStep > 0) const SizedBox(width: 12),
-                        Expanded(
-                          child: PrimaryButton(
-                            onPressed: () {
-                              HapticFeedback.mediumImpact();
-                              _nextStep();
-                            },
-                            child: Text(_currentStep == 3 ? 'ペルミィを作る' : '次へ'),
-                          ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  children: [
+                    if (_currentStep > 0)
+                      Expanded(
+                        child: AppButton(
+                          text: '戻る',
+                          variant: AppButtonVariant.secondary,
+                          onPressed: () {
+                            _pageController.previousPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          },
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: () {
-                        HapticFeedback.selectionClick();
-                        _skipOnboarding();
-                      },
-                      child: const Text('スキップ'),
+                      ),
+                    if (_currentStep > 0)
+                      const SizedBox(width: AppSpacing.inputVertical),
+                    Expanded(
+                      child: AppButton(
+                        text: _currentStep == 3 ? 'ペルミィを作る' : '次へ',
+                        onPressed: () {
+                          Haptics.mediumImpact();
+                          _nextStep();
+                        },
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStep1() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.message, size: 80, color: Color(0xFFF06292)),
-          const SizedBox(height: 24),
-          const Text(
-            'ペルミィへようこそ',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1C1E),
+                const SizedBox(height: AppSpacing.inputVertical),
+                TextButton(
+                  onPressed: _skipOnboarding,
+                  child: const Text('スキップ'),
+                ),
+              ],
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'ぼくはきみの分身。\nLINEのトーク履歴から、\nぴったりな返信を作るよ。',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.normal,
-              color: Color(0xFF374151),
-            ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStep2() {
+  Widget _buildStep({
+    required IconData icon,
+    required String title,
+    required String body,
+  }) {
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.share, size: 80, color: Color(0xFFF06292)),
-          const SizedBox(height: 24),
-          const Text(
-            'トーク履歴を送ろう',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1C1E),
-            ),
+          Icon(icon, size: 80, color: AppColors.secondaryPink),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            title,
+            style: AppTextStyles.primaryTitle,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 16),
-          const Text(
-            'LINEで、会話を長押し。\n【トーク履歴を送信】を選ぶ。\nテキストファイルでぼくに送ってね。',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.normal,
-              color: Color(0xFF374151),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStep3() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.lock_outline, size: 80, color: Color(0xFFF06292)),
-          const SizedBox(height: 24),
-          const Text(
-            'プライバシー保護',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1C1E),
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'トークの本文は保存されません。\n生成した返信案だけ、\nあなたがコピーして送ります。\n完全にあなたが操作。',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.normal,
-              color: Color(0xFF374151),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStep4() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.star, size: 80, color: Color(0xFFF06292)),
-          const SizedBox(height: 24),
-          const Text(
-            'さあ、始めよう',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1C1E),
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'ぼくに䮵せて。\nあなただけの返信をつくる。\nさあ、変身しよう。',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.normal,
-              color: Color(0xFF374151),
-            ),
-            textAlign: TextAlign.center,
-          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(body, style: AppTextStyles.body, textAlign: TextAlign.center),
         ],
       ),
     );

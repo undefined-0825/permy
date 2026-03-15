@@ -1,11 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../core/theme.dart';
+import 'package:sample_app/core/theme/app_colors.dart';
+import 'package:sample_app/core/theme/app_radius.dart';
+import 'package:sample_app/core/theme/app_spacing.dart';
+import 'package:sample_app/core/theme/app_text_styles.dart';
+import 'package:sample_app/core/utils/haptics.dart';
+import 'package:sample_app/core/widgets/app_button.dart';
+import 'package:sample_app/core/widgets/app_scaffold.dart';
+import 'package:sample_app/core/widgets/app_section_header.dart';
 import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
-import 'widgets/primary_button.dart';
+import 'widgets/top_brand_header.dart';
 
 class MigrationScreen extends StatefulWidget {
   const MigrationScreen({
@@ -107,7 +116,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
   }
 
   void _copyCodeToClipboard() {
-    HapticFeedback.selectionClick();
+    unawaited(Haptics.selection());
     Clipboard.setData(ClipboardData(text: _migrationCode)).then((_) {
       ScaffoldMessenger.of(
         context,
@@ -116,7 +125,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
   }
 
   Future<void> _shareCode() async {
-    HapticFeedback.selectionClick();
+    unawaited(Haptics.selection());
 
     if (_migrationCode.isEmpty) {
       ScaffoldMessenger.of(
@@ -151,50 +160,11 @@ class _MigrationScreenState extends State<MigrationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar.large(
-            title: const Text('端末移行'),
-            flexibleSpace: FlexibleSpaceBar(
-              title: Padding(
-                padding: const EdgeInsets.only(left: 16, bottom: 16),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset(
-                      'assets/images/icons/permy_icon.png',
-                      width: 24,
-                      height: 24,
-                      fit: BoxFit.contain,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text('端末移行'),
-                  ],
-                ),
-              ),
-            ),
-            backgroundColor: Colors.transparent,
-          ),
-          SliverFillRemaining(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    PermyColors.backgroundStart,
-                    PermyColors.backgroundEnd,
-                  ],
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: _buildContent(),
-              ),
-            ),
-          ),
-        ],
+    return AppScaffold(
+      appBar: const TopBrandHeader(),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: _buildContent(),
       ),
     );
   }
@@ -215,48 +185,54 @@ class _MigrationScreenState extends State<MigrationScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Text(
-          '端末を移行しますか？',
-          style: PermyTypography.primaryTitle,
+          '端末移行',
+          style: AppTextStyles.primaryTitle,
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.md),
+        const Text(
+          '端末を移行しますか？',
+          style: AppTextStyles.primaryTitle,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.lg),
         const Text(
           'このアプリのアカウント情報を別の端末に移行できます。',
-          style: PermyTypography.body,
+          style: AppTextStyles.body,
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 32),
-        PrimaryButton(
+        const SizedBox(height: AppSpacing.xl),
+        AppButton(
+          text: _loading ? '発行中...' : 'この端末から移行コードを発行',
           onPressed: _loading
               ? null
               : () {
-                  HapticFeedback.mediumImpact();
+                  unawaited(Haptics.mediumImpact());
                   _handleIssueMigration();
                 },
-          isLoading: _loading,
-          child: const Text('この端末から移行コードを発行'),
         ),
-        const SizedBox(height: 16),
-        OutlinedButton(
+        const SizedBox(height: AppSpacing.md),
+        AppButton(
+          text: '別の端末からコードを入力',
+          variant: AppButtonVariant.secondary,
           onPressed: () {
-            HapticFeedback.selectionClick();
+            unawaited(Haptics.selection());
             setState(() {
               _currentStep = 2;
             });
           },
-          child: const Text('別の端末からコードを入力'),
         ),
         if (_error != null) ...[
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppSpacing.inputVertical),
             decoration: BoxDecoration(
-              color: PermyColors.lightPink,
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.lightPink,
+              borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: Text(
               _error!.message,
-              style: const TextStyle(color: PermyColors.error),
+              style: AppTextStyles.small.copyWith(color: AppColors.error),
             ),
           ),
         ],
@@ -270,69 +246,61 @@ class _MigrationScreenState extends State<MigrationScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
-            '移行コードが発行されました',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            '端末移行',
+            style: AppTextStyles.primaryTitle,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.md),
+          const AppSectionHeader(title: '移行コードが発行されました'),
+          const SizedBox(height: AppSpacing.md),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: PermyColors.white.withOpacity(0.9),
-              border: Border.all(color: PermyColors.separator),
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.white.withValues(alpha: 0.9),
+              border: Border.all(color: AppColors.separator),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: Column(
               children: [
-                const Text(
-                  '12桁のコード',
-                  style: TextStyle(fontSize: 12, color: PermyColors.bodyText),
-                ),
-                const SizedBox(height: 8),
+                const Text('12桁のコード', style: AppTextStyles.small),
+                const SizedBox(height: AppSpacing.sm),
                 SelectableText(
                   _migrationCode,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2,
-                  ),
+                  style: AppTextStyles.accentNumber.copyWith(letterSpacing: 2),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.md),
                 Text(
                   '有効期限: $_expiresAt',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: PermyColors.bodyText,
+                  style: AppTextStyles.small.copyWith(
+                    color: AppColors.bodyText,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.content_copy),
-            onPressed: _copyCodeToClipboard,
-            label: const Text('コードをコピー'),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.share),
+          const SizedBox(height: AppSpacing.lg),
+          AppButton(text: 'コードをコピー', onPressed: _copyCodeToClipboard),
+          const SizedBox(height: AppSpacing.inputVertical),
+          AppButton(
+            text: '共有する',
+            variant: AppButtonVariant.secondary,
             onPressed: _shareCode,
-            label: const Text('共有する'),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
           const Text(
             '新しい端末で以下の手順を実行してください：\n'
             '1. 新しい端末でこのアプリを起動\n'
             '2. 設定 → 端末移行 → 「別の端末からコードを入力」\n'
             '3. 上のコードを入力して完了',
-            style: TextStyle(fontSize: 12),
+            style: AppTextStyles.small,
           ),
-          const SizedBox(height: 24),
-          OutlinedButton(
+          const SizedBox(height: AppSpacing.lg),
+          AppButton(
+            text: '戻る',
+            variant: AppButtonVariant.secondary,
             onPressed: () {
-              HapticFeedback.selectionClick();
+              unawaited(Haptics.selection());
               setState(() {
                 _currentStep = 0;
                 _migrationCode = '';
@@ -340,7 +308,6 @@ class _MigrationScreenState extends State<MigrationScreen> {
                 _error = null;
               });
             },
-            child: const Text('戻る'),
           ),
         ],
       ),
@@ -353,16 +320,19 @@ class _MigrationScreenState extends State<MigrationScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
-            '移行コードを入力',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            '端末移行',
+            style: AppTextStyles.primaryTitle,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.md),
+          const AppSectionHeader(title: '移行コードを入力'),
+          const SizedBox(height: AppSpacing.md),
           const Text(
             'もとの端末から発行された12桁のコードを入力してください。',
             textAlign: TextAlign.center,
+            style: AppTextStyles.body,
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: AppSpacing.xl),
           TextField(
             controller: _codeInputController,
             decoration: const InputDecoration(
@@ -370,51 +340,48 @@ class _MigrationScreenState extends State<MigrationScreen> {
               hintText: '000000000000',
               border: UnderlineInputBorder(),
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(
-                  color: PermyColors.primaryPink,
-                  width: 2,
-                ),
+                borderSide: BorderSide(color: AppColors.primaryPink, width: 2),
               ),
             ),
             keyboardType: TextInputType.number,
             maxLength: 12,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 20, letterSpacing: 1),
+            style: AppTextStyles.accentNumber.copyWith(letterSpacing: 1),
           ),
-          const SizedBox(height: 24),
-          PrimaryButton(
+          const SizedBox(height: AppSpacing.lg),
+          AppButton(
+            text: _loading ? '引き継ぎ中...' : 'アカウントを引き継ぐ',
             onPressed: _loading
                 ? null
                 : () {
-                    HapticFeedback.mediumImpact();
+                    unawaited(Haptics.mediumImpact());
                     _handleConsumeMigration();
                   },
-            isLoading: _loading,
-            child: const Text('アカウントを引き継ぐ'),
           ),
-          const SizedBox(height: 12),
-          OutlinedButton(
+          const SizedBox(height: AppSpacing.inputVertical),
+          AppButton(
+            text: '戻る',
+            variant: AppButtonVariant.secondary,
             onPressed: () {
-              HapticFeedback.selectionClick();
+              unawaited(Haptics.selection());
               setState(() {
                 _currentStep = 0;
                 _codeInputController.clear();
                 _error = null;
               });
             },
-            child: const Text('戻る'),
           ),
           if (_error != null) ...[
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.lg),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.inputVertical),
               decoration: BoxDecoration(
-                color: PermyColors.lightPink,
-                borderRadius: BorderRadius.circular(8),
+                color: AppColors.lightPink,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: Text(
                 _error!.message,
-                style: const TextStyle(color: PermyColors.error),
+                style: AppTextStyles.small.copyWith(color: AppColors.error),
               ),
             ),
           ],

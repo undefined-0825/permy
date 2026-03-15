@@ -1,12 +1,13 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../core/theme.dart';
+import '../core/theme/app_theme.dart';
 import 'domain/app_versioning.dart';
 import 'domain/persona_diagnosis.dart';
 import 'domain/telemetry_event.dart';
@@ -22,11 +23,23 @@ import 'presentation/onboarding_screen.dart';
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  static const String _backgroundImagePath =
+      'assets/images/backgrounds/background_pink.png';
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Permy',
-      theme: PermyTheme.lightTheme,
+      theme: AppTheme.lightTheme,
+      builder: (context, child) {
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(_backgroundImagePath, fit: BoxFit.cover),
+            if (child != null) child,
+          ],
+        );
+      },
       home: const AppRoot(),
     );
   }
@@ -40,6 +53,8 @@ class AppRoot extends StatefulWidget {
 }
 
 class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
+  static const String _defaultApiBaseUrl = 'https://permy-backend.onrender.com';
+
   late final ApiClient _apiClient;
   late final TelemetryQueue _telemetryQueue;
   late final PurchaseService _purchaseService;
@@ -48,14 +63,28 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   bool _loading = true;
   bool _needsOnboarding = false;
   bool _needsDiagnosis = false;
+  bool _initialDiagnosisFlowStarted = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    const configuredApiBaseUrl = String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: _defaultApiBaseUrl,
+    );
+    final apiBaseUrl = configuredApiBaseUrl.trim().isEmpty
+        ? _defaultApiBaseUrl
+        : configuredApiBaseUrl.trim();
+
     _apiClient = ApiClient(
-      baseUrl: 'https://permy-backend.onrender.com',
+      baseUrl: apiBaseUrl,
       tokenStore: const SecureTokenStore(),
+      debugLog: (message) {
+        if (kDebugMode) {
+          debugPrint(message);
+        }
+      },
     );
     _telemetryQueue = TelemetryQueue(apiClient: _apiClient);
     _purchaseService = PurchaseService(storage: const FlutterSecureStorage());
@@ -199,16 +228,28 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
     });
   }
 
-  Future<DiagnosisResult> _onDiagnosisCompleted(
-    List<DiagnosisAnswer> answers,
-  ) async {
-    final result = await _apiClient.completeDiagnosis(answers);
-    if (mounted) {
-      setState(() {
-        _needsDiagnosis = false;
-      });
-    }
-    return result;
+  Future<void> _startInitialDiagnosisFlow() async {
+    if (!mounted || _initialDiagnosisFlowStarted) return;
+
+    setState(() {
+      _initialDiagnosisFlowStarted = true;
+    });
+
+    final updated = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (diagnosisContext) => DiagnosisScreen(
+          onCompleted: (List<DiagnosisAnswer> answers) {
+            return _apiClient.completeDiagnosis(answers);
+          },
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _initialDiagnosisFlowStarted = false;
+      _needsDiagnosis = updated != true;
+    });
   }
 
   @override
@@ -224,7 +265,14 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
     }
 
     if (_needsDiagnosis) {
-      return DiagnosisScreen(onCompleted: _onDiagnosisCompleted);
+      if (!_initialDiagnosisFlowStarted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _startInitialDiagnosisFlow();
+        });
+      }
+      return const Scaffold(
+        body: SafeArea(child: Center(child: CircularProgressIndicator())),
+      );
     }
 
     return GenerateScreen(

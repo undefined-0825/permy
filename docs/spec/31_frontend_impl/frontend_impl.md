@@ -3,6 +3,17 @@
 **Scope:** 本ドキュメントはフロントエンドの実装指針を定義する。  
 設計は `frontend.*`、バックエンド契約は `api_contract.*` と `error_codes.*` を正とする。
 
+## Spec参照順（MUST）
+1. `docs/spec/00_world/world_concept.md`
+2. `docs/spec/10_product/product_spec.md`
+3. `docs/spec/40_design/permy_design_system_spec.md`
+4. `docs/spec/30_frontend/frontend_spec.md`
+5. `docs/spec/31_frontend_impl/frontend_impl.md`
+
+## 参照前提（MUST）
+- frontend実装前に、`docs/spec/40_design/permy_design_system_spec.md` を必ず事前参照する。
+- 実装時のUI判断（余白、配色、タイポ、コンポーネント形状、画面ブロック構成）はデザインシステム準拠で行う。
+
 ---
 
 ## 0. 実装の大原則（MUST）
@@ -218,7 +229,7 @@ ios/
 
 **適用ルール**：
 - 診断画面・生成画面・Settings等、全画面で統一使用
-- 将来的に `lib/core/theme.dart` で ThemeData 定義予定（現在は各Widget内でハードコード）
+- UIテーマ定義は `lib/core/theme/app_theme.dart` を正とし、画面側の配色・余白・タイポは `permy_design_system_spec.md` 準拠で継続的に洗練する
 - Material Design 3 準拠、ColorScheme 活用を推奨
 
 **デザイン意図（world_concept 参照）**：
@@ -361,17 +372,16 @@ ios/
   - child：
     - 保存中（_saving）：CircularProgressIndicator（24x24、白、strokeWidth 2）
     - 通常：Text（fontSize 16、fontWeight bold）
-      - 最終問：「この内容で進む」
+      - 最終問：選択後に自動送信（「次へ」ボタンを経由しない）
       - それ以外：「次へ」
 
 **動作フロー**：
 1. 初期表示：_currentQuestionIndex = 0、質問1を表示
 2. ユーザーが選択肢タップ → _answers[questionId] = choiceId、UI更新
-3. 「次へ」タップ：
-   - 最終問以外 → _currentQuestionIndex++、次問へ遷移
-   - 最終問 → _submit()、POST /me/diagnosis 実行
-4. 送信成功 → widget.onCompleted(answers) 呼び出し、pop で Settings へ戻る
-5. 送信失敗 → エラーメッセージ表示
+3. 選択後に自動で次問へ遷移（最終問以外）
+4. 最終問の選択後に `_submit()` を実行し、`POST /me/diagnosis` を実行
+5. 送信成功 → `widget.onCompleted(answers)` 呼び出し → Result Slide 表示
+6. 送信失敗 → エラーメッセージ表示
 
 **段階的実装の注記**：
 - **Phase 1（完了）**：グラデーション背景、プレースホルダー配置、UI構造実装
@@ -423,19 +433,20 @@ ios/
      - 右：「N%」表示（fontSize 12、fontWeight w500、gray）
    - Section 全体は Result Sections と同じ Container スタイル
 4. **ボタン**（下部固定）：
-   - 「わかりました」（Primary スタイル）
+  - 「さっそく使ってみる」（Primary スタイル）
    - onPressed：`_onResultConfirmed()`
-   - Settings へ `pop(true)` し、呼び出し元で再読込をトリガー
+  - 初回診断では `pop(true)` 後に Generate へ遷移
+  - 再診断（Settings起点）では `pop(true)` 後に Settings 側で再読込を実行
 
 **ナビゲーションフロー**：
 - Question Slide（0-6）
-  - 最終問で「この内容で進む」タップ
+  - 最終問の選択後に自動送信
   - `POST /me/diagnosis` 実行
   - Success で `_diagnosisResult = DiagnosisResult`
   - Result Slide 表示
 - Result Slide
   - 戻るボタン：Question Slide に戻る
-  - 「わかりました」：Settings へ戻る（`pop(true)`）
+  - 「さっそく使ってみる」：`pop(true)`（起点画面側で遷移を継続）
 
 **実装ポイント**：
 - API から取得した `DiagnosisResult` をそのまま UI 表示に利用（不要な変換をしない）
@@ -448,10 +459,12 @@ ios/
 ### 7.3 Generate（メイン）
 - sharedText state（メモリのみ）
 - settings state（GET/PUT同期）
+- レイアウトは「上部固定（ペルソナ要約+combo）/中央CTA/下部Expanded結果エリア」を基本とする
 - 「生成」ボタンで `/generate`
   - `Idempotency-Key` はUUID生成
 - 生成中：ローディング＋演出（色反転等）
-- 結果：A/B/Cカード
+- 結果：A/B/Cカード（固定3スロット）
+  - 未生成時/生成中は同じ結果領域でプレースホルダー表示
   - タップでClipboardへコピー
   - 0.4秒のハイライトフィードバック
 
@@ -462,8 +475,8 @@ ios/
   - `AUTH_INVALID` / `AUTH_REQUIRED`：「認証を更新したよ。もう一度ためしてね」
   - `SETTINGS_VERSION_CONFLICT` / `ETAG_MISMATCH`：「設定が更新されていたみたい。読み込み直してね」
   - `RATE_LIMITED`：「少し混み合ってるみたい。少し待って、もう一度」
-  - `DAILY_LIMIT_REACHED` / `DAILY_LIMIT_EXCEEDED`：「今日はここまで。続きは明日か、Proで使える」
-  - `PLAN_REQUIRED`：「この機能はProで使えるよ」
+  - `DAILY_LIMIT_REACHED` / `DAILY_LIMIT_EXCEEDED`：「今日はここまで。続きは明日か、Plusで使える」
+  - `PLAN_REQUIRED`：「この機能はPlusで使えるよ」
   - `OPENAI_DISABLED`：「この環境では生成を止めているよ」
   - `UPSTREAM_UNAVAILABLE` / `UPSTREAM_TIMEOUT`：「今は不安定みたい。少し待って、もう一度」
   - その他：「うまく読めなかった。もう一度共有して」
@@ -474,7 +487,7 @@ ios/
 - **表示内容**（読み取り専用）：
   1) 普段の自分：True Self（5タイプ：Stability/Independence/Approval/Realism/Romance）
   2) 夜の私：Night Self（5タイプ：VisitPush/Heal/LittleDevil/BigClient/Balance）
-  3) スタイルスコア（主張度/温かみ/リスク回避）：0-100の LinearProgressIndicator
+  3) ペルソナパラメータ（主張度/温かみ/リスク回避）：0-100の LinearProgressIndicator
 - **各タイプの説明文**：固定テキスト（詳細は後述）
 - **保存**：なし（読み取り専用、スクロール可）
 - **遷移**：Settings から「ペルソナ欄」をタップで表示、BackボタンまたはAppBar戻るで Settings に復帰
@@ -497,30 +510,29 @@ ios/
    - 遷移：DiagnosisScreen（7問固定、全類型への回答）
    - 完了後：自動リロード + SnackBar「再診断を反映しました」
 
-3) **生成設定**：
-   - SegmentedButton「生成戦術」：
-     - 0=「通常」（combo_id: 0 / デフォルト）
-     - 1=「短め」（combo_id: 1）
-     - 2=「長め」（combo_id: 2）
+3) **デフォルトの返信スタイル**：
+  - SegmentedButton（`combo_id`）：
+    - 0=「来店約束」（combo_id: 0 / デフォルト）
+    - 1=「休眠復活」（combo_id: 1）
    - `combo_id` を settings で管理
 
-4) **NG設定**：
-   - テキスト表示：「禁止ワード・表現を設定してください。実装は後日予定です。」
-   - 現在の禁止設定表示（`forbidden_type_ids`）
-   - 実装時に `ng_tags` / `ng_free_phrases` フォーム追加予定
+4) **返信案のNG設定**：
+  - NGタグ（複数選択）を選択可能
+  - 禁止フレーズ（自由入力、最大10件）を管理
+  - `ng_tags` / `ng_free_phrases` を settings と同期
 
-5) **端末移行**：
-   - ボタン：「端末移行の設定」
-   - 遷移：MigrationScreen
+5) **サポート・規約・その他設定**：
+  - アコーディオン形式で表示
+  - アコーディオン内はリンク行（`AppListItem`）に統一し、以下を表示：
+    - 利用規約 / プライバシーポリシー / ヘルプ（使い方） / このアプリについて / オープンソースライセンス
+    - 端末移行の設定 / 購入を復元 / サブスクリプション管理 / アカウントを削除する
+  - 遷移先：
+    - 端末移行の設定 → MigrationScreen
+    - このアプリについて → AboutPrivacyScreen
 
-6) **もっと知る**：
-   - ボタン：「このアプリについて」
-   - 遷移：AboutPrivacyScreen
-
-7) **保存**：
-   - ボタン：「保存」
-   - 動作：PUT `/me/settings` を発火、成功時「設定を保存しました」SnackBar
-   - 失敗時：エラーに応じて再取得または復帰導線
+6) **自動反映ステータス**：
+  - 画面下部に「変更は自動で反映されます」を表示
+  - 保存ボタンは設置しない（変更は自動保存）
 
 #### 7.4.2 再診断フロー（詳細）
 1. Settings 画面の「再診断する」ボタンをタップ
@@ -547,7 +559,7 @@ ios/
 - セクション標題：
   - 「普段の自分」（True Self セクション）
   - 「夜の私」（Night Self セクション）
-  - 「スタイルスコア」
+  - 「ペルソナパラメータ」
 - 各スコア行ラベル：「主張度」「温かみ」「リスク回避」
 - 説明文：「これらのペルソナは、あなたの返信スタイルを決める大事な指標。ときどき見返して、「今のぼくはこう考えてるんだ」って確認してみてね。」
 
@@ -820,5 +832,41 @@ r     # Hot Reload（状態保持、コード変更反映）
 R     # Hot Restart（状態リセット、コード変更反映）
 q     # アプリ終了
 ```
+
+### 14.6 起動/再起動ツール（MUST）
+以下の運用ツールは `c:\dev\permy\tools` を正とする。手順の省略や独自バッチ乱立を避け、再現性を固定する。
+
+1. `start_frontend.ps1`（通常起動）
+  - 目的：既に起動済みのエミュレータへ `flutter run` する。
+  - 代表例：
+    ```powershell
+    powershell -ExecutionPolicy Bypass -File .\tools\start_frontend.ps1 -DeviceId emulator-5554
+    ```
+
+2. `start_permy_clean.ps1`（クリーン起動）
+  - 目的：エミュレータ起動、`flutter clean`、`pub get`、`flutter run` を一括で行う。
+  - 代表例（ローカルBackend接続）：
+    ```powershell
+    powershell -ExecutionPolicy Bypass -File .\tools\start_permy_clean.ps1 -UseLocalBackend
+    ```
+  - 備考：`-UseLocalBackend` は `API_BASE_URL=http://10.0.2.2:8000` を使う。
+
+3. `hot_restart_frontend.ps1` / `hot_restart_frontend.bat`（再起動補助）
+  - 目的：エミュレータ再起動なしで、アプリ反映を1コマンド化する。
+  - 実行順：
+    1) `flutter attach` に `R` を送って Hot Restart を試行
+    2) 失敗時のみ、`adb force-stop` + `am/monkey` でアプリプロセスを再起動
+  - 代表例：
+    ```powershell
+    powershell -ExecutionPolicy Bypass -File .\tools\hot_restart_frontend.ps1
+    ```
+    ```bat
+    .\tools\hot_restart_frontend.bat
+    ```
+
+4. 運用原則（MUST）
+  - 文言/UI確認では、原則としてエミュレータ再起動を行わない。
+  - `device offline` などOS側異常時のみ、エミュレータ再起動を許可する。
+  - スクリプト追加・変更時は、`-CheckOnly` のような事前確認モードを優先して用意する。
 
 ---
