@@ -40,7 +40,7 @@ class AppButton extends StatelessWidget {
     final ButtonStyle primaryStyle = ElevatedButton.styleFrom(
       backgroundColor: isDisabled
           ? AppColors.disabledPink
-          : AppColors.primaryPink,
+          : AppColors.buttonBackground,
       foregroundColor: isDisabled ? AppColors.metaText : AppColors.white,
       disabledBackgroundColor: AppColors.disabledPink,
       disabledForegroundColor: AppColors.metaText,

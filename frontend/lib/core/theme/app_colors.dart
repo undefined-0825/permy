@@ -11,10 +11,11 @@ class AppColors {
   static const Color secondaryPink = Color(0xFFFF69B4);
   static const Color lightPink = Color(0xFFFCE7F3);
   static const Color disabledPink = Color(0xFFE6DCE8);
+  static const Color buttonBackground = Color(0xFF932B50);
 
   // テキストカラー
-  static const Color primaryTitle = Color(0xFF1A1C1E);
-  static const Color bodyText = Color(0xFF374151);
+  static const Color primaryTitle = Color(0xFF932B50);
+  static const Color bodyText = Color(0xFF932B50);
   static const Color metaText = Color(0xFF6B7280);
   static const Color white = Color(0xFFFFFFFF);
 
@@ -24,7 +25,7 @@ class AppColors {
 
   // 状態色
   static const Color error = Color(0xFFEF4444);
-  static const Color plusBadgeBackground = Color(0xFF333333);
+  static const Color plusBadgeBackground = Color(0xFF7B4AA3);
 
   // 生成演出用
   static const Color generateBackground = Color(0xFF000000);
