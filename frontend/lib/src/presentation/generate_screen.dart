@@ -14,6 +14,7 @@ import 'package:sample_app/core/widgets/app_section_header.dart';
 import '../domain/models.dart';
 import '../domain/persona_type_helper.dart';
 import '../domain/telemetry_event.dart';
+import '../domain/history_text.dart';
 import '../infrastructure/api_client.dart';
 import '../infrastructure/purchase_service.dart';
 import '../infrastructure/share_receiver.dart';
@@ -183,6 +184,13 @@ class _GenerateScreenState extends State<GenerateScreen>
                       fileName: _sharedFileName,
                       hasText: _sharedText?.isNotEmpty ?? false,
                     ),
+                    if (_sharedText?.isNotEmpty ?? false) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      _SharedHistoryPreview(
+                        fileName: _sharedFileName,
+                        sharedText: _sharedText!,
+                      ),
+                    ],
                     const SizedBox(height: AppSpacing.sm),
                     _ComboSelector(
                       selectedCombo: _comboId,
@@ -209,10 +217,6 @@ class _GenerateScreenState extends State<GenerateScreen>
                         planLabel: _planLabel(_plan),
                         metaPro: _plan == 'pro' ? _metaPro : null,
                       ),
-                    if (_error != null) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      _ErrorBanner(message: _errorMessage(_error!)),
-                    ],
                     const SizedBox(height: AppSpacing.sm),
                     Expanded(
                       child: _ResultArea(
@@ -256,8 +260,23 @@ class _GenerateScreenState extends State<GenerateScreen>
 
   Future<void> _onGeneratePressed() async {
     unawaited(Haptics.mediumImpact());
-    final text = _sharedText?.trim();
-    if (text == null || text.isEmpty) return;
+    final rawText = _sharedText?.trim();
+    if (rawText == null || rawText.isEmpty) return;
+
+    final planFromStore = widget.purchaseService.isPro ? 'pro' : _plan;
+    final text = trimHistoryForGenerate(rawText, plan: planFromStore);
+    if (text.isEmpty) {
+      final error = ApiError(
+        errorCode: 'VALIDATION_FAILED',
+        message: '共有テキストを読み取れなかった',
+        httpStatus: 422,
+      );
+      setState(() {
+        _error = error;
+      });
+      _showErrorMessageBox(error);
+      return;
+    }
 
     // Pro専用コンボ（2,3,4,5）をFreeで選択した場合
     if (_plan == 'free' && _comboId >= 2) {
@@ -363,6 +382,7 @@ class _GenerateScreenState extends State<GenerateScreen>
       setState(() {
         _error = error;
       });
+      _showErrorMessageBox(error);
     } finally {
       if (!mounted) return;
       _generationLineTimer?.cancel();
@@ -410,6 +430,8 @@ class _GenerateScreenState extends State<GenerateScreen>
       case 'SETTINGS_VERSION_CONFLICT':
       case 'ETAG_MISMATCH':
         return '設定が更新されていたみたい。読み込み直してね';
+      case 'VALIDATION_FAILED':
+        return '履歴が長すぎるか形式が不正かも。LINEからもう一度共有してね';
       case 'RATE_LIMITED':
         return '少し混み合ってるみたい。少し待って、もう一度';
       case 'DAILY_LIMIT_REACHED':
@@ -422,9 +444,45 @@ class _GenerateScreenState extends State<GenerateScreen>
       case 'UPSTREAM_UNAVAILABLE':
       case 'UPSTREAM_TIMEOUT':
         return '今は不安定みたい。少し待って、もう一度';
+      case 'INTERNAL_ERROR':
+        return 'サーバーで問題が起きたみたい。少し待って、もう一度ためしてね';
       default:
-        return 'うまく読めなかった。もう一度共有して';
+        return '処理に失敗したよ。内容を確認して、もう一度ためしてね';
     }
+  }
+
+  void _showErrorMessageBox(ApiError error) {
+    if (!mounted) return;
+
+    final message = _errorMessage(error);
+    final detail = error.message.trim();
+    final detailMessage = detail.isEmpty ? '詳細情報は取得できなかったよ' : detail;
+
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('エラーが発生したよ'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(message),
+              const SizedBox(height: AppSpacing.sm),
+              Text('エラーコード: ${error.errorCode}', style: AppTextStyles.small),
+              const SizedBox(height: AppSpacing.xs),
+              Text('詳細: $detailMessage', style: AppTextStyles.small),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('閉じる'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showUpsellDialog() {
@@ -516,6 +574,7 @@ class _GenerateScreenState extends State<GenerateScreen>
       setState(() {
         _error = error;
       });
+      _showErrorMessageBox(error);
     } finally {
       if (!mounted) return;
       setState(() {
@@ -590,6 +649,71 @@ class _PersonaValueRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SharedHistoryPreview extends StatelessWidget {
+  const _SharedHistoryPreview({
+    required this.fileName,
+    required this.sharedText,
+  });
+
+  final String? fileName;
+  final String sharedText;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xs,
+        ),
+        childrenPadding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          0,
+          AppSpacing.md,
+          AppSpacing.sm,
+        ),
+        title: const Text(
+          '共有されたトーク履歴（確認用）',
+          style: AppTextStyles.sectionHeader,
+        ),
+        subtitle: Text(
+          fileName == null || fileName!.isEmpty
+              ? 'タップで内容を確認できるよ'
+              : '$fileName（タップで内容を確認）',
+          style: AppTextStyles.small,
+        ),
+        children: [
+          SizedBox(
+            height: 140,
+            child: TextFormField(
+              key: const Key('shared_history_preview_textfield'),
+              initialValue: sharedText,
+              readOnly: true,
+              expands: true,
+              minLines: null,
+              maxLines: null,
+              style: AppTextStyles.body,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: AppColors.white,
+                contentPadding: const EdgeInsets.all(AppSpacing.md),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -896,22 +1020,3 @@ class _ResultCandidateCard extends StatelessWidget {
   }
 }
 
-class _ErrorBanner extends StatelessWidget {
-  const _ErrorBanner({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.lightPink,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm),
-        child: Text(message, style: AppTextStyles.small),
-      ),
-    );
-  }
-}

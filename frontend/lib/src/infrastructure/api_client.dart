@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
@@ -40,12 +42,14 @@ class ApiClient implements AppApiClient {
     required this.baseUrl,
     required this.tokenStore,
     http.Client? httpClient,
+    this.requestTimeout = const Duration(seconds: 30),
     this.debugLog,
   }) : _httpClient = httpClient ?? http.Client();
 
   final String baseUrl;
   final TokenStore tokenStore;
   final http.Client _httpClient;
+  final Duration requestTimeout;
   final Uuid _uuid = const Uuid();
   final void Function(String message)? debugLog;
 
@@ -65,18 +69,22 @@ class ApiClient implements AppApiClient {
     await bootstrapAuth();
     return _runWithAuthRetry(() async {
       final token = await tokenStore.read();
-      final response = await _httpClient.post(
-        Uri.parse('$baseUrl/api/v1/generate'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-          'Idempotency-Key': _uuid.v4(),
-        },
-        body: jsonEncode({
-          'history_text': historyText,
-          'combo_id': comboId,
-          'tuning': null,
-        }),
+      final response = await _sendWithTimeout(
+        () => _httpClient.post(
+          Uri.parse('$baseUrl/api/v1/generate'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+            'Idempotency-Key': _uuid.v4(),
+          },
+          body: jsonEncode({
+            'history_text': historyText,
+            'combo_id': comboId,
+            'tuning': null,
+          }),
+        ),
+        method: 'POST',
+        path: '/api/v1/generate',
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -97,9 +105,13 @@ class ApiClient implements AppApiClient {
     return _runWithAuthRetry(() async {
       final token = await tokenStore.read();
       _logHttpRequest('GET', '/api/v1/me/settings');
-      final response = await _httpClient.get(
-        Uri.parse('$baseUrl/api/v1/me/settings'),
-        headers: {'Authorization': 'Bearer $token'},
+      final response = await _sendWithTimeout(
+        () => _httpClient.get(
+          Uri.parse('$baseUrl/api/v1/me/settings'),
+          headers: {'Authorization': 'Bearer $token'},
+        ),
+        method: 'GET',
+        path: '/api/v1/me/settings',
       );
       _logHttpResponse('GET', '/api/v1/me/settings', response.statusCode);
 
@@ -139,14 +151,18 @@ class ApiClient implements AppApiClient {
           'settingsKeys': settings.keys.length,
         },
       );
-      final response = await _httpClient.put(
-        Uri.parse('$baseUrl/api/v1/me/settings'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-          'If-Match': etag,
-        },
-        body: jsonEncode({'settings': settings}),
+      final response = await _sendWithTimeout(
+        () => _httpClient.put(
+          Uri.parse('$baseUrl/api/v1/me/settings'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+            'If-Match': etag,
+          },
+          body: jsonEncode({'settings': settings}),
+        ),
+        method: 'PUT',
+        path: '/api/v1/me/settings',
       );
       _logHttpResponse('PUT', '/api/v1/me/settings', response.statusCode);
 
@@ -174,15 +190,19 @@ class ApiClient implements AppApiClient {
         '/api/v1/me/diagnosis',
         extra: {'answersCount': answers.length},
       );
-      final response = await _httpClient.post(
-        Uri.parse('$baseUrl/api/v1/me/diagnosis'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'answers': answers.map((answer) => answer.toJson()).toList(),
-        }),
+      final response = await _sendWithTimeout(
+        () => _httpClient.post(
+          Uri.parse('$baseUrl/api/v1/me/diagnosis'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({
+            'answers': answers.map((answer) => answer.toJson()).toList(),
+          }),
+        ),
+        method: 'POST',
+        path: '/api/v1/me/diagnosis',
       );
       _logHttpResponse('POST', '/api/v1/me/diagnosis', response.statusCode);
 
@@ -272,13 +292,17 @@ class ApiClient implements AppApiClient {
     await bootstrapAuth();
     return _runWithAuthRetry(() async {
       final token = await tokenStore.read();
-      final response = await _httpClient.post(
-        Uri.parse('$baseUrl/api/v1/migration/issue'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: '{}',
+      final response = await _sendWithTimeout(
+        () => _httpClient.post(
+          Uri.parse('$baseUrl/api/v1/migration/issue'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: '{}',
+        ),
+        method: 'POST',
+        path: '/api/v1/migration/issue',
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -295,10 +319,14 @@ class ApiClient implements AppApiClient {
 
   @override
   Future<MigrationConsumeResult> consumeMigrationCode(String code) async {
-    final response = await _httpClient.post(
-      Uri.parse('$baseUrl/api/v1/migration/consume'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'migration_code': code}),
+    final response = await _sendWithTimeout(
+      () => _httpClient.post(
+        Uri.parse('$baseUrl/api/v1/migration/consume'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'migration_code': code}),
+      ),
+      method: 'POST',
+      path: '/api/v1/migration/consume',
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -320,13 +348,17 @@ class ApiClient implements AppApiClient {
     await bootstrapAuth();
     return _runWithAuthRetry(() async {
       final token = await tokenStore.read();
-      final response = await _httpClient.post(
-        Uri.parse('$baseUrl/api/v1/telemetry/events'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'events': events}),
+      final response = await _sendWithTimeout(
+        () => _httpClient.post(
+          Uri.parse('$baseUrl/api/v1/telemetry/events'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({'events': events}),
+        ),
+        method: 'POST',
+        path: '/api/v1/telemetry/events',
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -342,8 +374,12 @@ class ApiClient implements AppApiClient {
 
   @override
   Future<AppVersionInfo> getAppVersionInfo() async {
-    final response = await _httpClient.get(
-      Uri.parse('$baseUrl/api/v1/version'),
+    final response = await _sendWithTimeout(
+      () => _httpClient.get(
+        Uri.parse('$baseUrl/api/v1/version'),
+      ),
+      method: 'GET',
+      path: '/api/v1/version',
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -366,17 +402,21 @@ class ApiClient implements AppApiClient {
     await bootstrapAuth();
     return _runWithAuthRetry(() async {
       final token = await tokenStore.read();
-      final response = await _httpClient.post(
-        Uri.parse('$baseUrl/api/v1/billing/verify'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'platform': platform,
-          'product_id': productId,
-          'purchase_token': purchaseToken,
-        }),
+      final response = await _sendWithTimeout(
+        () => _httpClient.post(
+          Uri.parse('$baseUrl/api/v1/billing/verify'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({
+            'platform': platform,
+            'product_id': productId,
+            'purchase_token': purchaseToken,
+          }),
+        ),
+        method: 'POST',
+        path: '/api/v1/billing/verify',
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -395,9 +435,13 @@ class ApiClient implements AppApiClient {
     await bootstrapAuth();
     return _runWithAuthRetry(() async {
       final token = await tokenStore.read();
-      final response = await _httpClient.delete(
-        Uri.parse('$baseUrl/api/v1/auth/me'),
-        headers: {'Authorization': 'Bearer $token'},
+      final response = await _sendWithTimeout(
+        () => _httpClient.delete(
+          Uri.parse('$baseUrl/api/v1/auth/me'),
+          headers: {'Authorization': 'Bearer $token'},
+        ),
+        method: 'DELETE',
+        path: '/api/v1/auth/me',
       );
 
       if (response.statusCode == 204) {
@@ -425,10 +469,14 @@ class ApiClient implements AppApiClient {
 
   Future<void> _authenticateAnonymous() async {
     _logHttpRequest('POST', '/api/v1/auth/anonymous');
-    final response = await _httpClient.post(
-      Uri.parse('$baseUrl/api/v1/auth/anonymous'),
-      headers: {'Content-Type': 'application/json'},
-      body: '{}',
+    final response = await _sendWithTimeout(
+      () => _httpClient.post(
+        Uri.parse('$baseUrl/api/v1/auth/anonymous'),
+        headers: {'Content-Type': 'application/json'},
+        body: '{}',
+      ),
+      method: 'POST',
+      path: '/api/v1/auth/anonymous',
     );
     _logHttpResponse('POST', '/api/v1/auth/anonymous', response.statusCode);
 
@@ -450,6 +498,53 @@ class ApiClient implements AppApiClient {
       httpStatus: response.statusCode,
       body: _tryJson(response.body),
     );
+  }
+
+  Future<http.Response> _sendWithTimeout(
+    Future<http.Response> Function() request, {
+    required String method,
+    required String path,
+  }) async {
+    try {
+      return await request().timeout(requestTimeout);
+    } on TimeoutException {
+      _logClientEvent('http', {
+        'stage': 'error',
+        'method': method,
+        'path': path,
+        'error': 'timeout',
+        'timeoutMs': requestTimeout.inMilliseconds,
+      });
+      throw ApiError(
+        errorCode: 'UPSTREAM_TIMEOUT',
+        message: '通信がタイムアウトしたよ',
+        httpStatus: 504,
+      );
+    } on SocketException {
+      _logClientEvent('http', {
+        'stage': 'error',
+        'method': method,
+        'path': path,
+        'error': 'socket',
+      });
+      throw ApiError(
+        errorCode: 'UPSTREAM_UNAVAILABLE',
+        message: 'ネットワークに接続できないよ',
+        httpStatus: 503,
+      );
+    } on http.ClientException {
+      _logClientEvent('http', {
+        'stage': 'error',
+        'method': method,
+        'path': path,
+        'error': 'client_exception',
+      });
+      throw ApiError(
+        errorCode: 'UPSTREAM_UNAVAILABLE',
+        message: '通信に失敗したよ',
+        httpStatus: 503,
+      );
+    }
   }
 
   Map<String, dynamic>? _tryJson(String raw) {

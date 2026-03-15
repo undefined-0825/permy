@@ -187,6 +187,14 @@ ios/
 - API層で `ApiError(errorCode, httpStatus)` に正規化
 - Presentation層は errorCodeでUIを選ぶ
 
+### 5.3 生成画面のエラー表示（MUST）
+- 生成失敗時の通知は、ボタン下の小さな文言ではなく **メッセージボックス（AlertDialog）** で表示する。
+- メッセージボックスには以下を必ず表示する。
+  - ユーザー向け要約メッセージ
+  - `error_code`（例: `VALIDATION_FAILED`）
+  - サーバーから受けた詳細メッセージ（本文を含まない範囲）
+- 既知の `error_code` は全て個別文言を定義し、未知コードは汎用文言 + `error_code` を表示する。
+
 ---
 
 ## 6. 共有受信（Android/iOS）実装（最重要）

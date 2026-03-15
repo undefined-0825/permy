@@ -36,13 +36,12 @@ class ShareReceiver implements ShareInput {
   Future<SharePayload?> _buildFromMedia(List<SharedMediaFile> files) async {
     for (final file in files) {
       final path = file.path;
-      if (path.isEmpty || !path.toLowerCase().endsWith('.txt')) {
+      if (path.isEmpty) {
         continue;
       }
 
-      final text = await File(path).readAsString();
-      final trimmed = text.trim();
-      if (trimmed.isEmpty) {
+      final trimmed = await _tryReadText(path);
+      if (trimmed == null || trimmed.isEmpty) {
         continue;
       }
       return SharePayload(
@@ -51,5 +50,14 @@ class ShareReceiver implements ShareInput {
       );
     }
     return null;
+  }
+
+  Future<String?> _tryReadText(String path) async {
+    try {
+      final text = await File(path).readAsString();
+      return text.trim();
+    } catch (_) {
+      return null;
+    }
   }
 }
