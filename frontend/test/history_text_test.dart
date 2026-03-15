@@ -18,10 +18,14 @@ void main() {
     final source = lines.join('\n');
 
     final trimmed = trimHistoryForGenerate(source, plan: 'pro');
+    final trimmedLines = trimmed.split('\n');
 
-    expect(trimmed.split('\n').length, lessThanOrEqualTo(300));
-    expect(trimmed.contains('line-1'), isFalse);
-    expect(trimmed.contains('line-360'), isTrue);
+    // 行リストで検証する（部分文字列一致だと line-100 が line-1 を含むため誤検知になる）
+    expect(trimmedLines.length, lessThanOrEqualTo(300));
+    expect(trimmedLines, isNot(contains('line-1')));
+    expect(trimmedLines, isNot(contains('line-60')));
+    expect(trimmedLines, contains('line-61'));
+    expect(trimmedLines, contains('line-360'));
   });
 
   test('空白だけの入力は空文字を返す', () {

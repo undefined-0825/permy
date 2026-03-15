@@ -16,6 +16,7 @@ from app.ai_client import get_ai_client, GenerateContext
 from app.models import UserSettings
 from app.services.usage import get_or_create_usage
 from app.services.idempotency import acquire
+from app.settings_defaults import with_default_settings
 from app.utils_time import jst_today_ymd
 from app.followup_helper import check_missing_setting
 
@@ -77,7 +78,7 @@ async def generate(
     # Settings取得（followup判定とNG判定に使用）
     row = await db.execute(select(UserSettings).where(UserSettings.user_id == auth.user_id))
     st = row.scalar_one_or_none()
-    settings = st.settings_json if st else {}
+    settings = with_default_settings(st.settings_json if st else {})
 
     # Followup判定（設定不足チェック）
     followup = check_missing_setting(settings)

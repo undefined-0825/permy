@@ -66,22 +66,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               },
               children: [
                 _buildStep(
-                  icon: Icons.message,
+                  imagePath: 'assets/images/onboarding/step1.png',
                   title: 'ペルミィへようこそ',
                   body: 'ぼくはきみの分身。\nLINEのトーク履歴から、\nぴったりな返信を作るよ。',
                 ),
                 _buildStep(
-                  icon: Icons.share,
+                  imagePath: 'assets/images/onboarding/step2.png',
                   title: 'トーク履歴を送ろう',
                   body: 'LINEでトーク履歴を送信して、\nこのアプリに共有して。\n.txtを受け取って返信案を作るよ。',
                 ),
                 _buildStep(
-                  icon: Icons.lock_outline,
+                  imagePath: 'assets/images/onboarding/step3.png',
                   title: 'プライバシー保護',
                   body: 'トークの本文は保存されません。\n返信案はあなたが選んでコピーして、\n送信はあなたの操作で行います。',
                 ),
                 _buildStep(
-                  icon: Icons.star,
+                  imagePath: 'assets/images/onboarding/step4.png',
                   title: 'さあ、始めよう',
                   body: '準備ができたら始めよう。\nきみのやり方に合う返信を\nいっしょに作っていくよ。',
                 ),
@@ -154,7 +154,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildStep({
-    required IconData icon,
+    required String imagePath,
     required String title,
     required String body,
   }) {
@@ -163,7 +163,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 80, color: AppColors.secondaryPink),
+          Image.asset(imagePath, width: double.infinity, fit: BoxFit.contain),
           const SizedBox(height: AppSpacing.lg),
           Text(
             title,

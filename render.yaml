@@ -59,6 +59,10 @@ services:
         value: 3
       - key: PRO_GENERATE_DAILY_LIMIT
         value: 100
+
+      # テスト期間：新規ユーザーを全員Proで作成（期間終了後にfalseまたは削除）
+      - key: BETA_ALL_PRO
+        value: true
       
       # Logging
       - key: UVICORN_ACCESS_LOG

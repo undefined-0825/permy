@@ -35,10 +35,18 @@ class _FakePurchaseService extends PurchaseService {
 }
 
 class _FakeApiClient implements AppApiClient {
-  _FakeApiClient({this.generateResult, this.generateError});
+  _FakeApiClient({
+    this.generateResult,
+    this.generateError,
+    List<GenerateResult>? generateResults,
+  }) : _generateResults = List<GenerateResult>.from(
+         generateResults ?? const [],
+       );
 
   final GenerateResult? generateResult;
   final ApiError? generateError;
+  final List<GenerateResult> _generateResults;
+  int generateCallCount = 0;
   Map<String, dynamic> lastUpdatedSettings = <String, dynamic>{};
 
   @override
@@ -63,7 +71,8 @@ class _FakeApiClient implements AppApiClient {
   Future<SettingsSnapshot> getSettings() async {
     return SettingsSnapshot(
       settings: <String, dynamic>{
-        'relationship_type': 'new_customer',
+        'relationship_type': 'new',
+        'reply_length_pref': 'standard',
         'ng_tags': <String>[],
         'ng_free_phrases': <String>[],
       },
@@ -100,8 +109,14 @@ class _FakeApiClient implements AppApiClient {
     required String historyText,
     int comboId = 0,
   }) async {
+    generateCallCount += 1;
+
     if (generateError != null) {
       throw generateError!;
+    }
+
+    if (_generateResults.isNotEmpty) {
+      return _generateResults.removeAt(0);
     }
 
     if (generateResult != null) {
@@ -199,8 +214,34 @@ void main() {
     await tester.pump();
 
     expect(find.byType(TextField), findsNothing);
-    expect(find.text('返信案'), findsOneWidget);
-    expect(find.text('まずLINEのトーク履歴を共有してね'), findsNWidgets(3));
+    expect(find.text('返信案'), findsNothing);
+    expect(find.text('まずは、LINEからトーク履歴を共有してね♪'), findsOneWidget);
+    expect(find.text('返信案の調整'), findsOneWidget);
+    expect(find.text('現在のペルソナ情報'), findsOneWidget);
+  });
+
+  testWidgets('Generate画面でお客様との関係を変更できる', (WidgetTester tester) async {
+    final apiClient = _FakeApiClient();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: apiClient,
+          shareReceiver: _FakeShareInput(null),
+          telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final relationshipDropdown = tester.widget<DropdownButtonFormField<String>>(
+      find.byType(DropdownButtonFormField<String>).first,
+    );
+    relationshipDropdown.onChanged?.call('regular');
+    await tester.pumpAndSettle();
+
+    expect(apiClient.lastUpdatedSettings['relationship_type'], 'regular');
   });
 
   testWidgets('共有済みなら生成でA/B/Cを表示する', (WidgetTester tester) async {
@@ -264,6 +305,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('共有されたトーク履歴（確認用）'), findsOneWidget);
+    expect(find.text('返信案'), findsNothing);
     expect(
       find.byKey(const Key('shared_history_preview_textfield')),
       findsNothing,
@@ -279,22 +321,33 @@ void main() {
     expect(find.textContaining('共有本文1'), findsOneWidget);
   });
 
-  testWidgets('Followup選択でsettingsを保存できる', (WidgetTester tester) async {
+  testWidgets('Followup選択でsettingsを保存して返信案を更新できる', (WidgetTester tester) async {
     final apiClient = _FakeApiClient(
-      generateResult: GenerateResult(
-        candidates: [
-          Candidate(label: 'A', text: '返信案A'),
-          Candidate(label: 'B', text: '返信案B'),
-          Candidate(label: 'C', text: '返信案C'),
-        ],
-        plan: 'free',
-        daily: DailyInfo(limit: 3, used: 1, remaining: 2),
-        followup: FollowupInfo(
-          key: 'relationship_type',
-          question: 'お客様との関係を教えてね',
-          choices: [FollowupChoice(id: 'repeat', label: '常連')],
+      generateResults: [
+        GenerateResult(
+          candidates: [
+            Candidate(label: 'A', text: '補足前の返信案A'),
+            Candidate(label: 'B', text: '補足前の返信案B'),
+            Candidate(label: 'C', text: '補足前の返信案C'),
+          ],
+          plan: 'free',
+          daily: DailyInfo(limit: 3, used: 1, remaining: 2),
+          followup: FollowupInfo(
+            key: 'relationship_type',
+            question: 'お客様との関係を教えてね',
+            choices: [FollowupChoice(id: 'repeat', label: '常連')],
+          ),
         ),
-      ),
+        GenerateResult(
+          candidates: [
+            Candidate(label: 'A', text: '補足後の返信案A'),
+            Candidate(label: 'B', text: '補足後の返信案B'),
+            Candidate(label: 'C', text: '補足後の返信案C'),
+          ],
+          plan: 'free',
+          daily: DailyInfo(limit: 3, used: 2, remaining: 1),
+        ),
+      ],
     );
 
     await tester.pumpWidget(
@@ -319,10 +372,15 @@ void main() {
 
     expect(find.text('情報補足'), findsOneWidget);
     await tester.tap(find.text('常連'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 900));
     await tester.pumpAndSettle();
 
     expect(apiClient.lastUpdatedSettings['relationship_type'], 'repeat');
-    expect(find.text('情報を反映したよ。もう一度生成してみてね'), findsOneWidget);
+    expect(apiClient.generateCallCount, 2);
+    expect(find.text('情報を反映したよ。返信案を更新するね'), findsOneWidget);
+    expect(find.text('補足後の返信案A'), findsOneWidget);
+    expect(find.text('補足前の返信案A'), findsNothing);
   });
 
   testWidgets('FreeでPlus項目選択時に購買案内を表示する', (WidgetTester tester) async {
@@ -371,9 +429,7 @@ void main() {
     expect(find.text('Plus'), findsWidgets);
   });
 
-  testWidgets('生成失敗時にエラーコード付きメッセージボックスを表示する', (
-    WidgetTester tester,
-  ) async {
+  testWidgets('生成失敗時にエラーコード付きメッセージボックスを表示する', (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: GenerateScreen(

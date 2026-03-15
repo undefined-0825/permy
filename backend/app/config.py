@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     free_generate_daily_limit: int = 3
     pro_generate_daily_limit: int = 100
 
+    # テスト期間：新規ユーザーを全員Proで作成する（beta期間終了後にFalseに戻すこと）
+    beta_all_pro: bool = False
+
 
     # AI
     ai_provider: str = "dummy"  # dummy/openai

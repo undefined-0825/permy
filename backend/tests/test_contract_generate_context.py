@@ -43,3 +43,17 @@ def test_generate_uses_settings_context_with_dummy_client(client):
     candidates = body["candidates"]
     assert len(candidates) == 3
     assert "関係: regular" in candidates[0]["text"]
+
+
+def test_generate_uses_default_followup_settings_for_new_user(client):
+    headers = _auth_headers(client)
+
+    res = client.post(
+        "/api/v1/generate",
+        json={"history_text": "User: hello\nShop: hi", "combo_id": 0},
+        headers={**headers, "Idempotency-Key": "test-generate-default-settings-001"},
+    )
+    assert res.status_code == 200
+
+    body = res.json()
+    assert body.get("followup") is None

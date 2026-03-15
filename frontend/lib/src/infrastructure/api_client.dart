@@ -375,9 +375,7 @@ class ApiClient implements AppApiClient {
   @override
   Future<AppVersionInfo> getAppVersionInfo() async {
     final response = await _sendWithTimeout(
-      () => _httpClient.get(
-        Uri.parse('$baseUrl/api/v1/version'),
-      ),
+      () => _httpClient.get(Uri.parse('$baseUrl/api/v1/version')),
       method: 'GET',
       path: '/api/v1/version',
     );

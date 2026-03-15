@@ -56,10 +56,12 @@ class AppButton extends StatelessWidget {
     );
 
     final ButtonStyle secondaryStyle = OutlinedButton.styleFrom(
-      foregroundColor: isDisabled ? AppColors.metaText : AppColors.primaryPink,
+      foregroundColor: isDisabled
+          ? AppColors.metaText
+          : AppColors.buttonBackground,
       disabledForegroundColor: AppColors.metaText,
       side: BorderSide(
-        color: isDisabled ? AppColors.separator : AppColors.primaryPink,
+        color: isDisabled ? AppColors.separator : AppColors.buttonBackground,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.md),
@@ -78,7 +80,7 @@ class AppButton extends StatelessWidget {
           AppButtonVariant.primary =>
             isDisabled ? AppColors.metaText : AppColors.white,
           AppButtonVariant.secondary =>
-            isDisabled ? AppColors.metaText : AppColors.primaryPink,
+            isDisabled ? AppColors.metaText : AppColors.buttonBackground,
         },
       ),
     );

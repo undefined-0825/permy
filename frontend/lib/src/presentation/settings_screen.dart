@@ -64,6 +64,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     'no_late_reply_blame': '返信の催促をしない',
   };
 
+  static const Map<String, String> _replyLengthLabels = {
+    'short': '短め',
+    'standard': '標準',
+    'long': '長め',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -90,7 +96,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final snapshot = await widget.apiClient.getSettings();
       if (!mounted) return;
       setState(() {
-        _settings = Map<String, dynamic>.from(snapshot.settings);
+        _settings = _normalizeSettings(snapshot.settings);
         _currentETag = snapshot.etag;
         _loading = false;
       });
@@ -114,7 +120,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final snapshot = await widget.apiClient.getSettings();
       if (!mounted) return;
       setState(() {
-        _settings = Map<String, dynamic>.from(snapshot.settings);
+        _settings = _normalizeSettings(snapshot.settings);
         _currentETag = snapshot.etag;
         _saving = false;
       });
@@ -172,6 +178,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (autoPersist) {
       _scheduleAutoPersist();
     }
+  }
+
+  Map<String, dynamic> _normalizeSettings(Map<String, dynamic> settings) {
+    final normalized = Map<String, dynamic>.from(settings);
+    normalized.putIfAbsent('relationship_type', () => 'new');
+    normalized.putIfAbsent('reply_length_pref', () => 'standard');
+    normalized['ng_tags'] =
+        (normalized['ng_tags'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        <String>[];
+    normalized['ng_free_phrases'] =
+        (normalized['ng_free_phrases'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        <String>[];
+    return normalized;
   }
 
   Future<void> _startRediagnosis() async {
@@ -247,6 +270,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const AppSectionHeader(title: 'デフォルトの返信スタイル'),
                   const SizedBox(height: AppSpacing.sm),
                   _buildComboSetting(),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildReplyLengthSetting(),
                   const SizedBox(height: AppSpacing.xl),
                   const AppSectionHeader(title: '返信案のNG設定'),
                   const SizedBox(height: AppSpacing.sm),
@@ -406,6 +431,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Text(
           'Plus版ではさらに 4種類の方針が選択できます',
           style: AppTextStyles.small.copyWith(color: AppColors.bodyText),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReplyLengthSetting() {
+    final currentReplyLength =
+        _settings['reply_length_pref']?.toString() ?? 'standard';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text('返信の長さ', style: AppTextStyles.body),
+        const SizedBox(height: AppSpacing.sm),
+        SegmentedButton<String>(
+          segments: const [
+            ButtonSegment(value: 'short', label: Text('短め')),
+            ButtonSegment(value: 'standard', label: Text('標準')),
+            ButtonSegment(value: 'long', label: Text('長め')),
+          ],
+          selected: <String>{currentReplyLength},
+          onSelectionChanged: (Set<String> newSelection) {
+            unawaited(Haptics.selection());
+            _updateSetting('reply_length_pref', newSelection.first);
+          },
         ),
       ],
     );

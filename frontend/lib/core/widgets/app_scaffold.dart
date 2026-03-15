@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:sample_app/core/theme/app_colors.dart';
 import 'package:sample_app/core/theme/app_spacing.dart';
 
 class AppScaffold extends StatelessWidget {
@@ -38,16 +37,7 @@ class AppScaffold extends StatelessWidget {
 
     return Scaffold(
       appBar: appBar,
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [AppColors.backgroundStart, AppColors.backgroundEnd],
-          ),
-        ),
-        child: content,
-      ),
+      body: content,
       bottomNavigationBar: bottomNavigationBar,
       floatingActionButton: floatingActionButton,
     );

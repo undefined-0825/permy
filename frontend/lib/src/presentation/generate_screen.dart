@@ -44,6 +44,13 @@ class _GenerateScreenState extends State<GenerateScreen>
     with WidgetsBindingObserver {
   static const String _linePersona = 'ぼくはきみの分身・・・';
   static const String _lineDelegate = 'ぼくに任せて・・・';
+  static const Map<String, String> _relationshipLabels = {
+    'new': '新規（初めて）',
+    'regular': '常連（何度も来てる）',
+    'big_client': '太客（大切なお客様）',
+    'caution': '慎重（距離を見たい）',
+    'peer': '同業・友達寄り',
+  };
 
   StreamSubscription<SharePayload>? _shareSubscription;
   Timer? _generationLineTimer;
@@ -59,8 +66,12 @@ class _GenerateScreenState extends State<GenerateScreen>
   int? _metaPro;
   int _comboId = 0;
   String? _copiedLabel;
+  String? _trueTypeValue;
+  String? _nightTypeValue;
   String _trueTypeLabel = '診断待機中...';
   String _nightTypeLabel = '診断待機中...';
+  String _relationshipType = 'new';
+  bool _savingRelationshipType = false;
 
   @override
   void initState() {
@@ -95,13 +106,20 @@ class _GenerateScreenState extends State<GenerateScreen>
       if (!mounted) return;
       final trueType = snapshot.settings['true_self_type']?.toString();
       final nightType = snapshot.settings['night_self_type']?.toString();
+      final relationshipType = snapshot.settings['relationship_type']
+          ?.toString();
       setState(() {
+        _trueTypeValue = trueType;
+        _nightTypeValue = nightType;
         _trueTypeLabel = (trueType == null || trueType.isEmpty)
             ? '診断待機中...'
             : getTrueSelfTypeName(trueType);
         _nightTypeLabel = (nightType == null || nightType.isEmpty)
             ? '診断待機中...'
             : getNightSelfTypeName(nightType);
+        _relationshipType = _relationshipLabels.containsKey(relationshipType)
+            ? relationshipType!
+            : 'new';
       });
     } catch (_) {
       // ペルソナ取得失敗時は既定表示を維持
@@ -129,13 +147,14 @@ class _GenerateScreenState extends State<GenerateScreen>
 
   @override
   Widget build(BuildContext context) {
-    final canGenerate = !_loading && (_sharedText?.trim().isNotEmpty ?? false);
+    final hasSharedText = _sharedText?.trim().isNotEmpty ?? false;
+    final canGenerate = !_loading && !_savingRelationshipType && hasSharedText;
 
     return AppScaffold(
       appBar: TopBrandHeader(
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: const Icon(Icons.settings, size: 28),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -151,83 +170,79 @@ class _GenerateScreenState extends State<GenerateScreen>
       ),
       body: Stack(
         children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage(
-                    'assets/images/backgrounds/background_pink.png',
-                  ),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
             child: Stack(
               children: [
-                if (_isGeneratingSequence)
-                  Positioned.fill(
-                    child: Container(
-                      color: AppColors.generateBackground.withValues(
-                        alpha: 0.95,
-                      ),
-                    ),
-                  ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _PersonaSummaryCard(
-                      trueTypeLabel: _trueTypeLabel,
-                      nightTypeLabel: _nightTypeLabel,
-                      fileName: _sharedFileName,
-                      hasText: _sharedText?.isNotEmpty ?? false,
-                    ),
-                    if (_sharedText?.isNotEmpty ?? false) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      _SharedHistoryPreview(
-                        fileName: _sharedFileName,
-                        sharedText: _sharedText!,
-                      ),
-                    ],
-                    const SizedBox(height: AppSpacing.sm),
-                    _ComboSelector(
-                      selectedCombo: _comboId,
-                      isPro: _plan == 'pro',
-                      onChanged: (int value) {
-                        final isPro = value >= 2; // combo 2-5 は Pro のみ
-                        if (isPro && _plan == 'free') {
-                          _showUpsellDialog();
-                        } else {
+                SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (!hasSharedText) ...[
+                        const _SharePromptHero(),
+                        const SizedBox(height: AppSpacing.xl),
+                      ],
+                      if (hasSharedText) ...[
+                        _SharedHistoryPreview(
+                          fileName: _sharedFileName,
+                          sharedText: _sharedText!,
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                      ],
+                      _GenerateAdjustmentsCard(
+                        currentRelationshipType: _relationshipType,
+                        selectedCombo: _comboId,
+                        isPro: _plan == 'pro',
+                        isSaving: _savingRelationshipType,
+                        isDisabled: _loading || _isGeneratingSequence,
+                        onRelationshipChanged: _updateRelationshipType,
+                        onComboChanged: (int value) {
+                          final isPro = value >= 2; // combo 2-5 は Pro のみ
+                          if (isPro && _plan == 'free') {
+                            _showUpsellDialog();
+                            return;
+                          }
                           setState(() {
                             _comboId = value;
                           });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    AppButton(
-                      text: _loading ? '生成中...' : 'ぼくが返信案を考えるよ',
-                      onPressed: canGenerate ? _onGeneratePressed : null,
-                    ),
-                    if (_daily != null || (_plan == 'pro' && _metaPro != null))
-                      _GenerateMetaInfo(
-                        daily: _daily,
-                        planLabel: _planLabel(_plan),
-                        metaPro: _plan == 'pro' ? _metaPro : null,
+                        },
                       ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Expanded(
-                      child: _ResultArea(
-                        isLoading: _loading,
-                        canGenerate: canGenerate,
-                        candidates: _candidates,
-                        copiedLabel: _copiedLabel,
-                        onCopyCandidate: _copyCandidate,
+                      const SizedBox(height: AppSpacing.xl),
+                      AppButton(
+                        text: _loading ? '生成中...' : 'ぼくが返信案を考えるよ',
+                        onPressed: canGenerate ? _onGeneratePressed : null,
                       ),
-                    ),
-                  ],
+                      if (_daily != null ||
+                          (_plan == 'pro' && _metaPro != null)) ...[
+                        _GenerateMetaInfo(
+                          daily: _daily,
+                          planLabel: _planLabel(_plan),
+                          metaPro: _plan == 'pro' ? _metaPro : null,
+                        ),
+                      ],
+                      if (_candidates.isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.xxl),
+                        _ResultArea(
+                          candidates: _candidates,
+                          copiedLabel: _copiedLabel,
+                          onCopyCandidate: _copyCandidate,
+                        ),
+                      ],
+                      const SizedBox(height: AppSpacing.xxl),
+                      _PersonaSummaryCard(
+                        trueTypeLabel: _trueTypeLabel,
+                        nightTypeLabel: _nightTypeLabel,
+                        trueTypeImagePath: _trueTypeValue == null
+                            ? null
+                            : getTrueSelfTypeImagePath(_trueTypeValue!),
+                        nightTypeImagePath: _nightTypeValue == null
+                            ? null
+                            : getNightSelfTypeImagePath(_nightTypeValue!),
+                        isDisabled: _loading || _isGeneratingSequence,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
+                  ),
                 ),
                 if (_isGeneratingSequence)
                   Positioned.fill(
@@ -241,7 +256,7 @@ class _GenerateScreenState extends State<GenerateScreen>
                                 : _lineDelegate,
                             key: ValueKey<int>(_generationLineIndex),
                             style: AppTextStyles.primaryTitle.copyWith(
-                              color: AppColors.white,
+                              color: AppColors.primaryTitle,
                               fontSize: 20,
                             ),
                             textAlign: TextAlign.center,
@@ -259,7 +274,14 @@ class _GenerateScreenState extends State<GenerateScreen>
   }
 
   Future<void> _onGeneratePressed() async {
-    unawaited(Haptics.mediumImpact());
+    await _generateCandidates(triggerHaptics: true);
+  }
+
+  Future<void> _generateCandidates({bool triggerHaptics = false}) async {
+    if (triggerHaptics) {
+      unawaited(Haptics.mediumImpact());
+    }
+
     final rawText = _sharedText?.trim();
     if (rawText == null || rawText.isEmpty) return;
 
@@ -568,7 +590,8 @@ class _GenerateScreenState extends State<GenerateScreen>
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('情報を反映したよ。もう一度生成してみてね')));
+      ).showSnackBar(const SnackBar(content: Text('情報を反映したよ。返信案を更新するね')));
+      await _generateCandidates();
     } on ApiError catch (error) {
       if (!mounted) return;
       setState(() {
@@ -582,27 +605,81 @@ class _GenerateScreenState extends State<GenerateScreen>
       });
     }
   }
+
+  Future<void> _updateRelationshipType(String relationshipType) async {
+    if (_savingRelationshipType || _relationshipType == relationshipType)
+      return;
+
+    final previous = _relationshipType;
+    setState(() {
+      _relationshipType = relationshipType;
+      _savingRelationshipType = true;
+      _error = null;
+    });
+
+    try {
+      final snapshot = await widget.apiClient.getSettings();
+      final updated = Map<String, dynamic>.from(snapshot.settings);
+      updated['relationship_type'] = relationshipType;
+      await widget.apiClient.updateSettings(updated, snapshot.etag);
+    } on ApiError catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _relationshipType = previous;
+        _savingRelationshipType = false;
+        _error = error;
+      });
+      _showErrorMessageBox(error);
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _savingRelationshipType = false;
+    });
+  }
+}
+
+class _SharePromptHero extends StatelessWidget {
+  const _SharePromptHero();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xxl,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Text(
+        'まずは、LINEからトーク履歴を共有してね♪',
+        style: AppTextStyles.primaryTitle.copyWith(fontSize: 28, height: 1.5),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
 }
 
 class _PersonaSummaryCard extends StatelessWidget {
   const _PersonaSummaryCard({
     required this.trueTypeLabel,
     required this.nightTypeLabel,
-    required this.fileName,
-    required this.hasText,
+    required this.trueTypeImagePath,
+    required this.nightTypeImagePath,
+    required this.isDisabled,
   });
 
   final String trueTypeLabel;
   final String nightTypeLabel;
-  final String? fileName;
-  final bool hasText;
+  final String? trueTypeImagePath;
+  final String? nightTypeImagePath;
+  final bool isDisabled;
 
   @override
   Widget build(BuildContext context) {
-    final shareDescription = hasText
-        ? (fileName == null ? '.txtを受け取ったよ' : '$fileName を受け取ったよ')
-        : 'LINEでトーク履歴を送信して、このアプリに共有して';
-
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -617,13 +694,19 @@ class _PersonaSummaryCard extends StatelessWidget {
         children: [
           const Text('現在のペルソナ情報', style: AppTextStyles.sectionHeader),
           const SizedBox(height: AppSpacing.xs),
-          _PersonaValueRow(label: '普段の属性', value: trueTypeLabel),
+          _PersonaValueRow(
+            label: '普段の属性',
+            value: trueTypeLabel,
+            imagePath: trueTypeImagePath,
+            isDisabled: isDisabled,
+          ),
           const SizedBox(height: AppSpacing.xs),
-          _PersonaValueRow(label: '夜の属性', value: nightTypeLabel),
-          if (!hasText) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(shareDescription, style: AppTextStyles.small),
-          ],
+          _PersonaValueRow(
+            label: '夜の属性',
+            value: nightTypeLabel,
+            imagePath: nightTypeImagePath,
+            isDisabled: isDisabled,
+          ),
         ],
       ),
     );
@@ -631,21 +714,49 @@ class _PersonaSummaryCard extends StatelessWidget {
 }
 
 class _PersonaValueRow extends StatelessWidget {
-  const _PersonaValueRow({required this.label, required this.value});
+  const _PersonaValueRow({
+    required this.label,
+    required this.value,
+    required this.imagePath,
+    required this.isDisabled,
+  });
 
   final String label;
   final String value;
+  final String? imagePath;
+  final bool isDisabled;
 
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(child: Text(label, style: AppTextStyles.meta)),
         Expanded(
-          child: Text(
-            value,
-            style: AppTextStyles.body,
-            textAlign: TextAlign.right,
+          flex: 2,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Flexible(
+                child: Text(
+                  value,
+                  style: AppTextStyles.body,
+                  textAlign: TextAlign.right,
+                ),
+              ),
+              if (imagePath != null) ...[
+                const SizedBox(width: AppSpacing.sm),
+                Opacity(
+                  opacity: isDisabled ? 0.38 : 1,
+                  child: Image.asset(
+                    imagePath!,
+                    width: 72,
+                    height: 72,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ],
@@ -718,16 +829,24 @@ class _SharedHistoryPreview extends StatelessWidget {
   }
 }
 
-class _ComboSelector extends StatelessWidget {
-  const _ComboSelector({
+class _GenerateAdjustmentsCard extends StatelessWidget {
+  const _GenerateAdjustmentsCard({
+    required this.currentRelationshipType,
     required this.selectedCombo,
     required this.isPro,
-    required this.onChanged,
+    required this.isSaving,
+    required this.isDisabled,
+    required this.onRelationshipChanged,
+    required this.onComboChanged,
   });
 
+  final String currentRelationshipType;
   final int selectedCombo;
   final bool isPro;
-  final ValueChanged<int> onChanged;
+  final bool isSaving;
+  final bool isDisabled;
+  final ValueChanged<String> onRelationshipChanged;
+  final ValueChanged<int> onComboChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -740,64 +859,124 @@ class _ComboSelector extends StatelessWidget {
       ('落とす（恋愛寄せ）', true), // 5: Pro
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('生成方針', style: AppTextStyles.sectionHeader),
-        const SizedBox(height: AppSpacing.xs),
-        SizedBox(
-          width: double.infinity,
-          child: DropdownButton<int>(
-            value: selectedCombo,
-            isExpanded: true,
-            items: List.generate(combos.length, (index) {
-              final (label, isProOnly) = combos[index];
-              final isLocked = isProOnly && !isPro;
-              return DropdownMenuItem<int>(
-                value: index,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        label,
-                        style: AppTextStyles.body.copyWith(
-                          color: isLocked
-                              ? AppColors.metaText
-                              : AppColors.bodyText,
-                        ),
-                      ),
-                    ),
-                    if (isProOnly)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.sm,
-                          vertical: AppSpacing.xs,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.plusBadgeBackground,
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
-                        ),
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 180),
+      opacity: isDisabled ? 0.62 : 1,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.inputVertical,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.white.withValues(alpha: 0.55),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const AppSectionHeader(title: '返信案の調整'),
+            const SizedBox(height: AppSpacing.sm),
+            const Text('お客様との関係', style: AppTextStyles.body),
+            const SizedBox(height: AppSpacing.sm),
+            DropdownButtonFormField<String>(
+              value: currentRelationshipType,
+              isExpanded: true,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: AppColors.white.withValues(alpha: 0.88),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.inputVertical,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              items: _GenerateScreenState._relationshipLabels.entries.map((
+                entry,
+              ) {
+                return DropdownMenuItem<String>(
+                  value: entry.key,
+                  child: Text(entry.value, style: AppTextStyles.body),
+                );
+              }).toList(),
+              onChanged: (isSaving || isDisabled)
+                  ? null
+                  : (String? value) {
+                      if (value == null) return;
+                      unawaited(Haptics.selection());
+                      onRelationshipChanged(value);
+                    },
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            const Text('生成方針', style: AppTextStyles.body),
+            const SizedBox(height: AppSpacing.sm),
+            DropdownButtonFormField<int>(
+              value: selectedCombo,
+              isExpanded: true,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: AppColors.white.withValues(alpha: 0.88),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.inputVertical,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              items: List.generate(combos.length, (index) {
+                final (label, isProOnly) = combos[index];
+                final isLocked = isProOnly && !isPro;
+                return DropdownMenuItem<int>(
+                  value: index,
+                  child: Row(
+                    children: [
+                      Expanded(
                         child: Text(
-                          'Plus',
-                          style: AppTextStyles.small.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w600,
+                          label,
+                          style: AppTextStyles.body.copyWith(
+                            color: isLocked
+                                ? AppColors.metaText
+                                : AppColors.bodyText,
                           ),
                         ),
                       ),
-                  ],
-                ),
-              );
-            }),
-            onChanged: (int? value) {
-              if (value != null) {
-                unawaited(Haptics.selection());
-                onChanged(value);
-              }
-            },
-          ),
+                      if (isProOnly)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                            vertical: AppSpacing.xs,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.plusBadgeBackground,
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                          ),
+                          child: Text(
+                            'Plus',
+                            style: AppTextStyles.small.copyWith(
+                              color: AppColors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              }),
+              onChanged: isDisabled
+                  ? null
+                  : (int? value) {
+                      if (value == null) return;
+                      unawaited(Haptics.selection());
+                      onComboChanged(value);
+                    },
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -816,7 +995,7 @@ class _GenerateMetaInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.xs),
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -837,15 +1016,11 @@ class _GenerateMetaInfo extends StatelessWidget {
 
 class _ResultArea extends StatelessWidget {
   const _ResultArea({
-    required this.isLoading,
-    required this.canGenerate,
     required this.candidates,
     required this.copiedLabel,
     required this.onCopyCandidate,
   });
 
-  final bool isLoading;
-  final bool canGenerate;
   final List<Candidate> candidates;
   final String? copiedLabel;
   final ValueChanged<Candidate> onCopyCandidate;
@@ -853,12 +1028,6 @@ class _ResultArea extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     assert(candidates.isEmpty || candidates.length == 3);
-    const fixedLabels = <String>['A', 'B', 'C'];
-    final stateMessage = isLoading
-        ? '生成中...'
-        : canGenerate
-        ? 'ここに返信案が表示されるよ'
-        : 'まずLINEのトーク履歴を共有してね';
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -873,72 +1042,19 @@ class _ResultArea extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const AppSectionHeader(title: '返信案'),
-          const SizedBox(height: AppSpacing.xs),
-          Expanded(
-            child: ListView.builder(
-              itemCount: fixedLabels.length,
-              itemBuilder: (context, index) {
-                if (candidates.isNotEmpty) {
-                  final candidate = candidates[index];
-                  final isCopied = copiedLabel == candidate.label;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: _ResultCandidateCard(
-                      candidate: candidate,
-                      isCopied: isCopied,
-                      onCopy: () => onCopyCandidate(candidate),
-                    ),
-                  );
-                }
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  child: _ResultPlaceholderCard(
-                    label: fixedLabels[index],
-                    message: stateMessage,
-                  ),
-                );
-              },
-            ),
-          ),
+          const SizedBox(height: AppSpacing.sm),
+          ...candidates.map((candidate) {
+            final isCopied = copiedLabel == candidate.label;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: _ResultCandidateCard(
+                candidate: candidate,
+                isCopied: isCopied,
+                onCopy: () => onCopyCandidate(candidate),
+              ),
+            );
+          }),
         ],
-      ),
-    );
-  }
-}
-
-class _ResultPlaceholderCard extends StatelessWidget {
-  const _ResultPlaceholderCard({required this.label, required this.message});
-
-  final String label;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.xs,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.separator,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-              ),
-              child: Text('$label案', style: AppTextStyles.small),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(child: Text(message, style: AppTextStyles.meta)),
-          ],
-        ),
       ),
     );
   }
@@ -1019,4 +1135,3 @@ class _ResultCandidateCard extends StatelessWidget {
     );
   }
 }
-

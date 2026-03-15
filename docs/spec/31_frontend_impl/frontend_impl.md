@@ -604,8 +604,8 @@ ios/
    - `reply_length_pref` → `settings.reply_length_pref = choice.id`
    - など
 2. `PUT /me/settings` で更新（ETag/If-Match 必須）
-3. 設定更新成功後、生成ボタンを再度有効化
-4. ユーザーが再生成ボタンをタップで再度 `/generate` 呼び出し
+3. 設定更新成功後、同じ共有履歴で自動的に再度 `/generate` を呼び出す
+4. 再生成中は既存の生成中UIを使い、更新後のA/B/Cへ置き換える
 
 ### 8.4 許可リスト（MUST）
 - `relationship_type`
