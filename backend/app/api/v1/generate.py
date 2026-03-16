@@ -115,6 +115,8 @@ async def generate(
             style_risk_guard=int(settings.get("style_risk_guard", 0)) if settings.get("style_risk_guard") is not None else None,
             relationship_type=settings.get("relationship_type"),
             reply_length_pref=settings.get("reply_length_pref"),
+            emoji_amount_pref=settings.get("emoji_amount_pref"),
+            reaction_level_pref=settings.get("reaction_level_pref"),
             combo_id=req.combo_id,
             ng_tags=_to_list(settings.get("ng_tags")),
             ng_free_phrases=_to_list(settings.get("ng_free_phrases")),

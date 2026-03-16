@@ -22,6 +22,8 @@ def test_generate_uses_settings_context_with_dummy_client(client):
             "style_assertiveness": 40,
             "style_warmth": 70,
             "style_risk_guard": 65,
+            "emoji_amount_pref": "many",
+            "reaction_level_pref": "high",
         }
     )
 
@@ -43,6 +45,8 @@ def test_generate_uses_settings_context_with_dummy_client(client):
     candidates = body["candidates"]
     assert len(candidates) == 3
     assert "関係: regular" in candidates[0]["text"]
+    assert "😊" in candidates[0]["text"]
+    assert "！" in candidates[0]["text"]
 
 
 def test_generate_uses_default_followup_settings_for_new_user(client):

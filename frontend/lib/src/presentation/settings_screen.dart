@@ -183,6 +183,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final normalized = Map<String, dynamic>.from(settings);
     normalized.putIfAbsent('relationship_type', () => 'new');
     normalized.putIfAbsent('reply_length_pref', () => 'standard');
+    normalized.putIfAbsent('emoji_amount_pref', () => 'standard');
+    normalized.putIfAbsent('reaction_level_pref', () => 'standard');
     normalized['ng_tags'] =
         (normalized['ng_tags'] as List<dynamic>?)
             ?.map((e) => e.toString())
@@ -266,6 +268,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _buildComboSetting(),
                   const SizedBox(height: AppSpacing.lg),
                   _buildReplyLengthSetting(),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildEmojiAmountSetting(),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildReactionLevelSetting(),
                   const SizedBox(height: AppSpacing.xl),
                   const AppSectionHeader(title: '返信案のNG設定'),
                   const SizedBox(height: AppSpacing.sm),
@@ -449,6 +455,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onSelectionChanged: (Set<String> newSelection) {
             unawaited(Haptics.selection());
             _updateSetting('reply_length_pref', newSelection.first);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmojiAmountSetting() {
+    final currentEmojiAmount =
+        _settings['emoji_amount_pref']?.toString() ?? 'standard';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text('絵文字の量', style: AppTextStyles.body),
+        const SizedBox(height: AppSpacing.sm),
+        SegmentedButton<String>(
+          style: _settingsSegmentedStyle(),
+          segments: const [
+            ButtonSegment(value: 'none', label: Text('なし')),
+            ButtonSegment(value: 'standard', label: Text('標準')),
+            ButtonSegment(value: 'many', label: Text('多め')),
+          ],
+          selected: <String>{currentEmojiAmount},
+          onSelectionChanged: (Set<String> newSelection) {
+            unawaited(Haptics.selection());
+            _updateSetting('emoji_amount_pref', newSelection.first);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReactionLevelSetting() {
+    final currentReactionLevel =
+        _settings['reaction_level_pref']?.toString() ?? 'standard';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text('リアクション', style: AppTextStyles.body),
+        const SizedBox(height: AppSpacing.sm),
+        SegmentedButton<String>(
+          style: _settingsSegmentedStyle(),
+          segments: const [
+            ButtonSegment(value: 'low', label: Text('低め')),
+            ButtonSegment(value: 'standard', label: Text('標準')),
+            ButtonSegment(value: 'high', label: Text('高め')),
+          ],
+          selected: <String>{currentReactionLevel},
+          onSelectionChanged: (Set<String> newSelection) {
+            unawaited(Haptics.selection());
+            _updateSetting('reaction_level_pref', newSelection.first);
           },
         ),
       ],

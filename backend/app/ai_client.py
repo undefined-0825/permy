@@ -16,6 +16,8 @@ class GenerateContext:
     style_risk_guard: int | None
     relationship_type: str | None
     reply_length_pref: str | None
+    emoji_amount_pref: str | None
+    reaction_level_pref: str | None
     combo_id: int
     ng_tags: list[str]
     ng_free_phrases: list[str]
@@ -40,6 +42,28 @@ class DummyAiClient(AiClient):
             a += "\n\n今日はバタバタしてたけど、ちゃんと読んでるよ。無理ないタイミングで返してね。"
             b += "\n\nちょっとだけ声聞けたら安心する。タイミング合う時で大丈夫。"
             c += "\n\n予定が見えたら合わせるよ。無理なら無理って言ってね。"
+
+        emoji_pref = ctx.emoji_amount_pref or "standard"
+        if emoji_pref == "many":
+            a += " 😊✨"
+            b += " 🙌😊"
+            c += " 🌙✨"
+        elif emoji_pref == "none":
+            pass
+        else:
+            a += " 😊"
+            b += " 🙂"
+            c += " ✨"
+
+        reaction_pref = ctx.reaction_level_pref or "standard"
+        if reaction_pref == "high":
+            a += "！"
+            b += "！"
+            c += "！"
+        elif reaction_pref == "low":
+            a = a.replace("！", "")
+            b = b.replace("！", "")
+            c = c.replace("！", "")
 
         return [a, b, c]
 

@@ -81,6 +81,8 @@ class MockApiClient implements AppApiClient {
             'combo_id': 0,
             'relationship_type': 'new',
             'reply_length_pref': 'standard',
+            'emoji_amount_pref': 'standard',
+            'reaction_level_pref': 'standard',
             'ng_tags': <String>[],
             'ng_free_phrases': <String>[],
             'settings_schema_version': 1,
@@ -268,7 +270,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('お客様との関係'), findsNothing);
-      expect(find.text('標準'), findsOneWidget);
+      expect(find.text('標準'), findsWidgets);
 
       final longFinder = find.text('長め');
       await tester.ensureVisible(longFinder);
@@ -277,6 +279,54 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(mockApi.lastUpdatedSettings?['reply_length_pref'], 'long');
+    });
+
+    testWidgets('設定画面では絵文字の量を変更できる', (WidgetTester tester) async {
+      final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final manyFinder = find.text('多め');
+      await tester.ensureVisible(manyFinder);
+      await tester.tap(manyFinder);
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(mockApi.lastUpdatedSettings?['emoji_amount_pref'], 'many');
+    });
+
+    testWidgets('設定画面ではリアクションを変更できる', (WidgetTester tester) async {
+      final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final highFinder = find.text('高め');
+      await tester.ensureVisible(highFinder);
+      await tester.tap(highFinder);
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(mockApi.lastUpdatedSettings?['reaction_level_pref'], 'high');
     });
 
     testWidgets('読み込みエラー時の再読込ボタン', (WidgetTester tester) async {
@@ -496,7 +546,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(PersonaDiagnosisResultScreen), findsOneWidget);
-      expect(find.text('あなたのペルソナ'), findsWidgets); // SliverAppBar.large() で複数表示
+      expect(find.text('きみのペルソナはこれだよ'), findsOneWidget);
     });
 
     testWidgets('アカウント削除リンクで確認ダイアログが表示される', (WidgetTester tester) async {

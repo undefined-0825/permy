@@ -74,7 +74,7 @@ class FollowupChoice(BaseModel):
 
 class Followup(BaseModel):
     """入力不足時の聞き返し（0または1件）"""
-    key: Literal["relationship_type", "reply_length_pref", "ng_tags", "ng_free_phrases"]
+    key: Literal["relationship_type", "reply_length_pref", "emoji_amount_pref", "reaction_level_pref", "ng_tags", "ng_free_phrases"]
     question: str
     choices: list[FollowupChoice] = Field(..., min_length=1, max_length=3)
 
