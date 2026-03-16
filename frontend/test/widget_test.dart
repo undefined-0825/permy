@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -35,15 +37,9 @@ class _FakePurchaseService extends PurchaseService {
 }
 
 class _FakeApiClient implements AppApiClient {
-  _FakeApiClient({
-    this.generateResult,
-    this.generateError,
-    List<GenerateResult>? generateResults,
-  }) : _generateResults = List<GenerateResult>.from(
-         generateResults ?? const [],
-       );
+  _FakeApiClient({this.generateError, List<GenerateResult>? generateResults})
+    : _generateResults = List<GenerateResult>.from(generateResults ?? const []);
 
-  final GenerateResult? generateResult;
   final ApiError? generateError;
   final List<GenerateResult> _generateResults;
   int generateCallCount = 0;
@@ -119,10 +115,6 @@ class _FakeApiClient implements AppApiClient {
       return _generateResults.removeAt(0);
     }
 
-    if (generateResult != null) {
-      return generateResult!;
-    }
-
     return GenerateResult(
       candidates: [
         Candidate(label: 'A', text: '返信案A'),
@@ -172,6 +164,8 @@ class _FakeShareInput implements ShareInput {
   _FakeShareInput(this.initialPayload);
 
   final SharePayload? initialPayload;
+  final StreamController<SharePayload> _controller =
+      StreamController<SharePayload>.broadcast(sync: true);
 
   @override
   Future<SharePayload?> getInitialPayload() async {
@@ -179,7 +173,15 @@ class _FakeShareInput implements ShareInput {
   }
 
   @override
-  Stream<SharePayload> get payloadStream => const Stream<SharePayload>.empty();
+  Stream<SharePayload> get payloadStream => _controller.stream;
+
+  void emit(SharePayload payload) {
+    _controller.add(payload);
+  }
+
+  Future<void> close() async {
+    await _controller.close();
+  }
 }
 
 void main() {
@@ -262,7 +264,7 @@ void main() {
     final generateButton = find.widgetWithText(AppButton, 'ぼくが返信案を考えるよ');
     await tester.ensureVisible(generateButton);
     await tester.tap(generateButton);
-    await tester.pump(const Duration(milliseconds: 900));
+    await tester.pump(const Duration(milliseconds: 1800));
     await tester.pumpAndSettle();
 
     expect(find.text('A案'), findsOneWidget);
@@ -319,6 +321,66 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('共有本文1'), findsOneWidget);
+  });
+
+  testWidgets('共有受信直後はスプラッシュ画像をフェード表示する', (WidgetTester tester) async {
+    final shareInput = _FakeShareInput(
+      SharePayload(text: '共有本文', fileName: 'line.txt'),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: _FakeApiClient(),
+          shareReceiver: shareInput,
+          telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byKey(const Key('line_share_splash_overlay')), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 1800));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('line_share_splash_overlay')), findsNothing);
+    await shareInput.close();
+  });
+
+  testWidgets('アプリ起動中の共有受信でもスプラッシュを表示する', (WidgetTester tester) async {
+    final shareInput = _FakeShareInput(null);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: _FakeApiClient(),
+          shareReceiver: shareInput,
+          telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    shareInput.emit(SharePayload(text: '共有本文', fileName: 'line.txt'));
+    await tester.pump();
+
+    expect(find.byKey(const Key('line_share_splash_overlay')), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 900));
+    await tester.pumpAndSettle();
+
+    expect(find.text('共有されたトーク履歴（確認用）'), findsOneWidget);
+    final overlayFinder = find.byKey(const Key('line_share_splash_overlay'));
+    if (overlayFinder.evaluate().isNotEmpty) {
+      final splashOpacity = tester.widget<AnimatedOpacity>(overlayFinder);
+      expect(splashOpacity.opacity, 0);
+    } else {
+      expect(overlayFinder, findsNothing);
+    }
+    await shareInput.close();
   });
 
   testWidgets('Followup選択でsettingsを保存して返信案を更新できる', (WidgetTester tester) async {

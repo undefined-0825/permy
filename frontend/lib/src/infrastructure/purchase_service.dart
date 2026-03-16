@@ -19,8 +19,7 @@ class PurchaseService {
   final FlutterSecureStorage storage;
   final InAppPurchase _iap;
 
-  // 商品ID（ストア登録後に設定）
-  // TODO: ストア登録時に実際の商品IDに置き換える
+  // 商品ID（ストア登録後に実際の商品IDへ更新する）
   static const String _productIdAndroid = 'pro_monthly';
   static const String _productIdIOS = 'com.sukimalab.permy.pro_monthly';
 

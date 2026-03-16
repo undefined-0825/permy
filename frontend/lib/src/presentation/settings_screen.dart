@@ -9,6 +9,7 @@ import 'package:sample_app/core/theme/app_spacing.dart';
 import 'package:sample_app/core/theme/app_text_styles.dart';
 import 'package:sample_app/core/utils/haptics.dart';
 import 'package:sample_app/core/widgets/app_button.dart';
+import 'package:sample_app/core/widgets/app_error_message_box.dart';
 import 'package:sample_app/core/widgets/app_list_item.dart';
 import 'package:sample_app/core/widgets/app_scaffold.dart';
 import 'package:sample_app/core/widgets/app_section_header.dart';
@@ -62,12 +63,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     'no_money_talk': 'お金の話をしない',
     'no_sexual_joke': '性的な冗談をしない',
     'no_late_reply_blame': '返信の催促をしない',
-  };
-
-  static const Map<String, String> _replyLengthLabels = {
-    'short': '短め',
-    'standard': '標準',
-    'long': '長め',
   };
 
   @override
@@ -143,9 +138,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
         await _loadSettings();
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('設定の反映に失敗したよ。もう一度ためしてね')));
+        await showAppErrorDialog(
+          context: context,
+          title: '設定の反映に失敗したよ',
+          message: '通信状態を確認して、もう一度ためしてね。',
+          errorCode: e.errorCode,
+          detail: e.message,
+        );
       }
     }
   }
@@ -229,18 +228,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _error != null
           ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('エラー: ${_error!.errorCode}'),
-                  const SizedBox(height: AppSpacing.md),
-                  AppButton(
-                    text: '再読込',
-                    onPressed: () {
-                      _loadSettings();
-                    },
-                  ),
-                ],
+              child: AppErrorMessageBox(
+                title: '設定の読み込みに失敗したよ',
+                message: '通信状態を確認して、もう一度ためしてね。',
+                errorCode: _error!.errorCode,
+                detail: _error!.message,
+                actionLabel: '再読込',
+                onAction: _loadSettings,
               ),
             )
           : Padding(
@@ -277,8 +271,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: AppSpacing.sm),
                   _buildNGSetting(),
                   const SizedBox(height: AppSpacing.xl),
-                  const AppSectionHeader(title: 'チュートリアル'),
-                  const SizedBox(height: AppSpacing.sm),
                   AppButton(
                     text: 'チュートリアルをもう一度確認する',
                     onPressed: () {
@@ -294,13 +286,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       );
                     },
                   ),
+                  if (!widget.purchaseService.isPro) ...[
+                    const SizedBox(height: AppSpacing.xl),
+                    const AppSectionHeader(title: 'Plus版（月額2,980円）'),
+                    const SizedBox(height: AppSpacing.sm),
+                    _buildPurchaseSection(),
+                  ],
                   const SizedBox(height: AppSpacing.xl),
-                  const AppSectionHeader(title: 'Plus版（月額2,980円）'),
-                  const SizedBox(height: AppSpacing.sm),
-                  _buildPurchaseSection(),
-                  const SizedBox(height: AppSpacing.xl),
-                  const AppSectionHeader(title: 'サポート・規約・その他設定'),
-                  const SizedBox(height: AppSpacing.sm),
                   _buildAdvancedSettingsAccordion(),
                   const SizedBox(height: AppSpacing.lg),
                   Container(
@@ -398,7 +390,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Text(
                       'タップして詳しく見る →',
                       style: AppTextStyles.small.copyWith(
-                        color: AppColors.primaryPink,
+                        color: AppColors.bodyText,
                       ),
                     ),
                   ),
@@ -417,6 +409,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SegmentedButton<int>(
+          style: _settingsSegmentedStyle(),
           segments: const [
             ButtonSegment(value: 0, label: Text('来店約束')),
             ButtonSegment(value: 1, label: Text('休眠復活')),
@@ -446,6 +439,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const Text('返信の長さ', style: AppTextStyles.body),
         const SizedBox(height: AppSpacing.sm),
         SegmentedButton<String>(
+          style: _settingsSegmentedStyle(),
           segments: const [
             ButtonSegment(value: 'short', label: Text('短め')),
             ButtonSegment(value: 'standard', label: Text('標準')),
@@ -458,6 +452,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
           },
         ),
       ],
+    );
+  }
+
+  ButtonStyle _settingsSegmentedStyle() {
+    return ButtonStyle(
+      backgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+        if (states.contains(WidgetState.selected)) {
+          return AppColors.buttonBackground;
+        }
+        return AppColors.white.withValues(alpha: 0.75);
+      }),
+      foregroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+        if (states.contains(WidgetState.selected)) {
+          return AppColors.white;
+        }
+        return AppColors.bodyText;
+      }),
+      side: WidgetStateProperty.resolveWith<BorderSide?>((states) {
+        if (states.contains(WidgetState.selected)) {
+          return const BorderSide(color: AppColors.buttonBackground);
+        }
+        return const BorderSide(color: AppColors.separator);
+      }),
     );
   }
 
@@ -667,41 +684,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildPurchaseSection() {
     final isPro = widget.purchaseService.isPro;
 
+    if (isPro) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (isPro)
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.highlight,
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-            ),
-            child: const Text(
-              'Plus版をご利用中です\n1日100回まで生成できます',
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text('Plus版の特典:', style: AppTextStyles.body),
+            const SizedBox(height: AppSpacing.sm),
+            const Text(
+              '• 1日100回まで生成可能（Freeは3回）\n• 推定メーター表示\n• すべての生成方針が選択可能',
               style: AppTextStyles.body,
-              textAlign: TextAlign.center,
             ),
-          )
-        else
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text('Plus版の特典:', style: AppTextStyles.body),
-              const SizedBox(height: AppSpacing.sm),
-              const Text(
-                '• 1日100回まで生成可能（Freeは3回）\n• 推定メーター表示\n• すべての生成方針が選択可能',
-                style: AppTextStyles.body,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              AppButton(
-                text: 'Plusにアップグレード（月額2,980円）',
-                onPressed: () {
-                  _purchasePro();
-                },
-              ),
-            ],
-          ),
+            const SizedBox(height: AppSpacing.md),
+            AppButton(
+              text: 'Plusにアップグレード（月額2,980円）',
+              onPressed: () {
+                _purchasePro();
+              },
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -840,9 +847,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ).showSnackBar(const SnackBar(content: Text('購入処理を開始しました')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('購入に失敗しました: $e')));
+      await showAppErrorDialog(
+        context: context,
+        title: '購入に失敗したよ',
+        message: 'しばらく待って、もう一度ためしてね。',
+        detail: e.toString(),
+      );
     }
   }
 
@@ -856,9 +866,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setState(() {}); // 状態を更新
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('復元に失敗しました: $e')));
+      await showAppErrorDialog(
+        context: context,
+        title: '復元に失敗したよ',
+        message: '通信状態を確認して、もう一度ためしてね。',
+        detail: e.toString(),
+      );
     }
   }
 
@@ -916,9 +929,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ).showSnackBar(const SnackBar(content: Text('アカウントを削除しました')));
     } on ApiError catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('削除に失敗しました: ${e.errorCode}')));
+      await showAppErrorDialog(
+        context: context,
+        title: '削除に失敗したよ',
+        message: '時間をおいて、もう一度ためしてね。',
+        errorCode: e.errorCode,
+        detail: e.message,
+      );
     }
   }
 
@@ -936,9 +953,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ).showSnackBar(const SnackBar(content: Text('課金状態をサーバーに反映しました')));
     } on ApiError catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('課金状態の反映に失敗しました: ${e.errorCode}')));
+      await showAppErrorDialog(
+        context: context,
+        title: '課金状態の反映に失敗したよ',
+        message: '通信状態を確認して、もう一度ためしてね。',
+        errorCode: e.errorCode,
+        detail: e.message,
+      );
     }
   }
 }

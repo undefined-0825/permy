@@ -10,6 +10,7 @@ import 'package:sample_app/core/theme/app_spacing.dart';
 import 'package:sample_app/core/theme/app_text_styles.dart';
 import 'package:sample_app/core/utils/haptics.dart';
 import 'package:sample_app/core/widgets/app_button.dart';
+import 'package:sample_app/core/widgets/app_error_message_box.dart';
 import 'package:sample_app/core/widgets/app_scaffold.dart';
 import 'package:sample_app/core/widgets/app_section_header.dart';
 import '../domain/models.dart';
@@ -71,9 +72,11 @@ class _MigrationScreenState extends State<MigrationScreen> {
   Future<void> _handleConsumeMigration() async {
     final code = _codeInputController.text.trim();
     if (code.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('12桁コードを入力してください')));
+      await showAppErrorDialog(
+        context: context,
+        title: '入力エラー',
+        message: '12桁コードを入力してください。',
+      );
       return;
     }
 
@@ -109,19 +112,23 @@ class _MigrationScreenState extends State<MigrationScreen> {
       } else if (e.errorCode == 'RATE_LIMITED') {
         message = '試行回数が多すぎます。しばらく待ってからお試しください。';
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      await showAppErrorDialog(
+        context: context,
+        title: '移行に失敗したよ',
+        message: message,
+        errorCode: e.errorCode,
+        detail: e.message,
+      );
     }
   }
 
-  void _copyCodeToClipboard() {
+  Future<void> _copyCodeToClipboard() async {
     unawaited(Haptics.selection());
-    Clipboard.setData(ClipboardData(text: _migrationCode)).then((_) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('コードをコピーしました')));
-    });
+    await Clipboard.setData(ClipboardData(text: _migrationCode));
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('コードをコピーしました')));
   }
 
   Future<void> _shareCode() async {
@@ -224,16 +231,17 @@ class _MigrationScreenState extends State<MigrationScreen> {
         ),
         if (_error != null) ...[
           const SizedBox(height: AppSpacing.lg),
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.inputVertical),
-            decoration: BoxDecoration(
-              color: AppColors.lightPink,
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-            ),
-            child: Text(
-              _error!.message,
-              style: AppTextStyles.small.copyWith(color: AppColors.error),
-            ),
+          AppErrorMessageBox(
+            title: '処理に失敗したよ',
+            message: '通信状態を確認して、もう一度ためしてね。',
+            errorCode: _error!.errorCode,
+            detail: _error!.message,
+            actionLabel: '閉じる',
+            onAction: () {
+              setState(() {
+                _error = null;
+              });
+            },
           ),
         ],
       ],
@@ -373,16 +381,17 @@ class _MigrationScreenState extends State<MigrationScreen> {
           ),
           if (_error != null) ...[
             const SizedBox(height: AppSpacing.lg),
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.inputVertical),
-              decoration: BoxDecoration(
-                color: AppColors.lightPink,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-              ),
-              child: Text(
-                _error!.message,
-                style: AppTextStyles.small.copyWith(color: AppColors.error),
-              ),
+            AppErrorMessageBox(
+              title: '処理に失敗したよ',
+              message: '通信状態を確認して、もう一度ためしてね。',
+              errorCode: _error!.errorCode,
+              detail: _error!.message,
+              actionLabel: '閉じる',
+              onAction: () {
+                setState(() {
+                  _error = null;
+                });
+              },
             ),
           ],
         ],
