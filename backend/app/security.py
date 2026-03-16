@@ -77,6 +77,14 @@ async def get_auth_context(
     if not user:
         raise err("AUTH_INVALID", "認証が無効です", status_code=401)
 
+    # テスト期間中は既存ユーザーも含めて強制的にPro扱いにする
+    if settings.beta_all_pro:
+        return AuthContext(
+            user_id=user_id,
+            feature_tier="plus",
+            billing_tier="pro_comp",
+        )
+
     # 後方互換：feature_tierがない（旧DB）場合はPlanStatusからフォールバック
     feature_tier = user.feature_tier if hasattr(user, 'feature_tier') and user.feature_tier else None
     billing_tier = user.billing_tier if hasattr(user, 'billing_tier') and user.billing_tier else None

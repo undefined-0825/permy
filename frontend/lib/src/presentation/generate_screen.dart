@@ -9,6 +9,7 @@ import 'package:sample_app/core/theme/app_spacing.dart';
 import 'package:sample_app/core/theme/app_text_styles.dart';
 import 'package:sample_app/core/utils/haptics.dart';
 import 'package:sample_app/core/widgets/app_button.dart';
+import 'package:sample_app/core/widgets/app_error_message_box.dart';
 import 'package:sample_app/core/widgets/app_scaffold.dart';
 import 'package:sample_app/core/widgets/app_section_header.dart';
 import '../domain/models.dart';
@@ -44,6 +45,17 @@ class _GenerateScreenState extends State<GenerateScreen>
     with WidgetsBindingObserver {
   static const String _linePersona = 'ぼくはきみの分身・・・';
   static const String _lineDelegate = 'ぼくに任せて・・・';
+  static const String _lineShareSplashImagePath =
+      'assets/images/splash/line_share_splash.png';
+  static const Duration _lineShareSplashTotalDuration = Duration(
+    milliseconds: 1400,
+  );
+  static const Duration _lineShareSplashFadeDuration = Duration(
+    milliseconds: 500,
+  );
+  static const Duration _lineShareSplashVisibleDuration = Duration(
+    milliseconds: 850,
+  );
   static const Map<String, String> _relationshipLabels = {
     'new': '新規（初めて）',
     'regular': '常連（何度も来てる）',
@@ -54,12 +66,15 @@ class _GenerateScreenState extends State<GenerateScreen>
 
   StreamSubscription<SharePayload>? _shareSubscription;
   Timer? _generationLineTimer;
+  Timer? _shareSplashFadeTimer;
+  Timer? _shareSplashHideTimer;
   String? _sharedText;
   String? _sharedFileName;
   bool _loading = false;
   bool _isGeneratingSequence = false;
+  bool _showLineShareSplash = false;
+  double _lineShareSplashOpacity = 0;
   int _generationLineIndex = 0;
-  ApiError? _error;
   List<Candidate> _candidates = <Candidate>[];
   DailyInfo? _daily;
   String _plan = 'free';
@@ -85,17 +100,43 @@ class _GenerateScreenState extends State<GenerateScreen>
     unawaited(_loadPersonaSummary());
     final initialPayload = await widget.shareReceiver.getInitialPayload();
     if (initialPayload != null && mounted) {
-      setState(() {
-        _sharedText = initialPayload.text;
-        _sharedFileName = initialPayload.fileName;
-      });
+      _applySharePayload(initialPayload);
     }
     _shareSubscription = widget.shareReceiver.payloadStream.listen((payload) {
       if (!mounted) return;
+      _applySharePayload(payload);
+    });
+  }
+
+  void _applySharePayload(SharePayload payload) {
+    _shareSplashFadeTimer?.cancel();
+    _shareSplashHideTimer?.cancel();
+
+    setState(() {
+      _sharedText = payload.text;
+      _sharedFileName = payload.fileName;
+      _showLineShareSplash = true;
+      _lineShareSplashOpacity = 0;
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_showLineShareSplash) return;
       setState(() {
-        _sharedText = payload.text;
-        _sharedFileName = payload.fileName;
-        _error = null;
+        _lineShareSplashOpacity = 1;
+      });
+    });
+
+    _shareSplashFadeTimer = Timer(_lineShareSplashVisibleDuration, () {
+      if (!mounted || !_showLineShareSplash) return;
+      setState(() {
+        _lineShareSplashOpacity = 0;
+      });
+    });
+
+    _shareSplashHideTimer = Timer(_lineShareSplashTotalDuration, () {
+      if (!mounted) return;
+      setState(() {
+        _showLineShareSplash = false;
       });
     });
   }
@@ -141,7 +182,6 @@ class _GenerateScreenState extends State<GenerateScreen>
       _sharedText = null;
       _sharedFileName = null;
       _candidates = <Candidate>[];
-      _error = null;
     });
   }
 
@@ -268,6 +308,14 @@ class _GenerateScreenState extends State<GenerateScreen>
               ],
             ),
           ),
+          if (_showLineShareSplash)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: _LineShareSplashOverlay(
+                  opacity: _lineShareSplashOpacity,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -293,9 +341,7 @@ class _GenerateScreenState extends State<GenerateScreen>
         message: '共有テキストを読み取れなかった',
         httpStatus: 422,
       );
-      setState(() {
-        _error = error;
-      });
+      setState(() {});
       _showErrorMessageBox(error);
       return;
     }
@@ -310,7 +356,6 @@ class _GenerateScreenState extends State<GenerateScreen>
       _loading = true;
       _isGeneratingSequence = true;
       _generationLineIndex = 0;
-      _error = null;
       _candidates = <Candidate>[];
     });
     _generationLineTimer?.cancel();
@@ -401,18 +446,16 @@ class _GenerateScreenState extends State<GenerateScreen>
       );
 
       if (!mounted) return;
-      setState(() {
-        _error = error;
-      });
       _showErrorMessageBox(error);
     } finally {
-      if (!mounted) return;
       _generationLineTimer?.cancel();
-      setState(() {
-        _loading = false;
-        _isGeneratingSequence = false;
-        _generationLineIndex = 0;
-      });
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _isGeneratingSequence = false;
+          _generationLineIndex = 0;
+        });
+      }
     }
   }
 
@@ -479,31 +522,14 @@ class _GenerateScreenState extends State<GenerateScreen>
     final message = _errorMessage(error);
     final detail = error.message.trim();
     final detailMessage = detail.isEmpty ? '詳細情報は取得できなかったよ' : detail;
-
-    showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('エラーが発生したよ'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(message),
-              const SizedBox(height: AppSpacing.sm),
-              Text('エラーコード: ${error.errorCode}', style: AppTextStyles.small),
-              const SizedBox(height: AppSpacing.xs),
-              Text('詳細: $detailMessage', style: AppTextStyles.small),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('閉じる'),
-            ),
-          ],
-        );
-      },
+    unawaited(
+      showAppErrorDialog(
+        context: context,
+        title: 'エラーが発生したよ',
+        message: message,
+        errorCode: error.errorCode,
+        detail: detailMessage,
+      ),
     );
   }
 
@@ -530,6 +556,8 @@ class _GenerateScreenState extends State<GenerateScreen>
     WidgetsBinding.instance.removeObserver(this);
     _shareSubscription?.cancel();
     _generationLineTimer?.cancel();
+    _shareSplashFadeTimer?.cancel();
+    _shareSplashHideTimer?.cancel();
     super.dispose();
   }
 
@@ -564,7 +592,6 @@ class _GenerateScreenState extends State<GenerateScreen>
 
     setState(() {
       _loading = true;
-      _error = null;
     });
 
     try {
@@ -594,27 +621,25 @@ class _GenerateScreenState extends State<GenerateScreen>
       await _generateCandidates();
     } on ApiError catch (error) {
       if (!mounted) return;
-      setState(() {
-        _error = error;
-      });
       _showErrorMessageBox(error);
     } finally {
-      if (!mounted) return;
-      setState(() {
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
     }
   }
 
   Future<void> _updateRelationshipType(String relationshipType) async {
-    if (_savingRelationshipType || _relationshipType == relationshipType)
+    if (_savingRelationshipType || _relationshipType == relationshipType) {
       return;
+    }
 
     final previous = _relationshipType;
     setState(() {
       _relationshipType = relationshipType;
       _savingRelationshipType = true;
-      _error = null;
     });
 
     try {
@@ -627,7 +652,6 @@ class _GenerateScreenState extends State<GenerateScreen>
       setState(() {
         _relationshipType = previous;
         _savingRelationshipType = false;
-        _error = error;
       });
       _showErrorMessageBox(error);
       return;
@@ -637,6 +661,57 @@ class _GenerateScreenState extends State<GenerateScreen>
     setState(() {
       _savingRelationshipType = false;
     });
+  }
+}
+
+class _LineShareSplashOverlay extends StatelessWidget {
+  const _LineShareSplashOverlay({required this.opacity});
+
+  static const double _splashImageScale = 1.55;
+
+  final double opacity;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedOpacity(
+      key: const Key('line_share_splash_overlay'),
+      opacity: opacity,
+      duration: _GenerateScreenState._lineShareSplashFadeDuration,
+      curve: Curves.easeInOut,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [AppColors.backgroundStart, AppColors.backgroundEnd],
+              ),
+            ),
+          ),
+          Transform.scale(
+            scale: _splashImageScale,
+            child: Image.asset(
+              _GenerateScreenState._lineShareSplashImagePath,
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+              filterQuality: FilterQuality.high,
+              errorBuilder: (context, error, stackTrace) {
+                return const Center(
+                  child: Icon(
+                    Icons.image_not_supported_outlined,
+                    color: AppColors.metaText,
+                    size: 48,
+                  ),
+                );
+              },
+            ),
+          ),
+          Container(color: AppColors.white.withValues(alpha: 0.08)),
+        ],
+      ),
+    );
   }
 }
 
@@ -879,7 +954,7 @@ class _GenerateAdjustmentsCard extends StatelessWidget {
             const Text('お客様との関係', style: AppTextStyles.body),
             const SizedBox(height: AppSpacing.sm),
             DropdownButtonFormField<String>(
-              value: currentRelationshipType,
+              initialValue: currentRelationshipType,
               isExpanded: true,
               decoration: InputDecoration(
                 filled: true,
@@ -913,7 +988,7 @@ class _GenerateAdjustmentsCard extends StatelessWidget {
             const Text('生成方針', style: AppTextStyles.body),
             const SizedBox(height: AppSpacing.sm),
             DropdownButtonFormField<int>(
-              value: selectedCombo,
+              initialValue: selectedCombo,
               isExpanded: true,
               decoration: InputDecoration(
                 filled: true,
@@ -944,7 +1019,7 @@ class _GenerateAdjustmentsCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (isProOnly)
+                      if (isProOnly && !isPro)
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.sm,

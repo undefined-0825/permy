@@ -8,8 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/theme/app_spacing.dart';
-import '../core/theme/app_text_styles.dart';
 import '../core/theme/app_theme.dart';
+import '../core/widgets/app_error_message_box.dart';
 import 'domain/app_versioning.dart';
 import 'domain/models.dart';
 import 'domain/persona_diagnosis.dart';
@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             Image.asset(_backgroundImagePath, fit: BoxFit.cover),
-            if (child != null) child,
+            ...?child == null ? null : <Widget>[child],
           ],
         );
       },
@@ -56,7 +56,8 @@ class AppRoot extends StatefulWidget {
 }
 
 class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
-  static const String _defaultApiBaseUrl = 'https://permy-backend.onrender.com';
+  static const String _renderApiBaseUrl = 'https://permy-backend.onrender.com';
+  static const String _localApiBaseUrl = 'http://10.0.2.2:8000';
   static const int _configuredTimeoutSeconds = int.fromEnvironment(
     'API_TIMEOUT_SECONDS',
     defaultValue: 0,
@@ -77,12 +78,12 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    const configuredApiBaseUrl = String.fromEnvironment(
-      'API_BASE_URL',
-      defaultValue: _defaultApiBaseUrl,
-    );
+    const configuredApiBaseUrl = String.fromEnvironment('API_BASE_URL');
+    final fallbackApiBaseUrl = kDebugMode
+        ? _localApiBaseUrl
+        : _renderApiBaseUrl;
     final apiBaseUrl = configuredApiBaseUrl.trim().isEmpty
-        ? _defaultApiBaseUrl
+        ? fallbackApiBaseUrl
         : configuredApiBaseUrl.trim();
     final timeoutSeconds = _configuredTimeoutSeconds > 0
         ? _configuredTimeoutSeconds
@@ -239,8 +240,8 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
       context: context,
       barrierDismissible: canClose,
       builder: (dialogContext) {
-        return WillPopScope(
-          onWillPop: () async => canClose,
+        return PopScope(
+          canPop: canClose,
           child: AlertDialog(
             title: const Text('アップデートのお知らせ'),
             content: Text(
@@ -321,39 +322,13 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
           child: Center(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    '起動に失敗したよ',
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.sectionHeader,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    _bootstrapErrorMessage(error),
-                    style: AppTextStyles.body,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'エラーコード: ${error.errorCode}',
-                    style: AppTextStyles.small,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    '詳細: ${error.message}',
-                    style: AppTextStyles.small,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  ElevatedButton(
-                    onPressed: _retryBootstrap,
-                    child: const Text('再試行'),
-                  ),
-                ],
+              child: AppErrorMessageBox(
+                title: '起動に失敗したよ',
+                message: _bootstrapErrorMessage(error),
+                errorCode: error.errorCode,
+                detail: error.message,
+                actionLabel: '再試行',
+                onAction: _retryBootstrap,
               ),
             ),
           ),

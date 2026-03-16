@@ -1,4 +1,4 @@
-/// ペルソナタイプの表示名変換ヘルパー
+// ペルソナタイプの表示名変換ヘルパー
 
 /// True Self タイプ名を日本語で返す
 String getTrueSelfTypeName(String typeValue) {

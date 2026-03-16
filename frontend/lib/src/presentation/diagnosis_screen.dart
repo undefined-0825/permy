@@ -8,6 +8,7 @@ import 'package:sample_app/core/theme/app_spacing.dart';
 import 'package:sample_app/core/theme/app_text_styles.dart';
 import 'package:sample_app/core/utils/haptics.dart';
 import 'package:sample_app/core/widgets/app_button.dart';
+import 'package:sample_app/core/widgets/app_error_message_box.dart';
 import 'package:sample_app/core/widgets/app_scaffold.dart';
 import 'package:sample_app/core/widgets/app_section_header.dart';
 import '../domain/models.dart';
@@ -203,18 +204,11 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
             const SizedBox(height: AppSpacing.md),
             if (_error != null) ...[
               const SizedBox(height: AppSpacing.md),
-              Text(
-                _error!,
-                style: AppTextStyles.body.copyWith(
-                  color: AppColors.error,
-                  fontWeight: FontWeight.w700,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              AppButton(
-                text: _saving ? '処理中...' : 'もう一度',
-                onPressed: !_saving ? _handleNext : null,
+              AppErrorMessageBox(
+                title: '診断に失敗したよ',
+                message: _error!,
+                actionLabel: _saving ? '処理中...' : 'もう一度',
+                onAction: !_saving ? _handleNext : null,
               ),
             ],
           ],
@@ -232,22 +226,29 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
           children: [
             const SizedBox(height: AppSpacing.md),
             const Text(
-              'きみのペルソナはこれ',
+              'きみのペルソナはこれだよ',
               style: AppTextStyles.primaryTitle,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            const Text(
+              'これらのペルソナは、あなたの返信スタイルを決める大事な指標。'
+              'ときどき見返して、今の傾向を確認してみてね。',
+              style: AppTextStyles.meta,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xl),
             _buildResultSection(
               title: '普段の自分',
               value: getTrueSelfTypeName(result.trueSelfType),
-              description: '日常で大事にしていることを表しています',
+              description: _getTrueTypeDescription(result.trueSelfType),
               imagePath: getTrueSelfTypeImagePath(result.trueSelfType),
             ),
             const SizedBox(height: AppSpacing.lg),
             _buildResultSection(
               title: '夜の私',
               value: getNightSelfTypeName(result.nightSelfType),
-              description: 'LINE返信時のあなたのスタイルを表しています',
+              description: _getNightTypeDescription(result.nightSelfType),
               imagePath: getNightSelfTypeImagePath(result.nightSelfType),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -283,6 +284,40 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
     );
   }
 
+  String _getTrueTypeDescription(String type) {
+    switch (type) {
+      case 'Stability':
+        return '安定感と継続性を重視する。';
+      case 'Independence':
+        return '自分の判断軸で動ける。';
+      case 'Approval':
+        return '信頼獲得を大切にする。';
+      case 'Realism':
+        return '現実的に成果へつなげる。';
+      case 'Romance':
+        return '感情と直感を素直に活かす。';
+      default:
+        return 'ペルソナ種別が不明です。';
+    }
+  }
+
+  String _getNightTypeDescription(String type) {
+    switch (type) {
+      case 'VisitPush':
+        return '次の来店につながる提案が得意。';
+      case 'Heal':
+        return '安心感を与える寄り添いが得意。';
+      case 'LittleDevil':
+        return '軽快な駆け引きで温度を上げる。';
+      case 'BigClient':
+        return '重要顧客へ戦略的に寄せる。';
+      case 'Balance':
+        return '状況に応じて柔軟に最適化する。';
+      default:
+        return 'ペルソナ種別が不明です。';
+    }
+  }
+
   Widget _buildResultSection({
     required String title,
     required String value,
@@ -314,7 +349,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                 child: Image.asset(
                   imagePath,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (_, _, _) => Container(
                     color: AppColors.highlight,
                     alignment: Alignment.center,
                     child: const Icon(Icons.image_not_supported_outlined),
@@ -462,7 +497,7 @@ class _ChoiceCardState extends State<_ChoiceCard> {
                     width: 72,
                     height: 72,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) {
+                    errorBuilder: (_, _, _) {
                       return const Icon(
                         Icons.image_outlined,
                         size: 24,

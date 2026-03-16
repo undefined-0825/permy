@@ -1,6 +1,7 @@
 import pytest
 
 from app.schemas import AuthAnonymousResponse
+from app.config import settings
 
 
 def test_auth_anonymous_returns_200(client):
@@ -130,3 +131,27 @@ def test_delete_account_invalidates_session(client):
         headers={"Authorization": f"Bearer {token}"},
     )
     assert res.status_code == 401
+
+
+def test_beta_all_pro_forces_pro_plan_for_existing_session(client):
+    old_beta_all_pro = settings.beta_all_pro
+    settings.beta_all_pro = True
+
+    try:
+        auth_res = client.post("/api/v1/auth/anonymous")
+        assert auth_res.status_code == 200
+        token = auth_res.json()["access_token"]
+
+        gen_res = client.post(
+            "/api/v1/generate",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "history_text": "テスト",
+                "combo_id": 2,
+                "tuning": None,
+            },
+        )
+        assert gen_res.status_code == 200
+        assert gen_res.json()["plan"] == "pro"
+    finally:
+        settings.beta_all_pro = old_beta_all_pro

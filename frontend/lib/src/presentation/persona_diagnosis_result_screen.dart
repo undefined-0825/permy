@@ -37,8 +37,14 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: AppSpacing.md),
-              const Text('あなたのペルソナ', style: AppTextStyles.primaryTitle),
+              const Text('きみのペルソナはこれだよ', style: AppTextStyles.primaryTitle),
               const SizedBox(height: AppSpacing.md),
+              const Text(
+                'これらのペルソナは、あなたの返信スタイルを決める大事な指標。'
+                'ときどき見返して、今の傾向を確認してみてね。',
+                style: AppTextStyles.meta,
+              ),
+              const SizedBox(height: AppSpacing.lg),
               const AppSectionHeader(title: '普段の自分'),
               const SizedBox(height: AppSpacing.inputVertical),
               _PersonaTypeCard(
@@ -62,12 +68,6 @@ class PersonaDiagnosisResultScreen extends StatelessWidget {
               _StyleScoreRow(label: '温かみ', score: warmth),
               const SizedBox(height: AppSpacing.inputVertical),
               _StyleScoreRow(label: 'リスク回避', score: riskGuard),
-              const SizedBox(height: AppSpacing.xl),
-              const Text(
-                'これらのペルソナは、あなたの返信スタイルを決める大事な指標。'
-                'ときどき見返して、今の傾向を確認してみてね。',
-                style: AppTextStyles.meta,
-              ),
               const SizedBox(height: AppSpacing.md),
             ],
           ),
@@ -133,6 +133,7 @@ class _PersonaTypeCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: AppSpacing.md),
           ClipRRect(
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(AppRadius.md),
@@ -153,7 +154,7 @@ class _PersonaTypeCard extends StatelessWidget {
                       imagePath!,
                       fit: BoxFit.contain,
                       alignment: Alignment.center,
-                      errorBuilder: (_, __, ___) => Container(
+                      errorBuilder: (_, _, _) => Container(
                         color: AppColors.highlight,
                         alignment: Alignment.center,
                         child: const Icon(

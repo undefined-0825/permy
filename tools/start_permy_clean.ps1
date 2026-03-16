@@ -12,6 +12,12 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# デフォルトはローカルバックエンド接続にする。
+# 明示的にApiBaseUrlを渡した場合はそちらを優先する。
+if (-not $PSBoundParameters.ContainsKey("UseLocalBackend") -and -not $PSBoundParameters.ContainsKey("ApiBaseUrl")) {
+    $UseLocalBackend = $true
+}
+
 function Get-AndroidHome {
     if ($env:ANDROID_HOME) {
         return $env:ANDROID_HOME
