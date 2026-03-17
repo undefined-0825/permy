@@ -105,9 +105,9 @@ class MigrationCompleteResponse(BaseModel):
 
 
 class BillingVerifyRequest(BaseModel):
-    platform: Literal["ios", "android"]
+    platform: Literal["android"]
     product_id: str = Field(..., min_length=1, max_length=128)
-    purchase_token: str = Field(..., min_length=1, max_length=4096)
+    purchase_token: str = Field(..., max_length=4096)
 
 
 class BillingVerifyResponse(BaseModel):

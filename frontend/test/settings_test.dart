@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -8,6 +10,7 @@ import 'package:sample_app/core/widgets/app_list_item.dart';
 import 'package:sample_app/src/domain/models.dart';
 import 'package:sample_app/src/domain/persona_diagnosis.dart';
 import 'package:sample_app/src/infrastructure/api_client.dart';
+import 'package:sample_app/src/infrastructure/billing_proof.dart';
 import 'package:sample_app/src/infrastructure/purchase_service.dart';
 import 'package:sample_app/src/presentation/about_privacy_screen.dart';
 import 'package:sample_app/src/presentation/diagnosis_screen.dart';
@@ -25,6 +28,8 @@ class MockPurchaseService extends PurchaseService {
     : super(storage: const FlutterSecureStorage());
 
   final bool mockIsPro;
+  final StreamController<BillingProof> _proofController =
+      StreamController<BillingProof>.broadcast();
 
   @override
   bool get isPro => mockIsPro;
@@ -33,7 +38,16 @@ class MockPurchaseService extends PurchaseService {
   Future<void> initialize() async {}
 
   @override
-  void dispose() {}
+  void dispose() {
+    _proofController.close();
+  }
+
+  @override
+  Stream<BillingProof> get billingProofStream => _proofController.stream;
+
+  void emitBillingProof(BillingProof proof) {
+    _proofController.add(proof);
+  }
 
   @override
   Future<bool> isAvailable() async => true;
@@ -47,11 +61,17 @@ class MockPurchaseService extends PurchaseService {
 
 // Mock API Client
 class MockApiClient implements AppApiClient {
-  MockApiClient({this.settingsSnapshot, this.shouldFailUpdate = false});
+  MockApiClient({
+    this.settingsSnapshot,
+    this.shouldFailUpdate = false,
+    this.verifyBillingErrorCode,
+  });
 
   final SettingsSnapshot? settingsSnapshot;
   final bool shouldFailUpdate;
+  final String? verifyBillingErrorCode;
   Map<String, dynamic>? lastUpdatedSettings;
+  List<Map<String, String>> verifyBillingCalls = [];
 
   @override
   Future<void> bootstrapAuth() async {}
@@ -158,7 +178,20 @@ class MockApiClient implements AppApiClient {
     required String platform,
     required String productId,
     required String purchaseToken,
-  }) async {}
+  }) async {
+    verifyBillingCalls.add({
+      'platform': platform,
+      'productId': productId,
+      'purchaseToken': purchaseToken,
+    });
+    if (verifyBillingErrorCode != null) {
+      throw ApiError(
+        errorCode: verifyBillingErrorCode!,
+        message: '課金検証エラー',
+        httpStatus: verifyBillingErrorCode == 'BILLING_NOT_CONFIGURED' ? 503 : 400,
+      );
+    }
+  }
 
   @override
   Future<void> deleteAccount() async {}
@@ -601,6 +634,63 @@ void main() {
       expect(find.text('アカウントを削除しますか？'), findsNothing);
       // 設定画面に戻る
       expect(find.text('設定'), findsOneWidget);
+    });
+
+    testWidgets('billingProof受信時に /billing/verify を呼び出す', (WidgetTester tester) async {
+      final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      mockPurchase.emitBillingProof(
+        BillingProof(
+          platform: 'android',
+          productId: 'permy_pro_monthly',
+          purchaseToken: 'token-123',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(mockApi.verifyBillingCalls.length, 1);
+      expect(mockApi.verifyBillingCalls.first['platform'], 'android');
+      expect(mockApi.verifyBillingCalls.first['productId'], 'permy_pro_monthly');
+      expect(mockApi.verifyBillingCalls.first['purchaseToken'], 'token-123');
+      expect(find.text('課金状態をサーバーに反映しました'), findsOneWidget);
+    });
+
+    testWidgets('BILLING_NOT_CONFIGURED で専用エラーダイアログを表示', (WidgetTester tester) async {
+      final mockApi = MockApiClient(verifyBillingErrorCode: 'BILLING_NOT_CONFIGURED');
+      final mockPurchase = MockPurchaseService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      mockPurchase.emitBillingProof(
+        BillingProof(
+          platform: 'android',
+          productId: 'permy_pro_monthly',
+          purchaseToken: 'token-123',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('課金検証は準備中だよ'), findsOneWidget);
+      expect(find.text('運用設定が完了するまで少し待ってね。'), findsOneWidget);
     });
   });
 }

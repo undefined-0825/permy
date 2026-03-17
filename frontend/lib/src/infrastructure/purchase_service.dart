@@ -10,7 +10,7 @@ import 'billing_proof.dart';
 enum AppPurchaseStatus { free, pro, pending, error }
 
 /// 課金サービス（MVPシンプル実装）
-/// - ローカル状態管理のみ（backend連携なし）
+/// - backend 検証連携あり（BillingProof 経由）
 /// - 購入・復元・サブスク管理導線を提供
 class PurchaseService {
   PurchaseService({required this.storage, InAppPurchase? iapInstance})
@@ -19,9 +19,8 @@ class PurchaseService {
   final FlutterSecureStorage storage;
   final InAppPurchase _iap;
 
-  // 商品ID（ストア登録後に実際の商品IDへ更新する）
-  static const String _productIdAndroid = 'pro_monthly';
-  static const String _productIdIOS = 'com.sukimalab.permy.pro_monthly';
+  // Android Google Play 定期購入ID（SSOT）
+  static const String _productIdAndroid = 'permy_pro_monthly';
 
   static const String _storageKeyPurchaseStatus = 'purchase_status';
 
@@ -66,7 +65,10 @@ class PurchaseService {
 
   /// 商品情報を取得
   Future<List<ProductDetails>> getProducts() async {
-    final productId = Platform.isAndroid ? _productIdAndroid : _productIdIOS;
+    if (!Platform.isAndroid) {
+      throw Exception('現在の課金実装はAndroidのみ対応です');
+    }
+    final productId = _productIdAndroid;
     final response = await _iap.queryProductDetails({productId});
 
     if (response.error != null) {
@@ -78,6 +80,9 @@ class PurchaseService {
 
   /// 購入を開始
   Future<void> purchase() async {
+    if (!Platform.isAndroid) {
+      throw Exception('現在の課金実装はAndroidのみ対応です');
+    }
     final products = await getProducts();
     if (products.isEmpty) {
       throw Exception('商品が見つかりません');
@@ -92,6 +97,9 @@ class PurchaseService {
   /// 購入を復元
   Future<void> restorePurchases() async {
     try {
+      if (!Platform.isAndroid) {
+        throw Exception('現在の課金実装はAndroidのみ対応です');
+      }
       await _iap.restorePurchases();
       // 復元結果は _onPurchaseUpdate で処理される
     } catch (e) {

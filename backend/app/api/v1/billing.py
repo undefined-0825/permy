@@ -9,13 +9,16 @@ from app.db import get_db
 from app.errors import err
 from app.models import User, PlanStatus
 from app.schemas import BillingVerifyRequest, BillingVerifyResponse
+from app.services.billing_verifier import (
+    BillingVerifyInput,
+    MockBillingVerifier,
+)
 from app.security import AuthContext, get_auth_context
 
 router = APIRouter()
 
 _ALLOWED_PRODUCT_IDS = {
-    "ios": {"com.sukimalab.permy.pro_monthly"},
-    "android": {"pro_monthly"},
+    "android": {"permy_pro_monthly"},
 }
 
 
@@ -40,6 +43,17 @@ async def billing_verify(
         raise err("BILLING_PRODUCT_INVALID", "商品IDが不正です", status_code=400)
 
     if not req.purchase_token.strip():
+        raise err("BILLING_RECEIPT_INVALID", "購入情報が不正です", status_code=400)
+
+    verifier = MockBillingVerifier()
+    result = await verifier.verify(
+        BillingVerifyInput(
+            platform=req.platform,
+            product_id=req.product_id,
+            purchase_token=req.purchase_token,
+        )
+    )
+    if not result.verified:
         raise err("BILLING_RECEIPT_INVALID", "購入情報が不正です", status_code=400)
 
     row = await db.execute(select(User).where(User.user_id == auth.user_id))

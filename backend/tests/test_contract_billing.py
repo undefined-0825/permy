@@ -6,7 +6,7 @@ def test_billing_verify_requires_auth(client):
         "/api/v1/billing/verify",
         json={
             "platform": "android",
-            "product_id": "pro_monthly",
+            "product_id": "permy_pro_monthly",
             "purchase_token": "dummy-token",
         },
     )
@@ -38,7 +38,7 @@ def test_billing_verify_returns_pro_and_allows_pro_combo(client):
             headers={"Authorization": f"Bearer {token}"},
             json={
                 "platform": "android",
-                "product_id": "pro_monthly",
+                "product_id": "permy_pro_monthly",
                 "purchase_token": "dummy-token",
             },
         )
@@ -81,5 +81,53 @@ def test_billing_verify_rejects_invalid_product(client):
         )
         assert verify_res.status_code == 400
         assert verify_res.json()["detail"]["error"]["code"] == "BILLING_PRODUCT_INVALID"
+    finally:
+        settings.app_env = old_app_env
+
+
+def test_billing_verify_rejects_empty_purchase_token(client):
+    old_app_env = settings.app_env
+    settings.app_env = "dev"
+
+    try:
+        auth_res = client.post("/api/v1/auth/anonymous")
+        assert auth_res.status_code == 200
+        token = auth_res.json()["access_token"]
+
+        verify_res = client.post(
+            "/api/v1/billing/verify",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "platform": "android",
+                "product_id": "permy_pro_monthly",
+                "purchase_token": "   ",
+            },
+        )
+        assert verify_res.status_code == 400
+        assert verify_res.json()["detail"]["error"]["code"] == "BILLING_RECEIPT_INVALID"
+    finally:
+        settings.app_env = old_app_env
+
+
+def test_billing_verify_prod_returns_not_configured(client):
+    old_app_env = settings.app_env
+    settings.app_env = "prod"
+
+    try:
+        auth_res = client.post("/api/v1/auth/anonymous")
+        assert auth_res.status_code == 200
+        token = auth_res.json()["access_token"]
+
+        verify_res = client.post(
+            "/api/v1/billing/verify",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "platform": "android",
+                "product_id": "permy_pro_monthly",
+                "purchase_token": "dummy-token",
+            },
+        )
+        assert verify_res.status_code == 503
+        assert verify_res.json()["detail"]["error"]["code"] == "BILLING_NOT_CONFIGURED"
     finally:
         settings.app_env = old_app_env

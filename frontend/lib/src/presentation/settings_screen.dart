@@ -1011,10 +1011,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ).showSnackBar(const SnackBar(content: Text('課金状態をサーバーに反映しました')));
     } on ApiError catch (e) {
       if (!mounted) return;
+      String title = '課金状態の反映に失敗したよ';
+      String message = '通信状態を確認して、もう一度ためしてね。';
+      if (e.errorCode == 'BILLING_NOT_CONFIGURED') {
+        title = '課金検証は準備中だよ';
+        message = '運用設定が完了するまで少し待ってね。';
+      } else if (e.errorCode == 'BILLING_PRODUCT_INVALID') {
+        title = '商品IDが無効だよ';
+        message = 'アプリを更新してから、もう一度購入を試してね。';
+      } else if (e.errorCode == 'BILLING_RECEIPT_INVALID') {
+        title = '購入情報を確認できなかったよ';
+        message = '購入を復元して、再度試してね。';
+      }
       await showAppErrorDialog(
         context: context,
-        title: '課金状態の反映に失敗したよ',
-        message: '通信状態を確認して、もう一度ためしてね。',
+        title: title,
+        message: message,
         errorCode: e.errorCode,
         detail: e.message,
       );
