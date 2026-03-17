@@ -445,7 +445,7 @@ void main() {
     expect(find.text('補足前の返信案A'), findsNothing);
   });
 
-  testWidgets('FreeでPlus項目選択時に購買案内を表示する', (WidgetTester tester) async {
+  testWidgets('FreeでPlus項目選択時に課金誘導ページを表示する', (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: GenerateScreen(
@@ -466,8 +466,12 @@ void main() {
     dropdown.onChanged?.call(2);
     await tester.pumpAndSettle();
 
-    expect(find.text('有料版のみ'), findsOneWidget);
-    expect(find.text('このモードはPlusで使える機能だよ。'), findsOneWidget);
+    expect(find.text('Plusのご案内'), findsOneWidget);
+    expect(find.textContaining('1日100回まで生成できる（Freeは1日3回）'), findsOneWidget);
+    expect(find.textContaining('限定コンボをすべて使える（2/3/4/5）'), findsOneWidget);
+    expect(find.text('月額 2,980円'), findsOneWidget);
+    expect(find.text('1日あたり100円以下'), findsOneWidget);
+    expect(find.widgetWithText(AppButton, 'Plusに変更'), findsOneWidget);
   });
 
   testWidgets('生成方針のPro項目にPlusバッジを表示する', (WidgetTester tester) async {

@@ -20,6 +20,7 @@ import '../infrastructure/api_client.dart';
 import '../infrastructure/purchase_service.dart';
 import '../infrastructure/share_receiver.dart';
 import '../infrastructure/telemetry_queue.dart';
+import 'pro_upgrade_screen.dart';
 import 'settings_screen.dart';
 import 'widgets/top_brand_header.dart';
 
@@ -239,7 +240,7 @@ class _GenerateScreenState extends State<GenerateScreen>
                         onComboChanged: (int value) {
                           final isPro = value >= 2; // combo 2-5 は Pro のみ
                           if (isPro && _plan == 'free') {
-                            _showUpsellDialog();
+                            _openProUpgradePage();
                             return;
                           }
                           setState(() {
@@ -348,7 +349,7 @@ class _GenerateScreenState extends State<GenerateScreen>
 
     // Pro専用コンボ（2,3,4,5）をFreeで選択した場合
     if (_plan == 'free' && _comboId >= 2) {
-      _showUpsellDialog();
+      _openProUpgradePage();
       return;
     }
 
@@ -533,21 +534,22 @@ class _GenerateScreenState extends State<GenerateScreen>
     );
   }
 
-  void _showUpsellDialog() {
-    showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('有料版のみ'),
-          content: const Text('このモードはPlusで使える機能だよ。'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('了解'),
-            ),
-          ],
-        );
-      },
+  void _openProUpgradePage() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (upgradeContext) => ProUpgradeScreen(
+          onTapChangePlus: () {
+            Navigator.of(upgradeContext).push(
+              MaterialPageRoute(
+                builder: (settingsContext) => SettingsScreen(
+                  apiClient: widget.apiClient,
+                  purchaseService: widget.purchaseService,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
