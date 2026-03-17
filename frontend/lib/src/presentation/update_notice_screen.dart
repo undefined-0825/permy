@@ -24,6 +24,7 @@ class UpdateNoticeScreen extends StatelessWidget {
   final String storeUrl;
   final String releaseNoteTitle;
   final String releaseNoteBody;
+
   /// true: 強制更新（戻る不可）, false: 任意更新（「あとで」スキップ可）
   final bool isForced;
 
