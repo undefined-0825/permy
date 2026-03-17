@@ -45,6 +45,19 @@ class UsageDaily(Base):
     plan_at_time: Mapped[str] = mapped_column(String(16), default="free")
 
 
+class AppReleaseNote(Base):
+    """バージョンごとのリリースノート。/api/v1/version で返す。"""
+
+    __tablename__ = "app_release_notes"
+
+    version: Mapped[str] = mapped_column(String(32), primary_key=True)
+    title: Mapped[str] = mapped_column(String(256), default="バージョンアップのお知らせ")
+    body: Mapped[str] = mapped_column(String(4096), default="")
+    released_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc)
+    )
+
+
 class TelemetryEvent(Base):
     __tablename__ = "telemetry_events"
 

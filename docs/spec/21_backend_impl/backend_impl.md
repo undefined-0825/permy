@@ -396,7 +396,65 @@ backend/
 
 ---
 
-## 16. 実装状況（Implementation Status）
+## 16. バージョン管理実装（/api/v1/version）
+
+### 16.1 DB モデル
+`AppReleaseNote` テーブル：
+- `version: str` (PK) — セマンティックバージョン（例: `1.2.3`）
+- `title: str` (255 char) — リリースノート見出し（例: `v1.2.3 アップデート`）
+- `body: str` (4096 char) — リリースノート本文（テキスト）
+- `released_at: datetime` — リリース日時
+
+### 16.2 エンドポイント実装（GET /api/v1/version）
+- **認証**: 不要（公開エンドポイント）
+- **入力**: なし
+- **処理**:
+  1. 環境変数 `APP_VERSION` / `APP_MIN_SUPPORTED_VERSION` / `APP_ANDROID_STORE_URL` / `APP_IOS_STORE_URL` をロード
+  2. DB から `version = APP_VERSION` の `AppReleaseNote` を検索
+  3. 見つかれば title/body を返す。見つからなければ空文字列
+- **出力** (JSON):
+  ```json
+  {
+    "latest_version": "1.2.3",
+    "min_supported_version": "1.0.0",
+    "android_store_url": "https://play.google.com/store/apps/details?id=...",
+    "ios_store_url": "/path/to/ios/store",
+    "release_note_title": "v1.2.3 アップデート",
+    "release_note_body": "・新機能A追加\n・バグ修正"
+  }
+  ```
+- **キャッシング** (推奨):
+  - 設定値（`latest_version` など）は config から直接読みで変化なし
+  - DB クエリ結果（title/body）は短 TTL（例：300秒）でメモリ/Redis キャッシュ可（オプション）
+
+### 16.3 デプロイ手順（更新時）
+1. `app/config.py` で `APP_VERSION` → 新バージョン，`APP_MIN_SUPPORTED_VERSION` / URL を更新
+2. DB 管理者が `AppReleaseNote` へ INSERT：
+   ```sql
+   INSERT INTO app_release_notes (version, title, body, released_at)
+   VALUES ('1.2.3', 'v1.2.3 アップデート', '・新機能\n・修正', NOW());
+   ```
+3. サーバー再起動（デプロイ自動 or 手動）
+4. フロント側は起動時に `/api/v1/version` を呼び出し、バージョン確認・通知表示
+
+### 16.4 設定値管理
+```python
+# app/config.py の Settings class に追加
+app_version: str = "1.0.0"  # 環境変数 APP_VERSION で上書き可
+app_min_supported_version: str = "0.1.0"
+app_android_store_url: str = ""
+app_ios_store_url: str = ""
+```
+
+### 16.5 テスト
+- `tests/test_contract_version.py`:
+  - `GET /api/v1/version` が 200 を返す
+  - Response に `latest_version`, `min_supported_version`, `release_note_title`, `release_note_body` が含まれていることを確認
+  - DBに登録されたリリースノートが返ることを確認
+
+---
+
+## 17. 実装状況（Implementation Status）
 
 **最終更新**: 2026-03-07
 

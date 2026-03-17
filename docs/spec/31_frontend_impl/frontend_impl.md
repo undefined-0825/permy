@@ -171,7 +171,72 @@ ios/
 
 ---
 
-## 5. エラー処理（error_codes.* 整合）
+## 5. バージョン更新画面（UpdateNoticeScreen）実装
+
+### 5.1 画面設計
+`UpdateNoticeScreen` ウィジェット：
+- **目的**: バージョンアップの必須/任意を通知し、Google Play へ誘導する。
+- **特性**:
+  - 強制更新時：`PopScope(canPop: false)` で戻る不可。ボタン必須。
+  - 背景：既存の淡いピンク背景を継承（`AppScaffold` 使用）。
+  - 引数:
+    - `latestVersion: String` — 最新版ショー用
+    - `storeUrl: String` — Google Play URL（空の場合はボタン無効化）
+    - `releaseNoteTitle: String` — リリースノートタイトル（デフォルト: `バージョンアップのお知らせ`）
+    - `releaseNoteBody: String` — リリースノート本文（デフォルト: `新しいバージョンが利用できます`）
+
+### 5.2 UI レイアウト（スタイル原則）
+- **AppScaffold** で Padding 自動適用（`AppSpacing.md`）
+- **Title**: `AppTextStyles.primaryTitle` でフォント統一
+- **Version号**: `AppTextStyles.meta` 表示
+- **本文エリア**: `AppColors.highlight` 背景の Container に `AppSpacing.md` padding（既存パターンに準拠）
+- **ボタン**: `AppButton` primary variant、フルサイズ（expand=true）
+- **垂直スぺーシング**: `AppSpacing.lg` / `AppSpacing.xl`
+
+### 5.3 実装クラス
+```dart
+class UpdateNoticeScreen extends StatelessWidget {
+  const UpdateNoticeScreen({
+    required this.latestVersion,
+    required this.storeUrl,
+    required this.releaseNoteTitle,
+    required this.releaseNoteBody,
+    super.key,
+  });
+
+  final String latestVersion;
+  final String storeUrl;
+  final String releaseNoteTitle;
+  final String releaseNoteBody;
+
+  Future<void> _openStore() async {
+    if (storeUrl.isEmpty) return;
+    final uri = Uri.parse(storeUrl);
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // title/body の fallback を実装
+    final title = releaseNoteTitle.isNotEmpty 
+        ? releaseNoteTitle 
+        : 'バージョンアップのお知らせ';
+    
+    // PopScope は canPop=false（強制）
+    // AppButton: enabled=storeUrl が非空
+    // launchUrl で Google Play へ遷移
+  }
+}
+```
+
+### 5.4 起動フロー との統合
+- `app.dart` の `_checkForAppUpdate()` から `Navigator.push()` で遷移
+- 遷移前に `AppVersionInfo` をパースし、引数を構成
+- `releaseNoteTitle`, `releaseNoteBody` は API response から取得
+
+---
+
+## 6. エラー処理（error_codes.* 整合）
 ### 5.1 UIメッセージ（例：実装側の責務）
 - `RATE_LIMITED`：一定時間待って再試行（リトライボタン）
 - `DAILY_LIMIT_EXCEEDED`：本日は上限到達（次回案内）
