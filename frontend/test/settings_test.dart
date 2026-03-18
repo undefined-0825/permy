@@ -188,7 +188,9 @@ class MockApiClient implements AppApiClient {
       throw ApiError(
         errorCode: verifyBillingErrorCode!,
         message: '課金検証エラー',
-        httpStatus: verifyBillingErrorCode == 'BILLING_NOT_CONFIGURED' ? 503 : 400,
+        httpStatus: verifyBillingErrorCode == 'BILLING_NOT_CONFIGURED'
+            ? 503
+            : 400,
       );
     }
   }
@@ -636,7 +638,9 @@ void main() {
       expect(find.text('設定'), findsOneWidget);
     });
 
-    testWidgets('billingProof受信時に /billing/verify を呼び出す', (WidgetTester tester) async {
+    testWidgets('billingProof受信時に /billing/verify を呼び出す', (
+      WidgetTester tester,
+    ) async {
       final mockApi = MockApiClient();
       final mockPurchase = MockPurchaseService();
 
@@ -661,13 +665,20 @@ void main() {
 
       expect(mockApi.verifyBillingCalls.length, 1);
       expect(mockApi.verifyBillingCalls.first['platform'], 'android');
-      expect(mockApi.verifyBillingCalls.first['productId'], 'permy_pro_monthly');
+      expect(
+        mockApi.verifyBillingCalls.first['productId'],
+        'permy_pro_monthly',
+      );
       expect(mockApi.verifyBillingCalls.first['purchaseToken'], 'token-123');
       expect(find.text('課金状態をサーバーに反映しました'), findsOneWidget);
     });
 
-    testWidgets('BILLING_NOT_CONFIGURED で専用エラーダイアログを表示', (WidgetTester tester) async {
-      final mockApi = MockApiClient(verifyBillingErrorCode: 'BILLING_NOT_CONFIGURED');
+    testWidgets('BILLING_NOT_CONFIGURED で専用エラーダイアログを表示', (
+      WidgetTester tester,
+    ) async {
+      final mockApi = MockApiClient(
+        verifyBillingErrorCode: 'BILLING_NOT_CONFIGURED',
+      );
       final mockPurchase = MockPurchaseService();
 
       await tester.pumpWidget(

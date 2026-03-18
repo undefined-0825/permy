@@ -75,7 +75,9 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
           ),
         ),
       ),
-      body: isShowingResult
+      body: _saving && _diagnosisResult == null
+          ? _buildLoadingView()
+          : isShowingResult
           ? _buildResultSlider(_diagnosisResult!)
           : _buildQuestionSlider(),
     );
@@ -165,6 +167,23 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
       default:
         return 'うまく反映できなかった。少し待って、もう一度';
     }
+  }
+
+  Widget _buildLoadingView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(color: AppColors.primaryPink),
+          const SizedBox(height: AppSpacing.lg),
+          const Text(
+            'きみのペルソナを作っているよ・・・',
+            style: AppTextStyles.body,
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildQuestionSlider() {
