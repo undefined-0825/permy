@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'package:sample_app/core/theme/app_colors.dart';
 import 'package:sample_app/core/theme/app_radius.dart';
@@ -30,6 +31,7 @@ class GenerateScreen extends StatefulWidget {
     required this.shareReceiver,
     required this.telemetryQueue,
     required this.purchaseService,
+    this.shareCandidateHandler,
     super.key,
   });
 
@@ -37,6 +39,7 @@ class GenerateScreen extends StatefulWidget {
   final ShareInput shareReceiver;
   final TelemetryQueue telemetryQueue;
   final PurchaseService purchaseService;
+  final Future<void> Function(String text)? shareCandidateHandler;
 
   @override
   State<GenerateScreen> createState() => _GenerateScreenState();
@@ -87,6 +90,7 @@ class _GenerateScreenState extends State<GenerateScreen>
   String _trueTypeLabel = '診断待機中...';
   String _nightTypeLabel = '診断待機中...';
   String _relationshipType = 'new';
+  String _candidateTapAction = 'copy';
   bool _savingRelationshipType = false;
 
   @override
@@ -98,7 +102,7 @@ class _GenerateScreenState extends State<GenerateScreen>
 
   Future<void> _bootstrap() async {
     await widget.apiClient.bootstrapAuth();
-    unawaited(_loadPersonaSummary());
+    unawaited(_loadScreenSettings());
     final initialPayload = await widget.shareReceiver.getInitialPayload();
     if (initialPayload != null && mounted) {
       _applySharePayload(initialPayload);
@@ -142,13 +146,15 @@ class _GenerateScreenState extends State<GenerateScreen>
     });
   }
 
-  Future<void> _loadPersonaSummary() async {
+  Future<void> _loadScreenSettings() async {
     try {
       final snapshot = await widget.apiClient.getSettings();
       if (!mounted) return;
       final trueType = snapshot.settings['true_self_type']?.toString();
       final nightType = snapshot.settings['night_self_type']?.toString();
       final relationshipType = snapshot.settings['relationship_type']
+          ?.toString();
+      final candidateTapAction = snapshot.settings['candidate_tap_action']
           ?.toString();
       setState(() {
         _trueTypeValue = trueType;
@@ -162,6 +168,7 @@ class _GenerateScreenState extends State<GenerateScreen>
         _relationshipType = _relationshipLabels.containsKey(relationshipType)
             ? relationshipType!
             : 'new';
+        _candidateTapAction = candidateTapAction == 'share' ? 'share' : 'copy';
       });
     } catch (_) {
       // ペルソナ取得失敗時は既定表示を維持
@@ -196,8 +203,8 @@ class _GenerateScreenState extends State<GenerateScreen>
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, size: 28),
-            onPressed: () {
-              Navigator.of(context).push(
+            onPressed: () async {
+              await Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => SettingsScreen(
                     apiClient: widget.apiClient,
@@ -205,6 +212,8 @@ class _GenerateScreenState extends State<GenerateScreen>
                   ),
                 ),
               );
+              if (!mounted) return;
+              await _loadScreenSettings();
             },
           ),
         ],
@@ -266,7 +275,9 @@ class _GenerateScreenState extends State<GenerateScreen>
                         _ResultArea(
                           candidates: _candidates,
                           copiedLabel: _copiedLabel,
+                          candidateTapAction: _candidateTapAction,
                           onCopyCandidate: _copyCandidate,
+                          onShareCandidate: _shareCandidate,
                         ),
                       ],
                       const SizedBox(height: AppSpacing.xxl),
@@ -486,6 +497,26 @@ class _GenerateScreenState extends State<GenerateScreen>
         _copiedLabel = null;
       });
     });
+  }
+
+  Future<void> _shareCandidate(Candidate candidate) async {
+    unawaited(Haptics.selection());
+
+    try {
+      if (widget.shareCandidateHandler != null) {
+        await widget.shareCandidateHandler!(candidate.text);
+      } else {
+        await Share.share(
+          candidate.text,
+          subject: 'Permy 返信案 ${candidate.label}',
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('共有に失敗したよ')));
+    }
   }
 
   String _errorMessage(ApiError error) {
@@ -1095,12 +1126,16 @@ class _ResultArea extends StatelessWidget {
   const _ResultArea({
     required this.candidates,
     required this.copiedLabel,
+    required this.candidateTapAction,
     required this.onCopyCandidate,
+    required this.onShareCandidate,
   });
 
   final List<Candidate> candidates;
   final String? copiedLabel;
+  final String candidateTapAction;
   final ValueChanged<Candidate> onCopyCandidate;
+  final ValueChanged<Candidate> onShareCandidate;
 
   @override
   Widget build(BuildContext context) {
@@ -1127,7 +1162,16 @@ class _ResultArea extends StatelessWidget {
               child: _ResultCandidateCard(
                 candidate: candidate,
                 isCopied: isCopied,
-                onCopy: () => onCopyCandidate(candidate),
+                tapActionLabel: candidateTapAction == 'share'
+                    ? 'タップで共有'
+                    : 'タップでコピー',
+                onTap: () {
+                  if (candidateTapAction == 'share') {
+                    onShareCandidate(candidate);
+                    return;
+                  }
+                  onCopyCandidate(candidate);
+                },
               ),
             );
           }),
@@ -1141,12 +1185,14 @@ class _ResultCandidateCard extends StatelessWidget {
   const _ResultCandidateCard({
     required this.candidate,
     required this.isCopied,
-    required this.onCopy,
+    required this.tapActionLabel,
+    required this.onTap,
   });
 
   final Candidate candidate;
   final bool isCopied;
-  final VoidCallback onCopy;
+  final String tapActionLabel;
+  final VoidCallback onTap;
 
   String _labelTitle(String label) {
     switch (label) {
@@ -1168,7 +1214,7 @@ class _ResultCandidateCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.md),
-        onTap: onCopy,
+        onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
@@ -1194,7 +1240,7 @@ class _ResultCandidateCard extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    isCopied ? 'コピー済み' : 'タップでコピー',
+                    isCopied ? 'コピー済み' : tapActionLabel,
                     style: AppTextStyles.small.copyWith(
                       color: isCopied
                           ? AppColors.primaryPink

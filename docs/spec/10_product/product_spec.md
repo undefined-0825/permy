@@ -368,7 +368,8 @@ NightSelf:
   - PurchaseService → BillingProof → Settings画面 → API連携フロー完成
   - 購入成功時に feature_tier/billing_tier を自動更新
   - mock mode で動作確認済み（実ストアサーバ検証は将来実装）
-- ストア登録後に商品IDを設定する必要あり
+- Android 商品ID（SSOT）：`permy_pro_monthly`
+- iOS 商品IDは将来実装時に別途確定
 
 ### 15.1.2 アカウント削除実装状況（2026-03-07追加）
 - 設定画面に「アカウントを削除する」導線と確認ダイアログを実装済み。

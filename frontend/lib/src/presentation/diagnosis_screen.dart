@@ -14,7 +14,6 @@ import 'package:sample_app/core/widgets/app_section_header.dart';
 import '../domain/models.dart';
 import '../domain/persona_diagnosis.dart';
 import '../domain/persona_type_helper.dart';
-import 'persona_diagnosis_result_screen.dart';
 import 'widgets/top_brand_header.dart';
 
 class DiagnosisScreen extends StatefulWidget {
@@ -250,6 +249,11 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.md),
+            AppButton(
+              text: _saving ? '処理中...' : 'さっそく使ってみる',
+              onPressed: !_saving ? _onResultConfirmed : null,
+            ),
+            const SizedBox(height: AppSpacing.md),
             const Text(
               'これらのペルソナは、あなたの返信スタイルを決める大事な指標。'
               'ときどき見返して、今の傾向を確認してみてね。',
@@ -272,30 +276,6 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
             ),
             const SizedBox(height: AppSpacing.lg),
             _buildStyleScores(result),
-            const SizedBox(height: AppSpacing.xl),
-            AppButton(
-              text: '詳しく見る',
-              variant: AppButtonVariant.secondary,
-              onPressed: () {
-                unawaited(Haptics.lightImpact());
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => PersonaDiagnosisResultScreen(
-                      trueType: result.trueSelfType,
-                      nightType: result.nightSelfType,
-                      assertiveness: result.styleAssertiveness,
-                      warmth: result.styleWarmth,
-                      riskGuard: result.styleRiskGuard,
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            AppButton(
-              text: _saving ? '処理中...' : 'さっそく使ってみる',
-              onPressed: !_saving ? _onResultConfirmed : null,
-            ),
             const SizedBox(height: AppSpacing.md),
           ],
         ),

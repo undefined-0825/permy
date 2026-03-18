@@ -37,11 +37,17 @@ class _FakePurchaseService extends PurchaseService {
 }
 
 class _FakeApiClient implements AppApiClient {
-  _FakeApiClient({this.generateError, List<GenerateResult>? generateResults})
-    : _generateResults = List<GenerateResult>.from(generateResults ?? const []);
+  _FakeApiClient({
+    this.generateError,
+    List<GenerateResult>? generateResults,
+    this.settings,
+  }) : _generateResults = List<GenerateResult>.from(
+         generateResults ?? const [],
+       );
 
   final ApiError? generateError;
   final List<GenerateResult> _generateResults;
+  final Map<String, dynamic>? settings;
   int generateCallCount = 0;
   Map<String, dynamic> lastUpdatedSettings = <String, dynamic>{};
 
@@ -66,12 +72,15 @@ class _FakeApiClient implements AppApiClient {
   @override
   Future<SettingsSnapshot> getSettings() async {
     return SettingsSnapshot(
-      settings: <String, dynamic>{
-        'relationship_type': 'new',
-        'reply_length_pref': 'standard',
-        'ng_tags': <String>[],
-        'ng_free_phrases': <String>[],
-      },
+      settings:
+          settings ??
+          <String, dynamic>{
+            'relationship_type': 'new',
+            'reply_length_pref': 'standard',
+            'candidate_tap_action': 'copy',
+            'ng_tags': <String>[],
+            'ng_free_phrases': <String>[],
+          },
       etag: 'test',
     );
   }
@@ -289,6 +298,50 @@ void main() {
 
     expect(find.text('C案'), findsOneWidget);
     expect(find.text('返信案C'), findsOneWidget);
+    expect(find.text('タップでコピー'), findsWidgets);
+  });
+
+  testWidgets('返信案タップ設定が共有なら共有シートを開く', (WidgetTester tester) async {
+    String? sharedText;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: _FakeApiClient(
+            settings: <String, dynamic>{
+              'relationship_type': 'new',
+              'reply_length_pref': 'standard',
+              'candidate_tap_action': 'share',
+              'ng_tags': <String>[],
+              'ng_free_phrases': <String>[],
+            },
+          ),
+          shareReceiver: _FakeShareInput(
+            SharePayload(text: '共有本文', fileName: 'line.txt'),
+          ),
+          telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
+          shareCandidateHandler: (text) async {
+            sharedText = text;
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final generateButton = find.widgetWithText(AppButton, 'ぼくが返信案を考えるよ');
+    await tester.ensureVisible(generateButton);
+    await tester.tap(generateButton);
+    await tester.pump(const Duration(milliseconds: 1800));
+    await tester.pumpAndSettle();
+
+    expect(find.text('タップで共有'), findsWidgets);
+
+    await tester.tap(find.text('返信案A'));
+    await tester.pumpAndSettle();
+
+    expect(sharedText, '返信案A');
+    expect(find.text('コピー済み'), findsNothing);
   });
 
   testWidgets('共有済みなら確認用トーク履歴テキストボックスを表示する', (WidgetTester tester) async {

@@ -185,6 +185,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     normalized.putIfAbsent('reply_length_pref', () => 'standard');
     normalized.putIfAbsent('emoji_amount_pref', () => 'standard');
     normalized.putIfAbsent('reaction_level_pref', () => 'standard');
+    normalized.putIfAbsent('candidate_tap_action', () => 'copy');
     normalized['ng_tags'] =
         (normalized['ng_tags'] as List<dynamic>?)
             ?.map((e) => e.toString())
@@ -262,6 +263,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _startRediagnosis();
                     },
                   ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildCandidateTapActionSetting(),
                   const SizedBox(height: AppSpacing.xl),
                   const AppSectionHeader(title: 'デフォルトの返信スタイル'),
                   const SizedBox(height: AppSpacing.sm),
@@ -507,6 +510,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onSelectionChanged: (Set<String> newSelection) {
             unawaited(Haptics.selection());
             _updateSetting('reaction_level_pref', newSelection.first);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCandidateTapActionSetting() {
+    final currentTapAction =
+        _settings['candidate_tap_action']?.toString() ?? 'copy';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text('返信案のタップ', style: AppTextStyles.body),
+        const SizedBox(height: AppSpacing.sm),
+        SegmentedButton<String>(
+          style: _settingsSegmentedStyle().copyWith(
+            minimumSize: const WidgetStatePropertyAll<Size>(
+              Size.fromHeight(AppSpacing.xxl),
+            ),
+          ),
+          segments: const [
+            ButtonSegment(value: 'copy', label: Text('コピー')),
+            ButtonSegment(value: 'share', label: Text('共有')),
+          ],
+          selected: <String>{currentTapAction},
+          onSelectionChanged: (Set<String> newSelection) {
+            unawaited(Haptics.selection());
+            _updateSetting('candidate_tap_action', newSelection.first);
           },
         ),
       ],

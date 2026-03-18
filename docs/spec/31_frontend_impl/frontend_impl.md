@@ -476,10 +476,12 @@ class UpdateNoticeScreen extends StatelessWidget {
 - 新規フィールド：`DiagnosisResult? _diagnosisResult`
 - null = Question Slider 表示、not null = Result Slide 表示
 - API呼び出し成功時に `_diagnosisResult` を更新、UI再構築
+- API送信中（`_saving=true` かつ `_diagnosisResult=null`）はローディング表示を優先する
+  - CircularProgressIndicator + 文言「きみのペルソナを作っているよ・・・」
 
 **表示コンテンツ**：
 1. **タイトル**：
-   - Text「あなたのペルソナが決まりました」
+  - Text「きみのペルソナはこれだよ」
    - fontSize 20、fontWeight bold、textAlign center、padding top 24
 2. **Result Sections ×2**：
    - **普段の自分（True Self）**：
@@ -538,8 +540,10 @@ class UpdateNoticeScreen extends StatelessWidget {
 - 生成中：ローディング＋演出（色反転等）
 - 結果：A/B/Cカード（固定3スロット）
   - 未生成時/生成中は同じ結果領域でプレースホルダー表示
-  - タップでClipboardへコピー
+  - `candidate_tap_action=copy`：タップでClipboardへコピー
+  - `candidate_tap_action=share`：タップで共有シートを表示
   - 0.4秒のハイライトフィードバック
+  - Generate 画面復帰時に settings を再取得し、`candidate_tap_action` を最新値へ更新する
 
 #### 7.3.1 Generate 画面のエラーハンドリング
 - **エラー発生箇所**：`/generate` 呼び出し失敗時
@@ -583,18 +587,25 @@ class UpdateNoticeScreen extends StatelessWidget {
    - 遷移：DiagnosisScreen（7問固定、全類型への回答）
    - 完了後：自動リロード + SnackBar「再診断を反映しました」
 
-3) **デフォルトの返信スタイル**：
+3) **返信案のタップ**：
+   - SegmentedButton（`candidate_tap_action`）：
+     - `copy` = 「コピー」（デフォルト）
+     - `share` = 「共有」
+   - UIサイズは「再診断する」ボタンと同程度の高さを維持する
+   - 変更は自動保存し、Generate画面側で復帰時に再読込する
+
+4) **デフォルトの返信スタイル**：
   - SegmentedButton（`combo_id`）：
     - 0=「来店約束」（combo_id: 0 / デフォルト）
     - 1=「休眠復活」（combo_id: 1）
    - `combo_id` を settings で管理
 
-4) **返信案のNG設定**：
+5) **返信案のNG設定**：
   - NGタグ（複数選択）を選択可能
   - 禁止フレーズ（自由入力、最大10件）を管理
   - `ng_tags` / `ng_free_phrases` を settings と同期
 
-5) **サポート・規約・その他設定**：
+6) **サポート・規約・その他設定**：
   - アコーディオン形式で表示
   - アコーディオン内はリンク行（`AppListItem`）に統一し、以下を表示：
     - 利用規約 / プライバシーポリシー / ヘルプ（使い方） / このアプリについて / オープンソースライセンス
@@ -603,7 +614,7 @@ class UpdateNoticeScreen extends StatelessWidget {
     - 端末移行の設定 → MigrationScreen
     - このアプリについて → AboutPrivacyScreen
 
-6) **自動反映ステータス**：
+7) **自動反映ステータス**：
   - 画面下部に「変更は自動で反映されます」を表示
   - 保存ボタンは設置しない（変更は自動保存）
 

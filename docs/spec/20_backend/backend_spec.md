@@ -165,7 +165,7 @@
     - `plan`（free/pro）
     - `verified`（bool）
   - 動作:
-    - 許可された product_id かチェック（許可リスト: `com.sukimalab.permy.pro_monthly`（iOS）、`pro_monthly`（Android））
+    - 許可された product_id かチェック（許可リスト: `com.sukimalab.permy.pro_monthly`（iOS）、`permy_pro_monthly`（Android））
     - purchase_token が存在するかチェック
     - 検証成功時、`feature_tier=plus`、`billing_tier=pro_store` に更新
     - PlanStatus を `plan=pro` に更新（未存在なら作成）

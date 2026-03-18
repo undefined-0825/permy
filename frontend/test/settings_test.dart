@@ -103,6 +103,7 @@ class MockApiClient implements AppApiClient {
             'reply_length_pref': 'standard',
             'emoji_amount_pref': 'standard',
             'reaction_level_pref': 'standard',
+            'candidate_tap_action': 'copy',
             'ng_tags': <String>[],
             'ng_free_phrases': <String>[],
             'settings_schema_version': 1,
@@ -362,6 +363,30 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(mockApi.lastUpdatedSettings?['reaction_level_pref'], 'high');
+    });
+
+    testWidgets('設定画面では返信案のタップ動作を変更できる', (WidgetTester tester) async {
+      final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('返信案のタップ'), findsOneWidget);
+      final shareFinder = find.text('共有');
+      await tester.ensureVisible(shareFinder);
+      await tester.tap(shareFinder.last);
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(mockApi.lastUpdatedSettings?['candidate_tap_action'], 'share');
     });
 
     testWidgets('読み込みエラー時の再読込ボタン', (WidgetTester tester) async {

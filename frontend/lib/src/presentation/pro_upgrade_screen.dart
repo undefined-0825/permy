@@ -11,6 +11,8 @@ import 'package:sample_app/core/widgets/app_section_header.dart';
 class ProUpgradeScreen extends StatelessWidget {
   const ProUpgradeScreen({required this.onTapChangePlus, super.key});
 
+  static const String _heroImagePath = 'assets/images/pro_upgrade/hero_01.png';
+
   final VoidCallback onTapChangePlus;
 
   @override
@@ -22,19 +24,19 @@ class ProUpgradeScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: AppSpacing.sm),
+          AspectRatio(
+            // 1024x1536（2:3）の挿絵サイズに合わせて表示する
+            aspectRatio: 2 / 3,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              child: Image.asset(_heroImagePath, fit: BoxFit.cover),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
           const Text(
             'Plusにすると、返信作成がもっと楽になるよ',
             style: AppTextStyles.primaryTitle,
             textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          _BenefitCard(
-            title: 'Plusの優位性',
-            items: const [
-              '1日100回まで生成できる（Freeは1日3回）',
-              '限定コンボをすべて使える（2/3/4/5）',
-              '推定メーター表示で判断しやすい',
-            ],
           ),
           const SizedBox(height: AppSpacing.lg),
           Container(
@@ -43,7 +45,7 @@ class ProUpgradeScreen extends StatelessWidget {
               color: AppColors.highlight,
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 AppSectionHeader(title: '料金'),
@@ -62,36 +64,6 @@ class ProUpgradeScreen extends StatelessWidget {
             child: const Text('あとで'),
           ),
           const SizedBox(height: AppSpacing.md),
-        ],
-      ),
-    );
-  }
-}
-
-class _BenefitCard extends StatelessWidget {
-  const _BenefitCard({required this.title, required this.items});
-
-  final String title;
-  final List<String> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.white.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AppSectionHeader(title: title),
-          const SizedBox(height: AppSpacing.sm),
-          for (final item in items)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: Text('・$item', style: AppTextStyles.body),
-            ),
         ],
       ),
     );
