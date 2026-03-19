@@ -68,8 +68,10 @@ def test_auth_anonymous_initial_settings_include_followup_defaults(client):
     body = settings.json()["settings"]
     assert body["relationship_type"] == "new"
     assert body["reply_length_pref"] == "standard"
+    assert body["line_break_pref"] == "infer"
     assert body["emoji_amount_pref"] == "standard"
     assert body["reaction_level_pref"] == "standard"
+    assert body["partner_name_usage_pref"] == "once"
     assert body["ng_tags"] == []
     assert body["ng_free_phrases"] == []
 

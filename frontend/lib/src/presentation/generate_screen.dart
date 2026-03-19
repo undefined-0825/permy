@@ -90,8 +90,14 @@ class _GenerateScreenState extends State<GenerateScreen>
   String _trueTypeLabel = '診断待機中...';
   String _nightTypeLabel = '診断待機中...';
   String _relationshipType = 'new';
+  String _replyLengthPref = 'short';
+  String _lineBreakPref = 'few';
+  String _emojiAmountPref = 'none';
+  String _reactionLevelPref = 'low';
+  String _partnerNameUsagePref = 'none';
   String _candidateTapAction = 'copy';
-  bool _savingRelationshipType = false;
+  bool _savingAdjustments = false;
+  int _dropdownResetVersion = 0;
 
   @override
   void initState() {
@@ -154,8 +160,18 @@ class _GenerateScreenState extends State<GenerateScreen>
       final nightType = snapshot.settings['night_self_type']?.toString();
       final relationshipType = snapshot.settings['relationship_type']
           ?.toString();
+      final replyLengthPref = snapshot.settings['reply_length_pref']
+          ?.toString();
+      final lineBreakPref = snapshot.settings['line_break_pref']?.toString();
+      final emojiAmountPref = snapshot.settings['emoji_amount_pref']
+          ?.toString();
+      final reactionLevelPref = snapshot.settings['reaction_level_pref']
+          ?.toString();
+      final partnerNameUsagePref = snapshot.settings['partner_name_usage_pref']
+          ?.toString();
       final candidateTapAction = snapshot.settings['candidate_tap_action']
           ?.toString();
+      final isProActive = _isProActive();
       setState(() {
         _trueTypeValue = trueType;
         _nightTypeValue = nightType;
@@ -168,6 +184,26 @@ class _GenerateScreenState extends State<GenerateScreen>
         _relationshipType = _relationshipLabels.containsKey(relationshipType)
             ? relationshipType!
             : 'new';
+        _replyLengthPref = _normalizeReplyLengthPref(
+          replyLengthPref,
+          isPro: isProActive,
+        );
+        _lineBreakPref = _normalizeLineBreakPref(
+          lineBreakPref,
+          isPro: isProActive,
+        );
+        _emojiAmountPref = _normalizeEmojiAmountPref(
+          emojiAmountPref,
+          isPro: isProActive,
+        );
+        _reactionLevelPref = _normalizeReactionLevelPref(
+          reactionLevelPref,
+          isPro: isProActive,
+        );
+        _partnerNameUsagePref = _normalizePartnerNameUsagePref(
+          partnerNameUsagePref,
+          isPro: isProActive,
+        );
         _candidateTapAction = candidateTapAction == 'share' ? 'share' : 'copy';
       });
     } catch (_) {
@@ -196,7 +232,7 @@ class _GenerateScreenState extends State<GenerateScreen>
   @override
   Widget build(BuildContext context) {
     final hasSharedText = _sharedText?.trim().isNotEmpty ?? false;
-    final canGenerate = !_loading && !_savingRelationshipType && hasSharedText;
+    final canGenerate = !_loading && !_savingAdjustments && hasSharedText;
 
     return AppScaffold(
       appBar: TopBrandHeader(
@@ -238,17 +274,36 @@ class _GenerateScreenState extends State<GenerateScreen>
                           sharedText: _sharedText!,
                         ),
                         const SizedBox(height: AppSpacing.lg),
+                        AppButton(
+                          text: _loading ? '生成中...' : 'ぼくが返信案を考えるよ',
+                          onPressed: canGenerate ? _onGeneratePressed : null,
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
                       ],
                       _GenerateAdjustmentsCard(
                         currentRelationshipType: _relationshipType,
+                        currentReplyLengthPref: _replyLengthPref,
+                        currentLineBreakPref: _lineBreakPref,
+                        currentEmojiAmountPref: _emojiAmountPref,
+                        currentReactionLevelPref: _reactionLevelPref,
+                        currentPartnerNameUsagePref: _partnerNameUsagePref,
+                        dropdownResetVersion: _dropdownResetVersion,
                         selectedCombo: _comboId,
-                        isPro: _plan == 'pro',
-                        isSaving: _savingRelationshipType,
+                        isPro: _isProActive(),
+                        isSaving: _savingAdjustments,
                         isDisabled: _loading || _isGeneratingSequence,
                         onRelationshipChanged: _updateRelationshipType,
+                        onReplyLengthChanged: _updateReplyLengthPref,
+                        onLineBreakChanged: _updateLineBreakPref,
+                        onEmojiAmountChanged: _updateEmojiAmountPref,
+                        onReactionLevelChanged: _updateReactionLevelPref,
+                        onPartnerNameUsageChanged: _updatePartnerNameUsagePref,
                         onComboChanged: (int value) {
                           final isPro = value >= 2; // combo 2-5 は Pro のみ
-                          if (isPro && _plan == 'free') {
+                          if (isPro && !_isProActive()) {
+                            setState(() {
+                              _dropdownResetVersion += 1;
+                            });
                             _openProUpgradePage();
                             return;
                           }
@@ -257,11 +312,7 @@ class _GenerateScreenState extends State<GenerateScreen>
                           });
                         },
                       ),
-                      const SizedBox(height: AppSpacing.xl),
-                      AppButton(
-                        text: _loading ? '生成中...' : 'ぼくが返信案を考えるよ',
-                        onPressed: canGenerate ? _onGeneratePressed : null,
-                      ),
+                      if (hasSharedText) const SizedBox(height: AppSpacing.xl),
                       if (_daily != null ||
                           (_plan == 'pro' && _metaPro != null)) ...[
                         _GenerateMetaInfo(
@@ -665,14 +716,14 @@ class _GenerateScreenState extends State<GenerateScreen>
   }
 
   Future<void> _updateRelationshipType(String relationshipType) async {
-    if (_savingRelationshipType || _relationshipType == relationshipType) {
+    if (_savingAdjustments || _relationshipType == relationshipType) {
       return;
     }
 
     final previous = _relationshipType;
     setState(() {
       _relationshipType = relationshipType;
-      _savingRelationshipType = true;
+      _savingAdjustments = true;
     });
 
     try {
@@ -684,7 +735,7 @@ class _GenerateScreenState extends State<GenerateScreen>
       if (!mounted) return;
       setState(() {
         _relationshipType = previous;
-        _savingRelationshipType = false;
+        _savingAdjustments = false;
       });
       _showErrorMessageBox(error);
       return;
@@ -692,7 +743,160 @@ class _GenerateScreenState extends State<GenerateScreen>
 
     if (!mounted) return;
     setState(() {
-      _savingRelationshipType = false;
+      _savingAdjustments = false;
+    });
+  }
+
+  bool _isProActive() => widget.purchaseService.isPro || _plan == 'pro';
+
+  String _normalizeReplyLengthPref(String? value, {required bool isPro}) {
+    const freeValue = 'short';
+    const proValues = {'standard', 'long'};
+    final resolved = (value == null || value.isEmpty) ? 'standard' : value;
+    if (isPro || !proValues.contains(resolved)) {
+      return resolved;
+    }
+    return freeValue;
+  }
+
+  String _normalizeLineBreakPref(String? value, {required bool isPro}) {
+    const freeValue = 'few';
+    const proValues = {'infer', 'many'};
+    final resolved = (value == null || value.isEmpty) ? 'infer' : value;
+    if (isPro || !proValues.contains(resolved)) {
+      return resolved;
+    }
+    return freeValue;
+  }
+
+  String _normalizeEmojiAmountPref(String? value, {required bool isPro}) {
+    const freeValue = 'none';
+    const proValues = {'standard', 'many'};
+    final resolved = (value == null || value.isEmpty) ? 'standard' : value;
+    if (isPro || !proValues.contains(resolved)) {
+      return resolved;
+    }
+    return freeValue;
+  }
+
+  String _normalizeReactionLevelPref(String? value, {required bool isPro}) {
+    const freeValue = 'low';
+    const proValues = {'standard', 'high'};
+    final resolved = (value == null || value.isEmpty) ? 'standard' : value;
+    if (isPro || !proValues.contains(resolved)) {
+      return resolved;
+    }
+    return freeValue;
+  }
+
+  String _normalizePartnerNameUsagePref(String? value, {required bool isPro}) {
+    const freeValue = 'none';
+    const proValues = {'once', 'many'};
+    final resolved = (value == null || value.isEmpty) ? 'once' : value;
+    if (isPro || !proValues.contains(resolved)) {
+      return resolved;
+    }
+    return freeValue;
+  }
+
+  Future<void> _updateReplyLengthPref(String value) async {
+    await _updateGenerateSetting(
+      key: 'reply_length_pref',
+      value: value,
+      currentValue: _replyLengthPref,
+      setLocal: () => _replyLengthPref = value,
+      rollback: (previous) => _replyLengthPref = previous,
+      isProOnly: value != 'short',
+    );
+  }
+
+  Future<void> _updateLineBreakPref(String value) async {
+    await _updateGenerateSetting(
+      key: 'line_break_pref',
+      value: value,
+      currentValue: _lineBreakPref,
+      setLocal: () => _lineBreakPref = value,
+      rollback: (previous) => _lineBreakPref = previous,
+      isProOnly: value != 'few',
+    );
+  }
+
+  Future<void> _updateEmojiAmountPref(String value) async {
+    await _updateGenerateSetting(
+      key: 'emoji_amount_pref',
+      value: value,
+      currentValue: _emojiAmountPref,
+      setLocal: () => _emojiAmountPref = value,
+      rollback: (previous) => _emojiAmountPref = previous,
+      isProOnly: value != 'none',
+    );
+  }
+
+  Future<void> _updateReactionLevelPref(String value) async {
+    await _updateGenerateSetting(
+      key: 'reaction_level_pref',
+      value: value,
+      currentValue: _reactionLevelPref,
+      setLocal: () => _reactionLevelPref = value,
+      rollback: (previous) => _reactionLevelPref = previous,
+      isProOnly: value != 'low',
+    );
+  }
+
+  Future<void> _updatePartnerNameUsagePref(String value) async {
+    await _updateGenerateSetting(
+      key: 'partner_name_usage_pref',
+      value: value,
+      currentValue: _partnerNameUsagePref,
+      setLocal: () => _partnerNameUsagePref = value,
+      rollback: (previous) => _partnerNameUsagePref = previous,
+      isProOnly: value != 'none',
+    );
+  }
+
+  Future<void> _updateGenerateSetting({
+    required String key,
+    required String value,
+    required String currentValue,
+    required VoidCallback setLocal,
+    required ValueChanged<String> rollback,
+    required bool isProOnly,
+  }) async {
+    if (_savingAdjustments || currentValue == value) {
+      return;
+    }
+    if (isProOnly && !_isProActive()) {
+      setState(() {
+        _dropdownResetVersion += 1;
+      });
+      _openProUpgradePage();
+      return;
+    }
+
+    final previous = currentValue;
+    setState(() {
+      setLocal();
+      _savingAdjustments = true;
+    });
+
+    try {
+      final snapshot = await widget.apiClient.getSettings();
+      final updated = Map<String, dynamic>.from(snapshot.settings);
+      updated[key] = value;
+      await widget.apiClient.updateSettings(updated, snapshot.etag);
+    } on ApiError catch (error) {
+      if (!mounted) return;
+      setState(() {
+        rollback(previous);
+        _savingAdjustments = false;
+      });
+      _showErrorMessageBox(error);
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _savingAdjustments = false;
     });
   }
 }
@@ -940,20 +1144,42 @@ class _SharedHistoryPreview extends StatelessWidget {
 class _GenerateAdjustmentsCard extends StatelessWidget {
   const _GenerateAdjustmentsCard({
     required this.currentRelationshipType,
+    required this.currentReplyLengthPref,
+    required this.currentLineBreakPref,
+    required this.currentEmojiAmountPref,
+    required this.currentReactionLevelPref,
+    required this.currentPartnerNameUsagePref,
+    required this.dropdownResetVersion,
     required this.selectedCombo,
     required this.isPro,
     required this.isSaving,
     required this.isDisabled,
     required this.onRelationshipChanged,
+    required this.onReplyLengthChanged,
+    required this.onLineBreakChanged,
+    required this.onEmojiAmountChanged,
+    required this.onReactionLevelChanged,
+    required this.onPartnerNameUsageChanged,
     required this.onComboChanged,
   });
 
   final String currentRelationshipType;
+  final String currentReplyLengthPref;
+  final String currentLineBreakPref;
+  final String currentEmojiAmountPref;
+  final String currentReactionLevelPref;
+  final String currentPartnerNameUsagePref;
+  final int dropdownResetVersion;
   final int selectedCombo;
   final bool isPro;
   final bool isSaving;
   final bool isDisabled;
   final ValueChanged<String> onRelationshipChanged;
+  final ValueChanged<String> onReplyLengthChanged;
+  final ValueChanged<String> onLineBreakChanged;
+  final ValueChanged<String> onEmojiAmountChanged;
+  final ValueChanged<String> onReactionLevelChanged;
+  final ValueChanged<String> onPartnerNameUsageChanged;
   final ValueChanged<int> onComboChanged;
 
   @override
@@ -1021,6 +1247,9 @@ class _GenerateAdjustmentsCard extends StatelessWidget {
             const Text('生成方針', style: AppTextStyles.body),
             const SizedBox(height: AppSpacing.sm),
             DropdownButtonFormField<int>(
+              key: ValueKey<String>(
+                'combo-$selectedCombo-$dropdownResetVersion',
+              ),
               initialValue: selectedCombo,
               isExpanded: true,
               decoration: InputDecoration(
@@ -1082,9 +1311,179 @@ class _GenerateAdjustmentsCard extends StatelessWidget {
                       onComboChanged(value);
                     },
             ),
+            const SizedBox(height: AppSpacing.lg),
+            _ProAwareDropdown(
+              label: '返信の長さ',
+              value: currentReplyLengthPref,
+              resetVersion: dropdownResetVersion,
+              isPro: isPro,
+              isDisabled: isDisabled,
+              isSaving: isSaving,
+              options: const [
+                ('短め', 'short', false),
+                ('標準', 'standard', true),
+                ('長め', 'long', true),
+              ],
+              onChanged: onReplyLengthChanged,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            _ProAwareDropdown(
+              label: '改行設定',
+              value: currentLineBreakPref,
+              resetVersion: dropdownResetVersion,
+              isPro: isPro,
+              isDisabled: isDisabled,
+              isSaving: isSaving,
+              options: const [
+                ('少なめ', 'few', false),
+                ('履歴から推測', 'infer', true),
+                ('多め', 'many', true),
+              ],
+              onChanged: onLineBreakChanged,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            _ProAwareDropdown(
+              label: '絵文字の量',
+              value: currentEmojiAmountPref,
+              resetVersion: dropdownResetVersion,
+              isPro: isPro,
+              isDisabled: isDisabled,
+              isSaving: isSaving,
+              options: const [
+                ('なし', 'none', false),
+                ('標準', 'standard', true),
+                ('多め', 'many', true),
+              ],
+              onChanged: onEmojiAmountChanged,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            _ProAwareDropdown(
+              label: 'リアクション',
+              value: currentReactionLevelPref,
+              resetVersion: dropdownResetVersion,
+              isPro: isPro,
+              isDisabled: isDisabled,
+              isSaving: isSaving,
+              options: const [
+                ('低め', 'low', false),
+                ('標準', 'standard', true),
+                ('高め', 'high', true),
+              ],
+              onChanged: onReactionLevelChanged,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            _ProAwareDropdown(
+              label: '相手の呼び方',
+              value: currentPartnerNameUsagePref,
+              resetVersion: dropdownResetVersion,
+              isPro: isPro,
+              isDisabled: isDisabled,
+              isSaving: isSaving,
+              options: const [
+                ('使わない', 'none', false),
+                ('1回程度', 'once', true),
+                ('多めに', 'many', true),
+              ],
+              onChanged: onPartnerNameUsageChanged,
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ProAwareDropdown extends StatelessWidget {
+  const _ProAwareDropdown({
+    required this.label,
+    required this.value,
+    required this.resetVersion,
+    required this.isPro,
+    required this.isDisabled,
+    required this.isSaving,
+    required this.options,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String value;
+  final int resetVersion;
+  final bool isPro;
+  final bool isDisabled;
+  final bool isSaving;
+  final List<(String label, String value, bool isProOnly)> options;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(label, style: AppTextStyles.body),
+        const SizedBox(height: AppSpacing.sm),
+        DropdownButtonFormField<String>(
+          key: ValueKey<String>('pro-$label-$value-$resetVersion'),
+          initialValue: value,
+          isExpanded: true,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: AppColors.white.withValues(alpha: 0.88),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.inputVertical,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              borderSide: BorderSide.none,
+            ),
+          ),
+          items: options.map((option) {
+            final isLocked = option.$3 && !isPro;
+            return DropdownMenuItem<String>(
+              value: option.$2,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      option.$1,
+                      style: AppTextStyles.body.copyWith(
+                        color: isLocked
+                            ? AppColors.metaText
+                            : AppColors.bodyText,
+                      ),
+                    ),
+                  ),
+                  if (isLocked)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: AppSpacing.xs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.plusBadgeBackground,
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
+                      child: Text(
+                        'Plus',
+                        style: AppTextStyles.small.copyWith(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (isDisabled || isSaving)
+              ? null
+              : (String? newValue) {
+                  if (newValue == null) return;
+                  unawaited(Haptics.selection());
+                  onChanged(newValue);
+                },
+        ),
+      ],
     );
   }
 }

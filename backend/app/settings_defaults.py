@@ -5,8 +5,10 @@ DEFAULT_SETTINGS: dict[str, object] = {
     "persona_version": 2,
     "relationship_type": "new",
     "reply_length_pref": "standard",
+    "line_break_pref": "infer",
     "emoji_amount_pref": "standard",
     "reaction_level_pref": "standard",
+    "partner_name_usage_pref": "once",
     "ng_tags": [],
     "ng_free_phrases": [],
 }

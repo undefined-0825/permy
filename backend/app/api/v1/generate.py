@@ -32,6 +32,19 @@ def _to_list(v) -> list[str]:
         return [str(x) for x in v]
     return [str(v)]
 
+
+def _normalize_generate_settings_by_plan(settings: dict, plan: str) -> dict:
+    if plan == "pro":
+        return settings
+
+    normalized = dict(settings)
+    normalized["reply_length_pref"] = "short"
+    normalized["line_break_pref"] = "few"
+    normalized["emoji_amount_pref"] = "none"
+    normalized["reaction_level_pref"] = "low"
+    normalized["partner_name_usage_pref"] = "none"
+    return normalized
+
 def _blocked_candidates(reason: str) -> list[str]:
     a = (
         "ごめんね、その内容はこのアプリでは手伝えないよ。"
@@ -79,6 +92,7 @@ async def generate(
     row = await db.execute(select(UserSettings).where(UserSettings.user_id == auth.user_id))
     st = row.scalar_one_or_none()
     settings = with_default_settings(st.settings_json if st else {})
+    settings_for_generate = _normalize_generate_settings_by_plan(settings, auth.plan)
 
     # Followup判定（設定不足チェック）
     followup = check_missing_setting(settings)
@@ -106,20 +120,22 @@ async def generate(
     try:
         ai_client = get_ai_client()
         ctx = GenerateContext(
-            true_self_type=settings.get("true_self_type"),
-            night_self_type=settings.get("night_self_type"),
-            persona_goal_primary=settings.get("persona_goal_primary"),
-            persona_goal_secondary=settings.get("persona_goal_secondary"),
-            style_assertiveness=int(settings.get("style_assertiveness", 0)) if settings.get("style_assertiveness") is not None else None,
-            style_warmth=int(settings.get("style_warmth", 0)) if settings.get("style_warmth") is not None else None,
-            style_risk_guard=int(settings.get("style_risk_guard", 0)) if settings.get("style_risk_guard") is not None else None,
-            relationship_type=settings.get("relationship_type"),
-            reply_length_pref=settings.get("reply_length_pref"),
-            emoji_amount_pref=settings.get("emoji_amount_pref"),
-            reaction_level_pref=settings.get("reaction_level_pref"),
+            true_self_type=settings_for_generate.get("true_self_type"),
+            night_self_type=settings_for_generate.get("night_self_type"),
+            persona_goal_primary=settings_for_generate.get("persona_goal_primary"),
+            persona_goal_secondary=settings_for_generate.get("persona_goal_secondary"),
+            style_assertiveness=int(settings_for_generate.get("style_assertiveness", 0)) if settings_for_generate.get("style_assertiveness") is not None else None,
+            style_warmth=int(settings_for_generate.get("style_warmth", 0)) if settings_for_generate.get("style_warmth") is not None else None,
+            style_risk_guard=int(settings_for_generate.get("style_risk_guard", 0)) if settings_for_generate.get("style_risk_guard") is not None else None,
+            relationship_type=settings_for_generate.get("relationship_type"),
+            reply_length_pref=settings_for_generate.get("reply_length_pref"),
+            line_break_pref=settings_for_generate.get("line_break_pref"),
+            emoji_amount_pref=settings_for_generate.get("emoji_amount_pref"),
+            reaction_level_pref=settings_for_generate.get("reaction_level_pref"),
+            partner_name_usage_pref=settings_for_generate.get("partner_name_usage_pref"),
             combo_id=req.combo_id,
-            ng_tags=_to_list(settings.get("ng_tags")),
-            ng_free_phrases=_to_list(settings.get("ng_free_phrases")),
+            ng_tags=_to_list(settings_for_generate.get("ng_tags")),
+            ng_free_phrases=_to_list(settings_for_generate.get("ng_free_phrases")),
             tuning=req.tuning,
         )
         candidates = await ai_client.generate_abc(req.history_text, ctx)

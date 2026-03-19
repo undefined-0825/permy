@@ -101,8 +101,10 @@ class MockApiClient implements AppApiClient {
             'combo_id': 0,
             'relationship_type': 'new',
             'reply_length_pref': 'standard',
+            'line_break_pref': 'infer',
             'emoji_amount_pref': 'standard',
             'reaction_level_pref': 'standard',
+            'partner_name_usage_pref': 'once',
             'candidate_tap_action': 'copy',
             'ng_tags': <String>[],
             'ng_free_phrases': <String>[],
@@ -265,6 +267,43 @@ void main() {
       // ペルソナ情報が表示されていることを確認
       expect(find.text('type_A'), findsOneWidget);
       expect(find.text('type_B'), findsWidgets);
+      expect(find.text('現在のステータス'), findsOneWidget);
+      expect(find.text('Free'), findsOneWidget);
+    });
+
+    testWidgets('Plus会員時は課金日と解約リンクを表示する', (WidgetTester tester) async {
+      final mockApi = MockApiClient(
+        settingsSnapshot: SettingsSnapshot(
+          settings: {
+            'true_self_type': 'type_A',
+            'night_self_type': 'type_B',
+            'last_billing_date': '2026-03-01',
+            'next_billing_date': '2026-03-31',
+            'settings_schema_version': 1,
+            'forbidden_type_ids': [],
+          },
+          etag: 'test-etag-123',
+        ),
+      );
+      final mockPurchase = MockPurchaseService(mockIsPro: true);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('会員種別'), findsOneWidget);
+      expect(find.text('Plus'), findsOneWidget);
+      expect(find.text('前回の更新日'), findsOneWidget);
+      expect(find.text('次回の更新日'), findsOneWidget);
+      expect(find.text('2026/03/01'), findsOneWidget);
+      expect(find.text('2026/03/31'), findsOneWidget);
+      expect(find.text('解約はこちら'), findsOneWidget);
     });
 
     testWidgets('コンボ設定を変更できる', (WidgetTester tester) async {
@@ -290,7 +329,7 @@ void main() {
       expect(find.text('休眠復活'), findsOneWidget);
     });
 
-    testWidgets('設定画面では返信の長さを変更でき、関係性は表示しない', (WidgetTester tester) async {
+    testWidgets('設定画面では生成調整項目の移設案内を表示する', (WidgetTester tester) async {
       final mockApi = MockApiClient();
       final mockPurchase = MockPurchaseService();
 
@@ -306,63 +345,15 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('お客様との関係'), findsNothing);
-      expect(find.text('標準'), findsWidgets);
-
-      final longFinder = find.text('長め');
-      await tester.ensureVisible(longFinder);
-      await tester.tap(longFinder);
-      await tester.pump(const Duration(milliseconds: 500));
-      await tester.pumpAndSettle();
-
-      expect(mockApi.lastUpdatedSettings?['reply_length_pref'], 'long');
-    });
-
-    testWidgets('設定画面では絵文字の量を変更できる', (WidgetTester tester) async {
-      final mockApi = MockApiClient();
-      final mockPurchase = MockPurchaseService();
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: SettingsScreen(
-            apiClient: mockApi,
-            purchaseService: mockPurchase,
-          ),
-        ),
+      expect(
+        find.text('返信の長さ・改行設定・絵文字の量・リアクション・相手の呼び方は、Generate画面で送信前に変更できるよ'),
+        findsOneWidget,
       );
-
-      await tester.pumpAndSettle();
-
-      final manyFinder = find.text('多め');
-      await tester.ensureVisible(manyFinder);
-      await tester.tap(manyFinder);
-      await tester.pump(const Duration(milliseconds: 500));
-      await tester.pumpAndSettle();
-
-      expect(mockApi.lastUpdatedSettings?['emoji_amount_pref'], 'many');
-    });
-
-    testWidgets('設定画面ではリアクションを変更できる', (WidgetTester tester) async {
-      final mockApi = MockApiClient();
-      final mockPurchase = MockPurchaseService();
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: SettingsScreen(
-            apiClient: mockApi,
-            purchaseService: mockPurchase,
-          ),
-        ),
-      );
-
-      await tester.pumpAndSettle();
-
-      final highFinder = find.text('高め');
-      await tester.ensureVisible(highFinder);
-      await tester.tap(highFinder);
-      await tester.pump(const Duration(milliseconds: 500));
-      await tester.pumpAndSettle();
-
-      expect(mockApi.lastUpdatedSettings?['reaction_level_pref'], 'high');
+      expect(find.text('返信の長さ'), findsNothing);
+      expect(find.text('改行設定'), findsNothing);
+      expect(find.text('絵文字の量'), findsNothing);
+      expect(find.text('リアクション'), findsNothing);
+      expect(find.text('相手の呼び方'), findsNothing);
     });
 
     testWidgets('設定画面では返信案のタップ動作を変更できる', (WidgetTester tester) async {

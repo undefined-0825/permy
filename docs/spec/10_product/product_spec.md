@@ -62,7 +62,9 @@
 ### 2.3 Pro専用機能（MUST）
 - Proのみ：推定メーター（♥/🔥 0..100）表示（backend_implの `meta.pro` を使用）
 - Proのみ：生成方針（コンボ）のうち **2/3/4/5** を実行可能（後述）
+- Proのみ：Generate画面の生成調整5項目でPro専用値を選択可能（後述）
 - FreeはPro専用機能をUI上に表示してよいが、選択/実行時は「有料版のみ」案内（アップセル）を必ず出す。
+- backendも Free時は5項目を強制的にFree値へ正規化する（クライアント制御だけに依存しない）。
 
 ---
 
@@ -172,6 +174,10 @@ NightSelf:
 - `style_risk_guard: int`（0..100）
 - `relationship_type: string`（後述）
 - `reply_length_pref: string`（short|standard|long）
+- `line_break_pref: string`（few|infer|many）
+- `emoji_amount_pref: string`（none|standard|many）
+- `reaction_level_pref: string`（low|standard|high）
+- `partner_name_usage_pref: string`（none|once|many）
 - `ng_tags: string[]`（後述）
 - `ng_free_phrases: string[]`（短いフレーズ、上限10）
 
@@ -180,8 +186,34 @@ NightSelf:
 
 ### 6.3 reply_length_pref（SSOT / MUST）
 - `short` / `standard` / `long`
+- Free が選択可能: `short` のみ
+- Pro のみ: `standard` / `long`
 
-### 6.4 NGタグ（SSOT / MUST）
+### 6.4 line_break_pref（SSOT / MUST）
+- `few`（少なめ）/ `infer`（履歴から推測）/ `many`（多め）
+- Free が選択可能: `few` のみ
+- Pro のみ: `infer` / `many`
+- デフォルト: `infer`
+
+### 6.5 emoji_amount_pref（SSOT / MUST）
+- `none`（なし）/ `standard`（標準）/ `many`（多め）
+- Free が選択可能: `none` のみ
+- Pro のみ: `standard` / `many`
+- デフォルト: `standard`
+
+### 6.6 reaction_level_pref（SSOT / MUST）
+- `low`（低め）/ `standard`（標準）/ `high`（高め）
+- Free が選択可能: `low` のみ
+- Pro のみ: `standard` / `high`
+- デフォルト: `standard`
+
+### 6.7 partner_name_usage_pref（SSOT / MUST）
+- `none`（使わない）/ `once`（1回程度）/ `many`（多めに）
+- Free が選択可能: `none` のみ
+- Pro のみ: `once` / `many`
+- デフォルト: `once`
+
+### 6.8 NGタグ（SSOT / MUST）
 - `no_preach`
 - `no_pressure`
 - `no_romance_bait`
@@ -189,7 +221,7 @@ NightSelf:
 - `no_sexual_joke`
 - `no_late_reply_blame`
 
-### 6.5 自由入力NG（SSOT / MUST）
+### 6.9 自由入力NG（SSOT / MUST）
 - `ng_free_phrases` は短いフレーズのみ（上限10）。
 - 会話本文/生成本文をここに混ぜない。
 

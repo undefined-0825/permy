@@ -535,6 +535,8 @@ class UpdateNoticeScreen extends StatelessWidget {
 - sharedText state（メモリのみ）
 - settings state（GET/PUT同期）
 - レイアウトは「上部固定（ペルソナ要約+combo）/中央CTA/下部Expanded結果エリア」を基本とする
+- `hasSharedText == false` のときは共有案内のみを表示し、「ぼくが返信案を考えるよ」ボタンと「返信案の調整」カードは描画しない
+- `hasSharedText == true` のときの表示順は「共有プレビュー → 生成ボタン → 返信案の調整カード」とする
 - 「生成」ボタンで `/generate`
   - `Idempotency-Key` はUUID生成
 - 生成中：ローディング＋演出（色反転等）
@@ -544,6 +546,23 @@ class UpdateNoticeScreen extends StatelessWidget {
   - `candidate_tap_action=share`：タップで共有シートを表示
   - 0.4秒のハイライトフィードバック
   - Generate 画面復帰時に settings を再取得し、`candidate_tap_action` を最新値へ更新する
+
+#### 7.3.1 生成前調整（_ProAwareDropdown / MUST）
+返信案の調整カード内に以下5ずつの `_ProAwareDropdown` を配置する。
+
+| 項目 | state変数 | settingsキー | Free値（デフォルト） |
+|------|-----------|-----------|------------|
+| 返信の長さ | `_replyLengthPref` | `reply_length_pref` | `short` |
+| 改行設定 | `_lineBreakPref` | `line_break_pref` | `few` |
+| 絵文字の量 | `_emojiAmountPref` | `emoji_amount_pref` | `none` |
+| リアクション | `_reactionLevelPref` | `reaction_level_pref` | `low` |
+| 相手の呼び方 | `_partnerNameUsagePref` | `partner_name_usage_pref` | `none` |
+
+- 値変更時は `_updateGenerateSetting(key, value)` で `/me/settings` を即時PUT保存する。
+- Pro専用値をFreeが選んだ場合は `_openProUpgradePage()` でProUpgradeScreenへ遷移する。
+- 読み込み時は `_isProActive()` でFree/Proを判定し、FreeならFree値にフォールバック正規化してからstateにセットする。
+- pro/freeの判定ロジック: `widget.purchaseService.isPro || _plan == 'pro'`。
+
 
 #### 7.3.1 Generate 画面のエラーハンドリング
 - **エラー発生箇所**：`/generate` 呼び出し失敗時
@@ -599,6 +618,8 @@ class UpdateNoticeScreen extends StatelessWidget {
     - 0=「来店約束」（combo_id: 0 / デフォルト）
     - 1=「休眠復活」（combo_id: 1）
    - `combo_id` を settings で管理
+
+> 返信の長さ/改行設定/絵文字の量/リアクション/相手の呼び方の5項目はSettings画面では設定しない。Generate画面の調整カードで変更する（7.3.1参照）。Settings画面には「Generate画面で送信前に変更できるよ」案内文を表示する。
 
 5) **返信案のNG設定**：
   - NGタグ（複数選択）を選択可能

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'package:sample_app/core/theme/app_colors.dart';
 import 'package:sample_app/core/theme/app_radius.dart';
@@ -114,10 +113,6 @@ class AppTheme {
     );
 
     return baseTheme.copyWith(
-      textTheme: GoogleFonts.notoSansJpTextTheme(baseTheme.textTheme),
-      primaryTextTheme: GoogleFonts.notoSansJpTextTheme(
-        baseTheme.primaryTextTheme,
-      ),
       hoverColor: AppColors.highlight.withValues(alpha: 0.5),
     );
   }

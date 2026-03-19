@@ -44,6 +44,13 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  static const String _statusTierKey = 'status_tier';
+  static const String _billingTierKey = 'billing_tier';
+  static const String _featureTierKey = 'feature_tier';
+  static const String _planKey = 'plan';
+  static const String _lastBillingDateKey = 'last_billing_date';
+  static const String _nextBillingDateKey = 'next_billing_date';
+
   String _currentETag = '';
   Map<String, dynamic> _settings = {};
   bool _loading = true;
@@ -95,6 +102,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _currentETag = snapshot.etag;
         _loading = false;
       });
+
+      _ensureBillingDatesIfNeeded();
     } on ApiError catch (e) {
       if (!mounted) return;
       setState(() {
@@ -183,8 +192,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final normalized = Map<String, dynamic>.from(settings);
     normalized.putIfAbsent('relationship_type', () => 'new');
     normalized.putIfAbsent('reply_length_pref', () => 'standard');
+    normalized.putIfAbsent('line_break_pref', () => 'infer');
     normalized.putIfAbsent('emoji_amount_pref', () => 'standard');
     normalized.putIfAbsent('reaction_level_pref', () => 'standard');
+    normalized.putIfAbsent('partner_name_usage_pref', () => 'once');
     normalized.putIfAbsent('candidate_tap_action', () => 'copy');
     normalized['ng_tags'] =
         (normalized['ng_tags'] as List<dynamic>?)
@@ -197,6 +208,109 @@ class _SettingsScreenState extends State<SettingsScreen> {
             .toList() ??
         <String>[];
     return normalized;
+  }
+
+  void _ensureBillingDatesIfNeeded() {
+    if (!_isPaidMember(_settings)) {
+      return;
+    }
+
+    final hasLastBilling = _parseDate(_settings[_lastBillingDateKey]) != null;
+    final hasNextBilling = _parseDate(_settings[_nextBillingDateKey]) != null;
+    if (hasLastBilling && hasNextBilling) {
+      return;
+    }
+
+    final now = DateTime.now();
+    final lastBillingDate = hasLastBilling
+        ? _parseDate(_settings[_lastBillingDateKey])!
+        : now;
+    final nextBillingDate = hasNextBilling
+        ? _parseDate(_settings[_nextBillingDateKey])!
+        : lastBillingDate.add(const Duration(days: 30));
+
+    setState(() {
+      _settings[_lastBillingDateKey] = _formatDate(lastBillingDate);
+      _settings[_nextBillingDateKey] = _formatDate(nextBillingDate);
+    });
+    _scheduleAutoPersist();
+  }
+
+  bool _isPaidMember(Map<String, dynamic> settings) {
+    final statusTier = settings[_statusTierKey]?.toString();
+    final billingTier = settings[_billingTierKey]?.toString();
+    final featureTier = settings[_featureTierKey]?.toString();
+    final plan = settings[_planKey]?.toString();
+
+    if (statusTier == 'special' || billingTier == 'pro_comp') {
+      return true;
+    }
+    if (widget.purchaseService.isPro) {
+      return true;
+    }
+    if (featureTier == 'plus' || plan == 'pro' || billingTier == 'pro_store') {
+      return true;
+    }
+    return false;
+  }
+
+  String _currentStatusLabel() {
+    final statusTier = _settings[_statusTierKey]?.toString();
+    final billingTier = _settings[_billingTierKey]?.toString();
+    final featureTier = _settings[_featureTierKey]?.toString();
+    final plan = _settings[_planKey]?.toString();
+
+    if (statusTier == 'special' || billingTier == 'pro_comp') {
+      return '特別会員';
+    }
+    if (widget.purchaseService.isPro ||
+        featureTier == 'plus' ||
+        plan == 'pro' ||
+        billingTier == 'pro_store') {
+      return 'Plus';
+    }
+    return 'Free';
+  }
+
+  DateTime? _parseDate(dynamic rawValue) {
+    final value = rawValue?.toString();
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+
+    final parsed = DateTime.tryParse(value);
+    if (parsed != null) {
+      return parsed;
+    }
+
+    final match = RegExp(
+      r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$',
+    ).firstMatch(value);
+    if (match == null) {
+      return null;
+    }
+    final year = int.tryParse(match.group(1)!);
+    final month = int.tryParse(match.group(2)!);
+    final day = int.tryParse(match.group(3)!);
+    if (year == null || month == null || day == null) {
+      return null;
+    }
+    return DateTime(year, month, day);
+  }
+
+  String _formatDate(DateTime date) {
+    final y = date.year.toString().padLeft(4, '0');
+    final m = date.month.toString().padLeft(2, '0');
+    final d = date.day.toString().padLeft(2, '0');
+    return '$y/$m/$d';
+  }
+
+  String _statusDateLabel(String key) {
+    final parsed = _parseDate(_settings[key]);
+    if (parsed != null) {
+      return _formatDate(parsed);
+    }
+    return _formatDate(DateTime.now());
   }
 
   Future<void> _startRediagnosis() async {
@@ -251,6 +365,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppSpacing.lg),
+                  _buildStatusSection(),
+                  const SizedBox(height: AppSpacing.xl),
                   const AppSectionHeader(title: 'ペルソナ'),
                   const SizedBox(height: AppSpacing.sm),
                   _buildPersonaInfo(),
@@ -270,11 +386,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: AppSpacing.sm),
                   _buildComboSetting(),
                   const SizedBox(height: AppSpacing.lg),
-                  _buildReplyLengthSetting(),
-                  const SizedBox(height: AppSpacing.lg),
-                  _buildEmojiAmountSetting(),
-                  const SizedBox(height: AppSpacing.lg),
-                  _buildReactionLevelSetting(),
+                  Text(
+                    '返信の長さ・改行設定・絵文字の量・リアクション・相手の呼び方は、Generate画面で送信前に変更できるよ',
+                    style: AppTextStyles.small.copyWith(
+                      color: AppColors.bodyText,
+                    ),
+                  ),
                   const SizedBox(height: AppSpacing.xl),
                   const AppSectionHeader(title: '返信案のNG設定'),
                   const SizedBox(height: AppSpacing.sm),
@@ -332,6 +449,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildStatusSection() {
+    final status = _currentStatusLabel();
+    final showBillingDates = status == 'Plus' || status == '特別会員';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const AppSectionHeader(title: '現在のステータス'),
+        const SizedBox(height: AppSpacing.sm),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.white.withValues(alpha: 0.75),
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _SettingRow(label: '会員種別', value: status),
+              if (showBillingDates) ...[
+                const SizedBox(height: AppSpacing.sm),
+                _SettingRow(
+                  label: '前回の更新日',
+                  value: _statusDateLabel(_lastBillingDateKey),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                _SettingRow(
+                  label: '次回の更新日',
+                  value: _statusDateLabel(_nextBillingDateKey),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (showBillingDates) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Align(
+            alignment: Alignment.centerRight,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              onTap: () {
+                unawaited(Haptics.lightImpact());
+                _openSubscriptionManagement();
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xs,
+                  vertical: AppSpacing.xs,
+                ),
+                child: Text(
+                  '解約はこちら',
+                  style: AppTextStyles.small.copyWith(
+                    color: AppColors.metaText,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -433,84 +614,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Text(
           'Plus版ではさらに 4種類の方針が選択できます',
           style: AppTextStyles.small.copyWith(color: AppColors.bodyText),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildReplyLengthSetting() {
-    final currentReplyLength =
-        _settings['reply_length_pref']?.toString() ?? 'standard';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Text('返信の長さ', style: AppTextStyles.body),
-        const SizedBox(height: AppSpacing.sm),
-        SegmentedButton<String>(
-          style: _settingsSegmentedStyle(),
-          segments: const [
-            ButtonSegment(value: 'short', label: Text('短め')),
-            ButtonSegment(value: 'standard', label: Text('標準')),
-            ButtonSegment(value: 'long', label: Text('長め')),
-          ],
-          selected: <String>{currentReplyLength},
-          onSelectionChanged: (Set<String> newSelection) {
-            unawaited(Haptics.selection());
-            _updateSetting('reply_length_pref', newSelection.first);
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEmojiAmountSetting() {
-    final currentEmojiAmount =
-        _settings['emoji_amount_pref']?.toString() ?? 'standard';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Text('絵文字の量', style: AppTextStyles.body),
-        const SizedBox(height: AppSpacing.sm),
-        SegmentedButton<String>(
-          style: _settingsSegmentedStyle(),
-          segments: const [
-            ButtonSegment(value: 'none', label: Text('なし')),
-            ButtonSegment(value: 'standard', label: Text('標準')),
-            ButtonSegment(value: 'many', label: Text('多め')),
-          ],
-          selected: <String>{currentEmojiAmount},
-          onSelectionChanged: (Set<String> newSelection) {
-            unawaited(Haptics.selection());
-            _updateSetting('emoji_amount_pref', newSelection.first);
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildReactionLevelSetting() {
-    final currentReactionLevel =
-        _settings['reaction_level_pref']?.toString() ?? 'standard';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Text('リアクション', style: AppTextStyles.body),
-        const SizedBox(height: AppSpacing.sm),
-        SegmentedButton<String>(
-          style: _settingsSegmentedStyle(),
-          segments: const [
-            ButtonSegment(value: 'low', label: Text('低め')),
-            ButtonSegment(value: 'standard', label: Text('標準')),
-            ButtonSegment(value: 'high', label: Text('高め')),
-          ],
-          selected: <String>{currentReactionLevel},
-          onSelectionChanged: (Set<String> newSelection) {
-            unawaited(Haptics.selection());
-            _updateSetting('reaction_level_pref', newSelection.first);
-          },
         ),
       ],
     );
@@ -1037,7 +1140,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         purchaseToken: proof.purchaseToken,
       );
       if (!mounted) return;
-      setState(() {});
+      final now = DateTime.now();
+      setState(() {
+        _settings[_lastBillingDateKey] = _formatDate(now);
+        _settings[_nextBillingDateKey] = _formatDate(
+          now.add(const Duration(days: 30)),
+        );
+      });
+      _scheduleAutoPersist();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('課金状態をサーバーに反映しました')));
