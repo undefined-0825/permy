@@ -35,7 +35,7 @@
 - `PUT /api/v1/me/settings`
 - `POST /api/v1/generate`
 - `POST /api/v1/migration/issue`（移行コード発行、存在する場合）
-- `POST /api/v1/migration/claim`（移行コード適用、存在する場合）
+- `POST /api/v1/migration/consume`（移行コード適用、存在する場合）
 - `POST /api/v1/telemetry`（存在する場合。本文ゼロを検証）
 
 ※ migration/telemetry は backend_spec に実装がある場合のみ対象。未実装なら本書の該当ケースは「保留」。

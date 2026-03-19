@@ -62,7 +62,9 @@
 ### 2.3 Pro専用機能（MUST）
 - Proのみ：推定メーター（♥/🔥 0..100）表示（backend_implの `meta.pro` を使用）
 - Proのみ：生成方針（コンボ）のうち **2/3/4/5** を実行可能（後述）
+- Proのみ：Generate画面の生成調整5項目でPro専用値を選択可能（後述）
 - FreeはPro専用機能をUI上に表示してよいが、選択/実行時は「有料版のみ」案内（アップセル）を必ず出す。
+- backendも Free時は5項目を強制的にFree値へ正規化する（クライアント制御だけに依存しない）。
 
 ---
 
@@ -172,6 +174,10 @@ NightSelf:
 - `style_risk_guard: int`（0..100）
 - `relationship_type: string`（後述）
 - `reply_length_pref: string`（short|standard|long）
+- `line_break_pref: string`（few|infer|many）
+- `emoji_amount_pref: string`（none|standard|many）
+- `reaction_level_pref: string`（low|standard|high）
+- `partner_name_usage_pref: string`（none|once|many）
 - `ng_tags: string[]`（後述）
 - `ng_free_phrases: string[]`（短いフレーズ、上限10）
 
@@ -180,8 +186,34 @@ NightSelf:
 
 ### 6.3 reply_length_pref（SSOT / MUST）
 - `short` / `standard` / `long`
+- Free が選択可能: `short` のみ
+- Pro のみ: `standard` / `long`
 
-### 6.4 NGタグ（SSOT / MUST）
+### 6.4 line_break_pref（SSOT / MUST）
+- `few`（少なめ）/ `infer`（履歴から推測）/ `many`（多め）
+- Free が選択可能: `few` のみ
+- Pro のみ: `infer` / `many`
+- デフォルト: `infer`
+
+### 6.5 emoji_amount_pref（SSOT / MUST）
+- `none`（なし）/ `standard`（標準）/ `many`（多め）
+- Free が選択可能: `none` のみ
+- Pro のみ: `standard` / `many`
+- デフォルト: `standard`
+
+### 6.6 reaction_level_pref（SSOT / MUST）
+- `low`（低め）/ `standard`（標準）/ `high`（高め）
+- Free が選択可能: `low` のみ
+- Pro のみ: `standard` / `high`
+- デフォルト: `standard`
+
+### 6.7 partner_name_usage_pref（SSOT / MUST）
+- `none`（使わない）/ `once`（1回程度）/ `many`（多めに）
+- Free が選択可能: `none` のみ
+- Pro のみ: `once` / `many`
+- デフォルト: `once`
+
+### 6.8 NGタグ（SSOT / MUST）
 - `no_preach`
 - `no_pressure`
 - `no_romance_bait`
@@ -189,7 +221,7 @@ NightSelf:
 - `no_sexual_joke`
 - `no_late_reply_blame`
 
-### 6.5 自由入力NG（SSOT / MUST）
+### 6.9 自由入力NG（SSOT / MUST）
 - `ng_free_phrases` は短いフレーズのみ（上限10）。
 - 会話本文/生成本文をここに混ぜない。
 
@@ -288,7 +320,28 @@ NightSelf:
 
 ---
 
-## 11. NG（禁止/書き換え/注意喚起）適用（SSOT / MUST）
+## 11. バージョン管理・アップデート通知（MUST）
+(詳細: `backend_spec.md` / `backend_impl.md` / `frontend_impl.md` / `version_release_process.md` を正とし、本Specではプロダクト仲介のみ)
+
+### 11.1 ユーザー体験（MUST）
+- **起動時**: `/api/v1/version` で最新バージョンを確認。
+- **アップデート必須**: インストール版 < min_supported_version の場合、強制アップデート画面（Close不可）を表示し、Google Play へ誘導。
+- **アップデート任意**: インストール版 < latest_version の場合、任意アップデート画面を表示。
+- **画面表示内容**: 最新バージョン番号、リリースノート（タイトル 1 行 + 本文）、「バージョンアップする」ボタン。
+
+### 11.2 バージョン定義（MUST）
+- `major.minor.patch` 形式（例: `1.2.3`）
+- min_supported_version: サーバ側で指定される最小利用可能版。下回るユーザーは強制アップデート。
+- latest_version: 最新版（通常は app_version = latest_version）。
+
+### 11.3 リリースノート登録（MUST）
+- DB に保存: `AppReleaseNote` テーブル（version, title, body, released_at）
+- 新バージョンリリース時に DBA / デプロイ担当が INSERT
+- 最新版のみ `/api/v1/version` で返す（複数版の履歴は送らない）
+
+---
+
+## 12. NG（禁止/書き換え/注意喚起）適用（SSOT / MUST）
 - NG制御は `ng_policy.md` をSSOTとする。
 - 優先順位（高→低）：
   1) 安全ゲート（STOP）
@@ -298,7 +351,7 @@ NightSelf:
 
 ---
 
-## 12. UI/UX（プロダクト側で固定する要点 / MUST）
+## 13. UI/UX（プロダクト側で固定する要点 / MUST）
 ### 12.1 生成のテンポ（MUST）
 - 生成中はUIをロックして二重送信を防ぐ。
 - A/B/Cは生成完了後にのみ表示（生成前は非表示）。
@@ -316,21 +369,21 @@ NightSelf:
 
 ---
 
-## 13. 公開に必要な文書（MUST）
+## 14. 公開に必要な文書（MUST）
 - 利用規約
 - プライバシーポリシー
 - ヘルプ（使い方）
 
 ---
 
-## 14. 未確定 / 確認事項（最大3点）
+## 15. 未確定 / 確認事項（最大3点）
 1) 「淡いピンク」「黒反転」の具体Hexを固定するか（world_concept側で未確定）。  
 2) プライバシー短文コピー（例：「トーク履歴は残さないよ。送信するのはきみだよ」）のSSOT配置先が本Specか別copybookか。  
 3) NightSelf画像ファイル名が `night_balance.png` で確定で良いか（過去資産に `night_flow.png` があるため、差し替え運用の整理が必要）。  
 
 ---
 
-## 15. 公開前TODO（法務/ストア審査の最低限）
+## 16. 公開前TODO（法務/ストア審査の最低限）
 - [x] 設定画面から遷移できる「利用規約」ページを実装（または外部URL導線を実装）。
 - [x] 設定画面から遷移できる「プライバシーポリシー」ページを実装（または外部URL導線を実装）。
 - [x] 設定画面から遷移できる「ヘルプ（使い方）」ページを実装。
@@ -340,14 +393,15 @@ NightSelf:
 - [x] アカウント削除/データ削除要件に備え、削除導線（UI）とAPI方針をSpecで確定。
 - [x] OSSライセンス表示導線を設定画面に実装（Flutter標準のライセンス画面可）。
 
-### 15.1.1 課金機能実装状況（2026-03-07更新）
+### 16.1.1 課金機能実装状況（2026-03-07更新）
 - MVPシンプル実装完了（ローカル状態管理のみ）
 - 購入フロー・購入復元・サブスク管理導線を実装済み
 - **backend連携を実装済み**（POST /api/v1/billing/verify）
   - PurchaseService → BillingProof → Settings画面 → API連携フロー完成
   - 購入成功時に feature_tier/billing_tier を自動更新
   - mock mode で動作確認済み（実ストアサーバ検証は将来実装）
-- ストア登録後に商品IDを設定する必要あり
+- Android 商品ID（SSOT）：`permy_pro_monthly`
+- iOS 商品IDは将来実装時に別途確定
 
 ### 15.1.2 アカウント削除実装状況（2026-03-07追加）
 - 設定画面に「アカウントを削除する」導線と確認ダイアログを実装済み。

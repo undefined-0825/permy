@@ -17,3 +17,5 @@ def test_version_endpoint_has_update_fields() -> None:
     assert "min_supported_version" in body
     assert "android_store_url" in body
     assert "ios_store_url" in body
+    assert "release_note_title" in body
+    assert "release_note_body" in body

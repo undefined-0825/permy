@@ -36,12 +36,23 @@ class _FakePurchaseService extends PurchaseService {
   Future<void> restorePurchases() async {}
 }
 
+class _FakeProPurchaseService extends _FakePurchaseService {
+  @override
+  bool get isPro => true;
+}
+
 class _FakeApiClient implements AppApiClient {
-  _FakeApiClient({this.generateError, List<GenerateResult>? generateResults})
-    : _generateResults = List<GenerateResult>.from(generateResults ?? const []);
+  _FakeApiClient({
+    this.generateError,
+    List<GenerateResult>? generateResults,
+    this.settings,
+  }) : _generateResults = List<GenerateResult>.from(
+         generateResults ?? const [],
+       );
 
   final ApiError? generateError;
   final List<GenerateResult> _generateResults;
+  final Map<String, dynamic>? settings;
   int generateCallCount = 0;
   Map<String, dynamic> lastUpdatedSettings = <String, dynamic>{};
 
@@ -66,12 +77,15 @@ class _FakeApiClient implements AppApiClient {
   @override
   Future<SettingsSnapshot> getSettings() async {
     return SettingsSnapshot(
-      settings: <String, dynamic>{
-        'relationship_type': 'new',
-        'reply_length_pref': 'standard',
-        'ng_tags': <String>[],
-        'ng_free_phrases': <String>[],
-      },
+      settings:
+          settings ??
+          <String, dynamic>{
+            'relationship_type': 'new',
+            'reply_length_pref': 'standard',
+            'candidate_tap_action': 'copy',
+            'ng_tags': <String>[],
+            'ng_free_phrases': <String>[],
+          },
       etag: 'test',
     );
   }
@@ -219,6 +233,7 @@ void main() {
     expect(find.text('返信案'), findsNothing);
     expect(find.text('まずは、LINEからトーク履歴を共有してね♪'), findsOneWidget);
     expect(find.text('返信案の調整'), findsOneWidget);
+    expect(find.widgetWithText(AppButton, 'ぼくが返信案を考えるよ'), findsNothing);
     expect(find.text('現在のペルソナ情報'), findsOneWidget);
   });
 
@@ -244,6 +259,118 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(apiClient.lastUpdatedSettings['relationship_type'], 'regular');
+  });
+
+  testWidgets('Generate画面でProなら返信調整を変更して保存できる', (WidgetTester tester) async {
+    final apiClient = _FakeApiClient();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: apiClient,
+          shareReceiver: _FakeShareInput(null),
+          telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakeProPurchaseService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final dropdowns = tester
+        .widgetList<DropdownButtonFormField<String>>(
+          find.byType(DropdownButtonFormField<String>),
+        )
+        .toList();
+
+    dropdowns[1].onChanged?.call('long');
+    await tester.pumpAndSettle();
+    expect(apiClient.lastUpdatedSettings['reply_length_pref'], 'long');
+
+    dropdowns[2].onChanged?.call('many');
+    await tester.pumpAndSettle();
+    expect(apiClient.lastUpdatedSettings['line_break_pref'], 'many');
+
+    dropdowns[3].onChanged?.call('many');
+    await tester.pumpAndSettle();
+    expect(apiClient.lastUpdatedSettings['emoji_amount_pref'], 'many');
+
+    dropdowns[4].onChanged?.call('high');
+    await tester.pumpAndSettle();
+    expect(apiClient.lastUpdatedSettings['reaction_level_pref'], 'high');
+
+    dropdowns[5].onChanged?.call('many');
+    await tester.pumpAndSettle();
+    expect(apiClient.lastUpdatedSettings['partner_name_usage_pref'], 'many');
+  });
+
+  testWidgets('Freeで返信の長さPro項目選択時に課金誘導後はFree選択表示を維持する', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: _FakeApiClient(),
+          shareReceiver: _FakeShareInput(
+            SharePayload(text: '共有本文', fileName: 'line.txt'),
+          ),
+          telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final dropdowns = tester
+        .widgetList<DropdownButtonFormField<String>>(
+          find.byType(DropdownButtonFormField<String>),
+        )
+        .toList();
+
+    dropdowns[1].onChanged?.call('standard');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Plusのご案内'), findsOneWidget);
+    expect(find.widgetWithText(AppButton, 'Plusに変更'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.text('短め'), findsOneWidget);
+    expect(find.text('標準'), findsNothing);
+  });
+
+  testWidgets('Freeで生成方針Pro項目選択時に課金誘導後はFree選択表示を維持する', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: _FakeApiClient(),
+          shareReceiver: _FakeShareInput(
+            SharePayload(text: '共有本文', fileName: 'line.txt'),
+          ),
+          telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final comboDropdown = tester.widget<DropdownButtonFormField<int>>(
+      find.byType(DropdownButtonFormField<int>).first,
+    );
+
+    comboDropdown.onChanged?.call(3);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Plusのご案内'), findsOneWidget);
+    expect(find.widgetWithText(AppButton, 'Plusに変更'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.text('次回来店の約束'), findsOneWidget);
+    expect(find.text('火消し（大事な対応）'), findsNothing);
   });
 
   testWidgets('共有済みなら生成でA/B/Cを表示する', (WidgetTester tester) async {
@@ -289,6 +416,51 @@ void main() {
 
     expect(find.text('C案'), findsOneWidget);
     expect(find.text('返信案C'), findsOneWidget);
+    expect(find.text('タップでコピー'), findsWidgets);
+  });
+
+  testWidgets('返信案タップ設定が共有なら共有シートを開く', (WidgetTester tester) async {
+    String? sharedText;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: _FakeApiClient(
+            settings: <String, dynamic>{
+              'relationship_type': 'new',
+              'reply_length_pref': 'standard',
+              'candidate_tap_action': 'share',
+              'ng_tags': <String>[],
+              'ng_free_phrases': <String>[],
+            },
+          ),
+          shareReceiver: _FakeShareInput(
+            SharePayload(text: '共有本文', fileName: 'line.txt'),
+          ),
+          telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
+          shareCandidateHandler: (text) async {
+            sharedText = text;
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final generateButton = find.widgetWithText(AppButton, 'ぼくが返信案を考えるよ');
+    await tester.ensureVisible(generateButton);
+    await tester.tap(generateButton);
+    await tester.pump(const Duration(milliseconds: 1800));
+    await tester.pumpAndSettle();
+
+    expect(find.text('タップで共有'), findsWidgets);
+
+    await tester.ensureVisible(find.text('返信案A'));
+    await tester.tap(find.text('返信案A'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+
+    expect(sharedText, '返信案A');
+    expect(find.text('コピー済み'), findsNothing);
   });
 
   testWidgets('共有済みなら確認用トーク履歴テキストボックスを表示する', (WidgetTester tester) async {
@@ -445,7 +617,7 @@ void main() {
     expect(find.text('補足前の返信案A'), findsNothing);
   });
 
-  testWidgets('FreeでPlus項目選択時に購買案内を表示する', (WidgetTester tester) async {
+  testWidgets('FreeでPlus項目選択時に課金誘導ページを表示する', (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: GenerateScreen(
@@ -466,8 +638,8 @@ void main() {
     dropdown.onChanged?.call(2);
     await tester.pumpAndSettle();
 
-    expect(find.text('有料版のみ'), findsOneWidget);
-    expect(find.text('このモードはPlusで使える機能だよ。'), findsOneWidget);
+    expect(find.text('Plusのご案内'), findsOneWidget);
+    expect(find.widgetWithText(AppButton, 'Plusに変更'), findsOneWidget);
   });
 
   testWidgets('生成方針のPro項目にPlusバッジを表示する', (WidgetTester tester) async {

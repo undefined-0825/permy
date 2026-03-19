@@ -14,6 +14,8 @@ def check_missing_setting(settings: dict) -> Followup | None:
     優先順位：
     1. relationship_type
     2. reply_length_pref
+    3. emoji_amount_pref
+    4. reaction_level_pref
     
     複数不足の場合は最優先1点のみ返す（product_spec 9.1）
     """
@@ -47,8 +49,36 @@ def check_missing_setting(settings: dict) -> Followup | None:
                 FollowupChoice(id="long", label="長め"),
             ]
         )
+
+    # 3. emoji_amount_pref チェック
+    emoji_amount_pref = settings.get("emoji_amount_pref")
+    valid_emoji_amounts = {"none", "standard", "many"}
+
+    if not emoji_amount_pref or emoji_amount_pref not in valid_emoji_amounts:
+        return Followup(
+            key="emoji_amount_pref",
+            question="絵文字の量はどうする？",
+            choices=[
+                FollowupChoice(id="none", label="なし"),
+                FollowupChoice(id="standard", label="標準"),
+                FollowupChoice(id="many", label="多め"),
+            ]
+        )
+
+    # 4. reaction_level_pref チェック
+    reaction_level_pref = settings.get("reaction_level_pref")
+    valid_reaction_levels = {"low", "standard", "high"}
+
+    if not reaction_level_pref or reaction_level_pref not in valid_reaction_levels:
+        return Followup(
+            key="reaction_level_pref",
+            question="リアクションの強さはどうする？",
+            choices=[
+                FollowupChoice(id="low", label="低め"),
+                FollowupChoice(id="standard", label="標準"),
+                FollowupChoice(id="high", label="高め"),
+            ]
+        )
     
     # 不足なし
-    return None
-
     return None

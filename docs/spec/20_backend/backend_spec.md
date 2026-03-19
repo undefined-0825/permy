@@ -132,6 +132,16 @@
   - アカウント削除（関連メタ削除 + セッション無効化）
 - `GET /api/v1/me/settings`
   - 設定取得（`ETag`返却）
+- `GET /api/v1/version`
+  - アプリバージョン情報取得（認証不要）
+  - Response:
+    - `latest_version`（最新版。通常は app_version）
+    - `min_supported_version`（最低対応版。下回ると強制アップデート）
+    - `android_store_url` / `ios_store_url`（ストアリンク）
+    - `release_note_title`（リリースノートタイトル）
+    - `release_note_body`（リリースノート本文。最新版のみ）
+  - DB: `AppReleaseNote` テーブルから最新版のノートを取得
+  - キャッシュ: 設定値キャッシュ + DB レスポンスキャッシュ (TBD)
 - `PUT /api/v1/me/settings`
   - 設定更新（`If-Match`必須。競合は409 `ETAG_MISMATCH`）
 - `POST /api/v1/generate`
@@ -155,7 +165,7 @@
     - `plan`（free/pro）
     - `verified`（bool）
   - 動作:
-    - 許可された product_id かチェック（許可リスト: `com.sukimalab.permy.pro_monthly`（iOS）、`pro_monthly`（Android））
+    - 許可された product_id かチェック（許可リスト: `com.sukimalab.permy.pro_monthly`（iOS）、`permy_pro_monthly`（Android））
     - purchase_token が存在するかチェック
     - 検証成功時、`feature_tier=plus`、`billing_tier=pro_store` に更新
     - PlanStatus を `plan=pro` に更新（未存在なら作成）

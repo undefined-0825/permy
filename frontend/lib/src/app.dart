@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../core/theme/app_spacing.dart';
 import '../core/theme/app_theme.dart';
@@ -22,6 +21,7 @@ import 'infrastructure/token_store.dart';
 import 'presentation/diagnosis_screen.dart';
 import 'presentation/generate_screen.dart';
 import 'presentation/onboarding_screen.dart';
+import 'presentation/update_notice_screen.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -215,63 +215,25 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
       final hasUpdate =
           compareAppVersions(installedVersion, info.latestVersion) < 0;
 
-      if (!hasUpdate || !mounted) return;
+      if ((!hasUpdate && !shouldForce) || !mounted) return;
 
       final storeUrl = Platform.isIOS ? info.iosStoreUrl : info.androidStoreUrl;
 
-      await _showUpdateDialog(
-        forceUpdate: shouldForce,
-        latestVersion: info.latestVersion,
-        storeUrl: storeUrl,
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          settings: const RouteSettings(name: '/update'),
+          builder: (_) => UpdateNoticeScreen(
+            latestVersion: info.latestVersion,
+            storeUrl: storeUrl,
+            releaseNoteTitle: info.releaseNoteTitle,
+            releaseNoteBody: info.releaseNoteBody,
+            isForced: shouldForce,
+          ),
+        ),
       );
     } catch (_) {
       // versionチェック失敗時は起動を継続
     }
-  }
-
-  Future<void> _showUpdateDialog({
-    required bool forceUpdate,
-    required String latestVersion,
-    required String storeUrl,
-  }) async {
-    final canClose = !forceUpdate || storeUrl.isEmpty;
-
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: canClose,
-      builder: (dialogContext) {
-        return PopScope(
-          canPop: canClose,
-          child: AlertDialog(
-            title: const Text('アップデートのお知らせ'),
-            content: Text(
-              forceUpdate
-                  ? 'このバージョンでは利用できません。最新バージョン（$latestVersion）へ更新してください。'
-                  : '新しいバージョン（$latestVersion）が利用できます。ストアで更新しますか？',
-            ),
-            actions: [
-              if (canClose)
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: Text(forceUpdate ? '閉じる' : 'あとで'),
-                ),
-              TextButton(
-                onPressed: () async {
-                  if (storeUrl.isNotEmpty) {
-                    final uri = Uri.parse(storeUrl);
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                  }
-                  if (canClose && dialogContext.mounted) {
-                    Navigator.of(dialogContext).pop();
-                  }
-                },
-                child: const Text('ストアを開く'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   Future<void> _onOnboardingCompleted() async {

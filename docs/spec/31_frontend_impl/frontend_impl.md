@@ -171,7 +171,72 @@ ios/
 
 ---
 
-## 5. エラー処理（error_codes.* 整合）
+## 5. バージョン更新画面（UpdateNoticeScreen）実装
+
+### 5.1 画面設計
+`UpdateNoticeScreen` ウィジェット：
+- **目的**: バージョンアップの必須/任意を通知し、Google Play へ誘導する。
+- **特性**:
+  - 強制更新時：`PopScope(canPop: false)` で戻る不可。ボタン必須。
+  - 背景：既存の淡いピンク背景を継承（`AppScaffold` 使用）。
+  - 引数:
+    - `latestVersion: String` — 最新版ショー用
+    - `storeUrl: String` — Google Play URL（空の場合はボタン無効化）
+    - `releaseNoteTitle: String` — リリースノートタイトル（デフォルト: `バージョンアップのお知らせ`）
+    - `releaseNoteBody: String` — リリースノート本文（デフォルト: `新しいバージョンが利用できます`）
+
+### 5.2 UI レイアウト（スタイル原則）
+- **AppScaffold** で Padding 自動適用（`AppSpacing.md`）
+- **Title**: `AppTextStyles.primaryTitle` でフォント統一
+- **Version号**: `AppTextStyles.meta` 表示
+- **本文エリア**: `AppColors.highlight` 背景の Container に `AppSpacing.md` padding（既存パターンに準拠）
+- **ボタン**: `AppButton` primary variant、フルサイズ（expand=true）
+- **垂直スぺーシング**: `AppSpacing.lg` / `AppSpacing.xl`
+
+### 5.3 実装クラス
+```dart
+class UpdateNoticeScreen extends StatelessWidget {
+  const UpdateNoticeScreen({
+    required this.latestVersion,
+    required this.storeUrl,
+    required this.releaseNoteTitle,
+    required this.releaseNoteBody,
+    super.key,
+  });
+
+  final String latestVersion;
+  final String storeUrl;
+  final String releaseNoteTitle;
+  final String releaseNoteBody;
+
+  Future<void> _openStore() async {
+    if (storeUrl.isEmpty) return;
+    final uri = Uri.parse(storeUrl);
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // title/body の fallback を実装
+    final title = releaseNoteTitle.isNotEmpty 
+        ? releaseNoteTitle 
+        : 'バージョンアップのお知らせ';
+    
+    // PopScope は canPop=false（強制）
+    // AppButton: enabled=storeUrl が非空
+    // launchUrl で Google Play へ遷移
+  }
+}
+```
+
+### 5.4 起動フロー との統合
+- `app.dart` の `_checkForAppUpdate()` から `Navigator.push()` で遷移
+- 遷移前に `AppVersionInfo` をパースし、引数を構成
+- `releaseNoteTitle`, `releaseNoteBody` は API response から取得
+
+---
+
+## 6. エラー処理（error_codes.* 整合）
 ### 5.1 UIメッセージ（例：実装側の責務）
 - `RATE_LIMITED`：一定時間待って再試行（リトライボタン）
 - `DAILY_LIMIT_EXCEEDED`：本日は上限到達（次回案内）
@@ -411,10 +476,12 @@ ios/
 - 新規フィールド：`DiagnosisResult? _diagnosisResult`
 - null = Question Slider 表示、not null = Result Slide 表示
 - API呼び出し成功時に `_diagnosisResult` を更新、UI再構築
+- API送信中（`_saving=true` かつ `_diagnosisResult=null`）はローディング表示を優先する
+  - CircularProgressIndicator + 文言「きみのペルソナを作っているよ・・・」
 
 **表示コンテンツ**：
 1. **タイトル**：
-   - Text「あなたのペルソナが決まりました」
+  - Text「きみのペルソナはこれだよ」
    - fontSize 20、fontWeight bold、textAlign center、padding top 24
 2. **Result Sections ×2**：
    - **普段の自分（True Self）**：
@@ -468,13 +535,34 @@ ios/
 - sharedText state（メモリのみ）
 - settings state（GET/PUT同期）
 - レイアウトは「上部固定（ペルソナ要約+combo）/中央CTA/下部Expanded結果エリア」を基本とする
+- `hasSharedText == false` のときは共有案内のみを表示し、「ぼくが返信案を考えるよ」ボタンと「返信案の調整」カードは描画しない
+- `hasSharedText == true` のときの表示順は「共有プレビュー → 生成ボタン → 返信案の調整カード」とする
 - 「生成」ボタンで `/generate`
   - `Idempotency-Key` はUUID生成
 - 生成中：ローディング＋演出（色反転等）
 - 結果：A/B/Cカード（固定3スロット）
   - 未生成時/生成中は同じ結果領域でプレースホルダー表示
-  - タップでClipboardへコピー
+  - `candidate_tap_action=copy`：タップでClipboardへコピー
+  - `candidate_tap_action=share`：タップで共有シートを表示
   - 0.4秒のハイライトフィードバック
+  - Generate 画面復帰時に settings を再取得し、`candidate_tap_action` を最新値へ更新する
+
+#### 7.3.1 生成前調整（_ProAwareDropdown / MUST）
+返信案の調整カード内に以下5ずつの `_ProAwareDropdown` を配置する。
+
+| 項目 | state変数 | settingsキー | Free値（デフォルト） |
+|------|-----------|-----------|------------|
+| 返信の長さ | `_replyLengthPref` | `reply_length_pref` | `short` |
+| 改行設定 | `_lineBreakPref` | `line_break_pref` | `few` |
+| 絵文字の量 | `_emojiAmountPref` | `emoji_amount_pref` | `none` |
+| リアクション | `_reactionLevelPref` | `reaction_level_pref` | `low` |
+| 相手の呼び方 | `_partnerNameUsagePref` | `partner_name_usage_pref` | `none` |
+
+- 値変更時は `_updateGenerateSetting(key, value)` で `/me/settings` を即時PUT保存する。
+- Pro専用値をFreeが選んだ場合は `_openProUpgradePage()` でProUpgradeScreenへ遷移する。
+- 読み込み時は `_isProActive()` でFree/Proを判定し、FreeならFree値にフォールバック正規化してからstateにセットする。
+- pro/freeの判定ロジック: `widget.purchaseService.isPro || _plan == 'pro'`。
+
 
 #### 7.3.1 Generate 画面のエラーハンドリング
 - **エラー発生箇所**：`/generate` 呼び出し失敗時
@@ -518,18 +606,27 @@ ios/
    - 遷移：DiagnosisScreen（7問固定、全類型への回答）
    - 完了後：自動リロード + SnackBar「再診断を反映しました」
 
-3) **デフォルトの返信スタイル**：
+3) **返信案のタップ**：
+   - SegmentedButton（`candidate_tap_action`）：
+     - `copy` = 「コピー」（デフォルト）
+     - `share` = 「共有」
+   - UIサイズは「再診断する」ボタンと同程度の高さを維持する
+   - 変更は自動保存し、Generate画面側で復帰時に再読込する
+
+4) **デフォルトの返信スタイル**：
   - SegmentedButton（`combo_id`）：
     - 0=「来店約束」（combo_id: 0 / デフォルト）
     - 1=「休眠復活」（combo_id: 1）
    - `combo_id` を settings で管理
 
-4) **返信案のNG設定**：
+> 返信の長さ/改行設定/絵文字の量/リアクション/相手の呼び方の5項目はSettings画面では設定しない。Generate画面の調整カードで変更する（7.3.1参照）。Settings画面には「Generate画面で送信前に変更できるよ」案内文を表示する。
+
+5) **返信案のNG設定**：
   - NGタグ（複数選択）を選択可能
   - 禁止フレーズ（自由入力、最大10件）を管理
   - `ng_tags` / `ng_free_phrases` を settings と同期
 
-5) **サポート・規約・その他設定**：
+6) **サポート・規約・その他設定**：
   - アコーディオン形式で表示
   - アコーディオン内はリンク行（`AppListItem`）に統一し、以下を表示：
     - 利用規約 / プライバシーポリシー / ヘルプ（使い方） / このアプリについて / オープンソースライセンス
@@ -538,7 +635,7 @@ ios/
     - 端末移行の設定 → MigrationScreen
     - このアプリについて → AboutPrivacyScreen
 
-6) **自動反映ステータス**：
+7) **自動反映ステータス**：
   - 画面下部に「変更は自動で反映されます」を表示
   - 保存ボタンは設置しない（変更は自動保存）
 

@@ -22,6 +22,10 @@ def test_generate_uses_settings_context_with_dummy_client(client):
             "style_assertiveness": 40,
             "style_warmth": 70,
             "style_risk_guard": 65,
+            "line_break_pref": "many",
+            "emoji_amount_pref": "many",
+            "reaction_level_pref": "high",
+            "partner_name_usage_pref": "many",
         }
     )
 
@@ -34,7 +38,7 @@ def test_generate_uses_settings_context_with_dummy_client(client):
 
     res = client.post(
         "/api/v1/generate",
-        json={"history_text": "User: hello\nShop: hi", "combo_id": 0},
+        json={"history_text": "さやかちゃん: hello\nShop: hi", "combo_id": 0},
         headers={**headers, "Idempotency-Key": "test-generate-context-001"},
     )
     assert res.status_code == 200
@@ -43,6 +47,11 @@ def test_generate_uses_settings_context_with_dummy_client(client):
     candidates = body["candidates"]
     assert len(candidates) == 3
     assert "関係: regular" in candidates[0]["text"]
+    # FreeプランではPro専用設定が正規化される
+    assert "さやかちゃん" not in candidates[0]["text"]
+    assert "😊" not in candidates[0]["text"]
+    assert "！" not in candidates[0]["text"]
+    assert "\n" not in candidates[0]["text"]
 
 
 def test_generate_uses_default_followup_settings_for_new_user(client):

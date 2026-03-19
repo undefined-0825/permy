@@ -72,6 +72,38 @@ def _length_guidance(pref: str | None) -> str:
     return "各案は2〜3文を目安。短すぎる一言返信は禁止。"
 
 
+def _line_break_guidance(pref: str | None) -> str:
+    if pref == "few":
+        return "改行は少なめ。基本は1つのまとまりとして読みやすく整える。"
+    if pref == "many":
+        return "改行は多め。1〜2文ごとに適度に改行して、見やすさを優先する。"
+    return "改行量は履歴の雰囲気から推測する。相手や元の文面が詰め気味なら少なめ、見やすく区切られているなら多めにする。"
+
+
+def _emoji_guidance(pref: str | None) -> str:
+    if pref == "none":
+        return "絵文字は使わない。"
+    if pref == "many":
+        return "各案に絵文字を2〜3個入れる。文の意味を邪魔しない位置に置く。"
+    return "各案に絵文字を1個まで入れてよい。過剰装飾は避ける。"
+
+
+def _reaction_guidance(pref: str | None) -> str:
+    if pref == "low":
+        return "落ち着いた温度感で書く。感嘆符の多用は避ける。"
+    if pref == "high":
+        return "反応をはっきり示す。各案で感嘆符や前向き表現を適度に使う。"
+    return "自然な温度感で書く。過剰にテンションを上げない。"
+
+
+def _partner_name_usage_guidance(pref: str | None) -> str:
+    if pref == "none":
+        return "相手の名前や呼び方は入れない。"
+    if pref == "many":
+        return "相手の名前や呼び方が履歴から自然に分かる場合、各案で1〜2回使って親しみを出す。分からない場合は無理に補わない。"
+    return "相手の名前や呼び方が履歴から自然に分かる場合のみ、各案で1回程度まで使う。分からない場合は無理に補わない。"
+
+
 class OpenAiChatClient(AiClient):
     def __init__(self) -> None:
         if not settings.openai_api_key:
@@ -104,6 +136,14 @@ class OpenAiChatClient(AiClient):
             profile.append(f"安全寄せ(0-100): {ctx.style_risk_guard}")
         if ctx.reply_length_pref:
             profile.append(f"長さ: {ctx.reply_length_pref}")
+        if ctx.line_break_pref:
+            profile.append(f"改行設定: {ctx.line_break_pref}")
+        if ctx.emoji_amount_pref:
+            profile.append(f"絵文字量: {ctx.emoji_amount_pref}")
+        if ctx.reaction_level_pref:
+            profile.append(f"リアクション: {ctx.reaction_level_pref}")
+        if ctx.partner_name_usage_pref:
+            profile.append(f"相手の呼び方: {ctx.partner_name_usage_pref}")
         profile.append(f"コンボID: {ctx.combo_id}")
 
         system_instructions = (
@@ -114,6 +154,18 @@ class OpenAiChatClient(AiClient):
             + "- C：攻め（距離を詰める/提案強め）。ただし圧はかけない、断定しない。\n"
             + "\n【長さ】\n"
             + _length_guidance(ctx.reply_length_pref)
+            + "\n"
+            + "\n【改行】\n"
+            + _line_break_guidance(ctx.line_break_pref)
+            + "\n"
+            + "\n【絵文字】\n"
+            + _emoji_guidance(ctx.emoji_amount_pref)
+            + "\n"
+            + "\n【リアクション】\n"
+            + _reaction_guidance(ctx.reaction_level_pref)
+            + "\n"
+            + "\n【相手の呼び方】\n"
+            + _partner_name_usage_guidance(ctx.partner_name_usage_pref)
             + "\n"
             + "\n【制約】\n"
             + "- 出力は必ず3案（A/B/C）。それぞれ狙いを変えて“別案”にする。\n"

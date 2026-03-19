@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -8,6 +10,7 @@ import 'package:sample_app/core/widgets/app_list_item.dart';
 import 'package:sample_app/src/domain/models.dart';
 import 'package:sample_app/src/domain/persona_diagnosis.dart';
 import 'package:sample_app/src/infrastructure/api_client.dart';
+import 'package:sample_app/src/infrastructure/billing_proof.dart';
 import 'package:sample_app/src/infrastructure/purchase_service.dart';
 import 'package:sample_app/src/presentation/about_privacy_screen.dart';
 import 'package:sample_app/src/presentation/diagnosis_screen.dart';
@@ -25,6 +28,8 @@ class MockPurchaseService extends PurchaseService {
     : super(storage: const FlutterSecureStorage());
 
   final bool mockIsPro;
+  final StreamController<BillingProof> _proofController =
+      StreamController<BillingProof>.broadcast();
 
   @override
   bool get isPro => mockIsPro;
@@ -33,7 +38,16 @@ class MockPurchaseService extends PurchaseService {
   Future<void> initialize() async {}
 
   @override
-  void dispose() {}
+  void dispose() {
+    _proofController.close();
+  }
+
+  @override
+  Stream<BillingProof> get billingProofStream => _proofController.stream;
+
+  void emitBillingProof(BillingProof proof) {
+    _proofController.add(proof);
+  }
 
   @override
   Future<bool> isAvailable() async => true;
@@ -47,11 +61,17 @@ class MockPurchaseService extends PurchaseService {
 
 // Mock API Client
 class MockApiClient implements AppApiClient {
-  MockApiClient({this.settingsSnapshot, this.shouldFailUpdate = false});
+  MockApiClient({
+    this.settingsSnapshot,
+    this.shouldFailUpdate = false,
+    this.verifyBillingErrorCode,
+  });
 
   final SettingsSnapshot? settingsSnapshot;
   final bool shouldFailUpdate;
+  final String? verifyBillingErrorCode;
   Map<String, dynamic>? lastUpdatedSettings;
+  List<Map<String, String>> verifyBillingCalls = [];
 
   @override
   Future<void> bootstrapAuth() async {}
@@ -81,6 +101,11 @@ class MockApiClient implements AppApiClient {
             'combo_id': 0,
             'relationship_type': 'new',
             'reply_length_pref': 'standard',
+            'line_break_pref': 'infer',
+            'emoji_amount_pref': 'standard',
+            'reaction_level_pref': 'standard',
+            'partner_name_usage_pref': 'once',
+            'candidate_tap_action': 'copy',
             'ng_tags': <String>[],
             'ng_free_phrases': <String>[],
             'settings_schema_version': 1,
@@ -156,7 +181,22 @@ class MockApiClient implements AppApiClient {
     required String platform,
     required String productId,
     required String purchaseToken,
-  }) async {}
+  }) async {
+    verifyBillingCalls.add({
+      'platform': platform,
+      'productId': productId,
+      'purchaseToken': purchaseToken,
+    });
+    if (verifyBillingErrorCode != null) {
+      throw ApiError(
+        errorCode: verifyBillingErrorCode!,
+        message: '課金検証エラー',
+        httpStatus: verifyBillingErrorCode == 'BILLING_NOT_CONFIGURED'
+            ? 503
+            : 400,
+      );
+    }
+  }
 
   @override
   Future<void> deleteAccount() async {}
@@ -227,6 +267,43 @@ void main() {
       // ペルソナ情報が表示されていることを確認
       expect(find.text('type_A'), findsOneWidget);
       expect(find.text('type_B'), findsWidgets);
+      expect(find.text('現在のステータス'), findsOneWidget);
+      expect(find.text('Free'), findsOneWidget);
+    });
+
+    testWidgets('Plus会員時は課金日と解約リンクを表示する', (WidgetTester tester) async {
+      final mockApi = MockApiClient(
+        settingsSnapshot: SettingsSnapshot(
+          settings: {
+            'true_self_type': 'type_A',
+            'night_self_type': 'type_B',
+            'last_billing_date': '2026-03-01',
+            'next_billing_date': '2026-03-31',
+            'settings_schema_version': 1,
+            'forbidden_type_ids': [],
+          },
+          etag: 'test-etag-123',
+        ),
+      );
+      final mockPurchase = MockPurchaseService(mockIsPro: true);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('会員種別'), findsOneWidget);
+      expect(find.text('Plus'), findsOneWidget);
+      expect(find.text('前回の更新日'), findsOneWidget);
+      expect(find.text('次回の更新日'), findsOneWidget);
+      expect(find.text('2026/03/01'), findsOneWidget);
+      expect(find.text('2026/03/31'), findsOneWidget);
+      expect(find.text('解約はこちら'), findsOneWidget);
     });
 
     testWidgets('コンボ設定を変更できる', (WidgetTester tester) async {
@@ -252,7 +329,7 @@ void main() {
       expect(find.text('休眠復活'), findsOneWidget);
     });
 
-    testWidgets('設定画面では返信の長さを変更でき、関係性は表示しない', (WidgetTester tester) async {
+    testWidgets('設定画面では生成調整項目の移設案内を表示する', (WidgetTester tester) async {
       final mockApi = MockApiClient();
       final mockPurchase = MockPurchaseService();
 
@@ -268,15 +345,39 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('お客様との関係'), findsNothing);
-      expect(find.text('標準'), findsOneWidget);
+      expect(
+        find.text('返信の長さ・改行設定・絵文字の量・リアクション・相手の呼び方は、Generate画面で送信前に変更できるよ'),
+        findsOneWidget,
+      );
+      expect(find.text('返信の長さ'), findsNothing);
+      expect(find.text('改行設定'), findsNothing);
+      expect(find.text('絵文字の量'), findsNothing);
+      expect(find.text('リアクション'), findsNothing);
+      expect(find.text('相手の呼び方'), findsNothing);
+    });
 
-      final longFinder = find.text('長め');
-      await tester.ensureVisible(longFinder);
-      await tester.tap(longFinder);
+    testWidgets('設定画面では返信案のタップ動作を変更できる', (WidgetTester tester) async {
+      final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('返信案のタップ'), findsOneWidget);
+      final shareFinder = find.text('共有');
+      await tester.ensureVisible(shareFinder);
+      await tester.tap(shareFinder.last);
       await tester.pump(const Duration(milliseconds: 500));
       await tester.pumpAndSettle();
 
-      expect(mockApi.lastUpdatedSettings?['reply_length_pref'], 'long');
+      expect(mockApi.lastUpdatedSettings?['candidate_tap_action'], 'share');
     });
 
     testWidgets('読み込みエラー時の再読込ボタン', (WidgetTester tester) async {
@@ -496,7 +597,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(PersonaDiagnosisResultScreen), findsOneWidget);
-      expect(find.text('あなたのペルソナ'), findsWidgets); // SliverAppBar.large() で複数表示
+      expect(find.text('きみのペルソナはこれだよ'), findsOneWidget);
     });
 
     testWidgets('アカウント削除リンクで確認ダイアログが表示される', (WidgetTester tester) async {
@@ -551,6 +652,72 @@ void main() {
       expect(find.text('アカウントを削除しますか？'), findsNothing);
       // 設定画面に戻る
       expect(find.text('設定'), findsOneWidget);
+    });
+
+    testWidgets('billingProof受信時に /billing/verify を呼び出す', (
+      WidgetTester tester,
+    ) async {
+      final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      mockPurchase.emitBillingProof(
+        BillingProof(
+          platform: 'android',
+          productId: 'permy_pro_monthly',
+          purchaseToken: 'token-123',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(mockApi.verifyBillingCalls.length, 1);
+      expect(mockApi.verifyBillingCalls.first['platform'], 'android');
+      expect(
+        mockApi.verifyBillingCalls.first['productId'],
+        'permy_pro_monthly',
+      );
+      expect(mockApi.verifyBillingCalls.first['purchaseToken'], 'token-123');
+      expect(find.text('課金状態をサーバーに反映しました'), findsOneWidget);
+    });
+
+    testWidgets('BILLING_NOT_CONFIGURED で専用エラーダイアログを表示', (
+      WidgetTester tester,
+    ) async {
+      final mockApi = MockApiClient(
+        verifyBillingErrorCode: 'BILLING_NOT_CONFIGURED',
+      );
+      final mockPurchase = MockPurchaseService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      mockPurchase.emitBillingProof(
+        BillingProof(
+          platform: 'android',
+          productId: 'permy_pro_monthly',
+          purchaseToken: 'token-123',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('課金検証は準備中だよ'), findsOneWidget);
+      expect(find.text('運用設定が完了するまで少し待ってね。'), findsOneWidget);
     });
   });
 }

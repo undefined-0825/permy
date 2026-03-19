@@ -182,12 +182,16 @@ class AppVersionInfo {
     required this.minSupportedVersion,
     required this.androidStoreUrl,
     required this.iosStoreUrl,
+    this.releaseNoteTitle = '',
+    this.releaseNoteBody = '',
   });
 
   final String latestVersion;
   final String minSupportedVersion;
   final String androidStoreUrl;
   final String iosStoreUrl;
+  final String releaseNoteTitle;
+  final String releaseNoteBody;
 
   factory AppVersionInfo.fromJson(Map<String, dynamic> json) {
     return AppVersionInfo(
@@ -201,6 +205,8 @@ class AppVersionInfo {
           '',
       androidStoreUrl: json['android_store_url']?.toString() ?? '',
       iosStoreUrl: json['ios_store_url']?.toString() ?? '',
+      releaseNoteTitle: json['release_note_title']?.toString() ?? '',
+      releaseNoteBody: json['release_note_body']?.toString() ?? '',
     );
   }
 }

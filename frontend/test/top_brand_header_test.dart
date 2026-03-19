@@ -11,7 +11,7 @@ void main() {
       ),
     );
 
-    expect(find.byType(BackButton), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_back), findsOneWidget);
   });
 
   testWidgets('ロゴ画像はcontainで表示する', (WidgetTester tester) async {
@@ -46,6 +46,6 @@ void main() {
     );
 
     expect(find.byIcon(Icons.close), findsOneWidget);
-    expect(find.byType(BackButton), findsNothing);
+    expect(find.byIcon(Icons.arrow_back), findsNothing);
   });
 }
