@@ -160,7 +160,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _scheduleAutoPersist() {
     _autoPersistDebounce?.cancel();
-    _autoPersistDebounce = Timer(const Duration(milliseconds: 450), () {
+    _autoPersistDebounce = Timer(const Duration(milliseconds: 200), () {
       if (!mounted) return;
       if (_persisting) {
         _pendingPersist = true;
