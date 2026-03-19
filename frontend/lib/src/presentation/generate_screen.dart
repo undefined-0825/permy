@@ -278,6 +278,16 @@ class _GenerateScreenState extends State<GenerateScreen>
                           text: _loading ? '生成中...' : 'ぼくが返信案を考えるよ',
                           onPressed: canGenerate ? _onGeneratePressed : null,
                         ),
+                        if (_candidates.isNotEmpty) ...[
+                          const SizedBox(height: AppSpacing.xl),
+                          _ResultArea(
+                            candidates: _candidates,
+                            copiedLabel: _copiedLabel,
+                            candidateTapAction: _candidateTapAction,
+                            onCopyCandidate: _copyCandidate,
+                            onShareCandidate: _shareCandidate,
+                          ),
+                        ],
                         const SizedBox(height: AppSpacing.lg),
                       ],
                       _GenerateAdjustmentsCard(
@@ -319,16 +329,6 @@ class _GenerateScreenState extends State<GenerateScreen>
                           daily: _daily,
                           planLabel: _planLabel(_plan),
                           metaPro: _plan == 'pro' ? _metaPro : null,
-                        ),
-                      ],
-                      if (_candidates.isNotEmpty) ...[
-                        const SizedBox(height: AppSpacing.xxl),
-                        _ResultArea(
-                          candidates: _candidates,
-                          copiedLabel: _copiedLabel,
-                          candidateTapAction: _candidateTapAction,
-                          onCopyCandidate: _copyCandidate,
-                          onShareCandidate: _shareCandidate,
                         ),
                       ],
                       const SizedBox(height: AppSpacing.xxl),
