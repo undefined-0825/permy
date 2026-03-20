@@ -16,18 +16,18 @@
 
 ## 1. タイプ軸（再掲）
 ### 1.1 本当の私（TrueSelfType）
-- `Stability`（安定重視）
-- `Independence`（自立）
-- `Approval`（承認欲求）
-- `Realism`（現実派）
-- `Romance`（ロマン）
+- `Stability`（安定重視タイプ）
+- `Independence`（自立タイプ）
+- `Approval`（承認欲求タイプ）
+- `Realism`（現実派タイプ）
+- `Romance`（ロマンタイプ）
 
 ### 1.2 夜の私（NightSelfType）
-- `VisitPush`（来店重視）
-- `Heal`（癒し）
-- `LittleDevil`（小悪魔）
-- `BigClient`（太客育成）
-- `Balance`（バランス）
+- `VisitPush`（来店重視タイプ）
+- `Heal`（癒し系タイプ）
+- `LittleDevil`（小悪魔系タイプ）
+- `BigClient`（太客育成タイプ）
+- `Balance`（バランスタイプ）
 
 ---
 
@@ -36,55 +36,55 @@
 
 ### 2.1 True（2問）
 #### Q1 `true_priority`
-**設問文:** 「普段いちばん優先するものは？」
+**設問文:** 「普段いちばん大切にしているもの？」
 - A `life_balance`（ライフバランス）
 - B `future_stability`（将来の安定）
 - C `partner_time`（パートナーとの時間）
-- D `social_trust`（評価・信頼）
-- E `self_autonomy`（自分の裁量・自由）
+- D `social_trust`（周りの人からの評価・信頼）
+- E `self_autonomy`（自分の価値観・自由）
 
 #### Q2 `true_decision_axis`
-**設問文:** 「迷った時の判断軸は？」
-- A `low_stress`（無理が少ない方）
-- B `long_term_return`（長期的に得な方）
-- C `emotional_satisfaction`（気持ちが満たされる方）
-- D `pace_control`（自分のペースを守れる方）
+**設問文:** 「迷った時はどうする？」
+- A `low_stress`（無理が少ない方にする）
+- B `long_term_return`（長期的に得な方にする）
+- C `emotional_satisfaction`（気持ちが満たされる方にする）
+- D `pace_control`（自分のペースを守れる方にする）
 
 ### 2.2 Night（5問）
 #### Q3 `night_goal_primary`
-**設問文:** 「今日の返信で一番達成したいことは？」
+**設問文:** 「夜職のLINE返信で一番達成したいことは？」
 - A `next_visit`（次回来店の約束）
-- B `relationship_keep`（関係維持）
-- C `special_distance`（特別感で距離を縮める）
-- D `long_term_growth`（長期で太く育てる）
+- B `relationship_keep`（お客様との関係を維持する）
+- C `special_distance`（特別感を出して距離を縮める）
+- D `long_term_growth`（長期で太く育成したい）
 
 #### Q4 `night_temperature`
 **設問文:** 「返信の温度感は？」
-- A `calm_safe`（安心感重視）
-- B `sweet_light`（軽く甘め）
-- C `clear_proposal`（提案をはっきり）
+- A `calm_safe`（安心感を重視する）
+- B `sweet_light`（軽く甘めに攻めてみる）
+- C `clear_proposal`（自分の考えをはっきり伝える）
 - D `adaptive`（相手に合わせる）
 
 #### Q5 `night_game_tolerance`
-**設問文:** 「駆け引きの許容度は？」
+**設問文:** 「お客様との駆け引きは？」
 - A `avoid_game`（ほぼ使わない）
 - B `light_game`（少しなら使う）
 - C `adaptive_game`（状況次第で使う）
 - D `active_game`（積極的に使う）
 
 #### Q6 `night_customer_allocation`
-**設問文:** 「お客様管理の考え方は？」
+**設問文:** 「お客様との関係をどうしたい？」
 - A `wide_touchpoints`（幅広く接点を増やす）
-- B `care_existing`（今ある関係を丁寧に維持）
-- C `focus_key_clients`（重点客に寄せる）
+- B `care_existing`（今ある関係を丁寧に維持したい）
+- C `focus_key_clients`（重要なお客を大切にする）
 - D `dynamic_balance`（状況で配分を切り替える）
 
 #### Q7 `night_risk_response`
-**設問文:** 「リスク場面での返し方は？」
-- A `firefighting_safe`（まず火消しして安全着地）
+**設問文:** 「お客様とトラブル。どうする？」
+- A `firefighting_safe`（まずは火消しして安全を確保）
 - B `soft_distance`（柔らかく距離を保つ）
-- C `recover_initiative`（主導権を戻す）
-- D `adaptive_landing`（相手に合わせて着地）
+- C `recover_initiative`（主導権を握って解決）
+- D `adaptive_landing`（相手に合わせて様子を見る）
 
 ---
 

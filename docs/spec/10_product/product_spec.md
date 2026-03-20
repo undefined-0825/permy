@@ -124,8 +124,8 @@ enum class TrueSelfType {
 // 夜の私（営業スタイル）
 enum class NightSelfType {
     VisitPush,   // 来店重視タイプ
-    Heal,        // 癒しタイプ
-    LittleDevil, // 小悪魔タイプ
+    Heal,        // 癒し系タイプ
+    LittleDevil, // 小悪魔系タイプ
     BigClient,   // 太客育成タイプ
     Balance,     // バランスタイプ
 }

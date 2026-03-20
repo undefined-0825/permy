@@ -24,9 +24,9 @@ String getNightSelfTypeName(String typeValue) {
     case 'VisitPush':
       return '来店重視タイプ';
     case 'Heal':
-      return '癒しタイプ';
+      return '癒し系タイプ';
     case 'LittleDevil':
-      return '小悪魔タイプ';
+      return '小悪魔系タイプ';
     case 'BigClient':
       return '太客育成タイプ';
     case 'Balance':
