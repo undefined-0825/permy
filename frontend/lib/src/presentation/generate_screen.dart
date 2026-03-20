@@ -21,6 +21,7 @@ import '../infrastructure/api_client.dart';
 import '../infrastructure/purchase_service.dart';
 import '../infrastructure/share_receiver.dart';
 import '../infrastructure/telemetry_queue.dart';
+import 'pro_comp_hidden_screen.dart';
 import 'pro_upgrade_screen.dart';
 import 'settings_screen.dart';
 import 'widgets/top_brand_header.dart';
@@ -172,7 +173,15 @@ class _GenerateScreenState extends State<GenerateScreen>
       final candidateTapAction = snapshot.settings['candidate_tap_action']
           ?.toString();
       final isProActive = _isProActive();
+      final featureTier = snapshot.settings['feature_tier']?.toString();
+      final billingTier = snapshot.settings['billing_tier']?.toString();
+      final plan = snapshot.settings['plan']?.toString();
+      final inferredPlan =
+          (featureTier == 'plus' || billingTier == 'pro_comp' || plan == 'pro')
+          ? 'pro'
+          : _plan;
       setState(() {
+        _plan = inferredPlan;
         _trueTypeValue = trueType;
         _nightTypeValue = nightType;
         _trueTypeLabel = (trueType == null || trueType.isEmpty)
@@ -617,9 +626,13 @@ class _GenerateScreenState extends State<GenerateScreen>
   }
 
   void _openProUpgradePage() {
+    if (_isProActive()) {
+      return;
+    }
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (upgradeContext) => ProUpgradeScreen(
+          isProActive: _isProActive(),
           onTapChangePlus: () {
             Navigator.of(upgradeContext).push(
               MaterialPageRoute(
@@ -629,6 +642,22 @@ class _GenerateScreenState extends State<GenerateScreen>
                 ),
               ),
             );
+          },
+          onOpenHiddenPage: () {
+            Navigator.of(upgradeContext)
+                .push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        ProCompHiddenScreen(apiClient: widget.apiClient),
+                  ),
+                )
+                .then((approved) {
+                  if (approved == true && mounted) {
+                    setState(() {
+                      _plan = 'pro';
+                    });
+                  }
+                });
           },
         ),
       ),

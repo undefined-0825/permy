@@ -162,6 +162,11 @@ class _FakeApiClient implements AppApiClient {
     required String productId,
     required String purchaseToken,
   }) async {}
+
+  @override
+  Future<ProCompRequestResult> requestProComp(String email) async {
+    return ProCompRequestResult(approved: true, requestCount: 1);
+  }
 }
 
 class _FakeTelemetryQueue extends TelemetryQueue {
@@ -640,6 +645,38 @@ void main() {
 
     expect(find.text('Plusのご案内'), findsOneWidget);
     expect(find.widgetWithText(AppButton, 'Plusに変更'), findsOneWidget);
+  });
+
+  testWidgets('課金誘導画面の右上を10回タップすると隠しページを開く', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: _FakeApiClient(),
+          shareReceiver: _FakeShareInput(
+            SharePayload(text: '共有本文', fileName: 'line.txt'),
+          ),
+          telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final dropdown = tester.widget<DropdownButton<int>>(
+      find.byType(DropdownButton<int>),
+    );
+    dropdown.onChanged?.call(2);
+    await tester.pumpAndSettle();
+
+    final tappable = find.byKey(const Key('pro_upgrade_hidden_tap_area'));
+    for (var i = 0; i < 10; i++) {
+      await tester.tap(tappable);
+      await tester.pump();
+    }
+    await tester.pumpAndSettle();
+
+    expect(find.text('承認依頼'), findsOneWidget);
+    expect(find.text('メールアドレス入力'), findsOneWidget);
   });
 
   testWidgets('生成方針のPro項目にPlusバッジを表示する', (WidgetTester tester) async {

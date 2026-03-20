@@ -115,6 +115,16 @@ class BillingVerifyResponse(BaseModel):
     verified: bool
 
 
+class ProCompGrantRequestRequest(BaseModel):
+    email: str = Field(..., min_length=3, max_length=320)
+
+
+class ProCompGrantRequestResponse(BaseModel):
+    approved: bool
+    request_count: int = Field(..., ge=0)
+    remaining_attempts: int | None = None  # 失敗時: ロックまでの残り回数、承認時: None
+
+
 # Telemetry Schemas（本文ゼロ厳守）
 class TelemetryEventBase(BaseModel):
     """クライアントから送信される共通フィールド"""

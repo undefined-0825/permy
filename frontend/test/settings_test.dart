@@ -199,6 +199,11 @@ class MockApiClient implements AppApiClient {
   }
 
   @override
+  Future<ProCompRequestResult> requestProComp(String email) async {
+    return ProCompRequestResult(approved: true, requestCount: 1);
+  }
+
+  @override
   Future<void> deleteAccount() async {}
 }
 

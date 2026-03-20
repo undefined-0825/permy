@@ -14,6 +14,8 @@ class User(Base):
     user_id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     feature_tier: Mapped[str] = mapped_column(String(16), default="free")  # free/plus
     billing_tier: Mapped[str] = mapped_column(String(16), default="free")  # free/pro_store/pro_comp
+    failed_pro_comp_attempts: Mapped[int] = mapped_column(Integer, default=0)  # pro_comp申請失敗回数
+    is_locked: Mapped[bool] = mapped_column(default=False)  # 不正アクセスロック
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc))
     updated_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc))
 
@@ -56,6 +58,18 @@ class AppReleaseNote(Base):
     released_at: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc)
     )
+
+
+class ProCompGrantRequest(Base):
+    __tablename__ = "pro_comp_grant_requests"
+
+    email: Mapped[str] = mapped_column(String(320), primary_key=True)
+    name: Mapped[str] = mapped_column(String(128), default="")
+    request_count: Mapped[int] = mapped_column(Integer, default=0)
+    approved_user_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    last_session_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc))
+    updated_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc))
 
 
 class TelemetryEvent(Base):

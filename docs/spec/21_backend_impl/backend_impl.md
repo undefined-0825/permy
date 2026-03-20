@@ -66,7 +66,9 @@ backend/
       migration.py
       common.py
   tools/
-    grant_comp_user.py
+    pro_comp/
+      register_comp_email.py
+      reset_comp_request_count.py
   tests/
     test_auth.py
     test_settings.py
@@ -153,10 +155,25 @@ backend/
 
 ### 7.3 永続無料付与（pro_comp）
 - 管理画面は作らない
-- `tools/grant_comp_user.py` で `user_id` を指定し DB更新
-  - `feature_tier=plus`
-  - `billing_tier=pro_comp`
-- 公開HTTPの管理APIは増やさない（攻撃面を増やさない）
+- 対象メールは運用CLIで事前登録する
+  - `python tools/pro_comp/register_comp_email.py <email> <name>`
+- クライアントは `POST /api/v1/pro-comp/request` で承認依頼を送信する
+  - 入力メールは trim + lower で正規化して照合する
+  - `pro_comp_grant_requests.email`（事前登録済み）と一致した場合のみ承認候補になる
+- 承認条件（MUST）
+  - 対象メールが事前登録済み
+  - `approved_user_id` が未設定
+  - `request_count=0`（初回依頼）
+  - `users.is_locked=false`
+- 承認時の更新
+  - `users.feature_tier=plus`
+  - `users.billing_tier=pro_comp`
+  - `plan_status.plan=pro`
+  - `user_settings.settings_json` に `feature_tier/billing_tier/plan` を反映
+- 不正アクセス対策（MUST）
+  - 承認失敗ごとに `users.failed_pro_comp_attempts` を +1
+  - 5回失敗で `users.is_locked=true`
+  - 失敗時エラー詳細に `remaining_attempts` を返す
 
 ---
 
@@ -496,8 +513,10 @@ app_ios_store_url: str = ""
   - Pro_comp（永続無料）サポート
 
 #### Management Tools
-- ✅ **Pro_comp 権限付与ツール** (`backend/tools/grant_comp_user.py`)
-  - CLI で user_id 指定して pro_comp 付与/解除/確認
+- ✅ **Pro_comp 対象メール事前登録ツール** (`backend/tools/pro_comp/register_comp_email.py`)
+  - 承認対象メールを登録/更新（`--force-reset` 対応）
+- ✅ **Pro_comp 依頼回数リセットツール** (`backend/tools/pro_comp/reset_comp_request_count.py`)
+  - 登録済みメールの `request_count` を0に戻す
 
 #### Documentation & Tooling
 - ✅ **OpenAPI Specification 自動生成**
@@ -518,7 +537,7 @@ app_ios_store_url: str = ""
 - ✅ `tools/manual_api_test.ps1`: コア API テスト（6/6 合格）
 - ✅ `tools/test_telemetry.ps1`: Telemetry API テスト（5 イベント検証）
 - ✅ `tools/test_followup.ps1`: Followup 機能テスト（優先順位確認）
-- ✅ `tools/test_pro_comp.ps1`: Pro_comp tier 機能テスト
+- ✅ `backend/tests/test_contract_pro_comp.py`: Pro_comp 承認フロー契約テスト
 
 ### 16.3 未実装・残作業（🔜）
 
@@ -559,8 +578,8 @@ app_ios_store_url: str = ""
   - 5req/min制限、429返却確認
 - ✅ **test_idempotency.ps1**: 合格
   - Idempotency-Key重複制御
-- ⚠️ **test_pro_comp.ps1**: パス問題（機能自体は実装済み）
-  - tools/grant_comp_user.pyのパス修正必要
+- ✅ **test_contract_pro_comp.py**: 合格
+  - 事前登録メール照合・単回承認・失敗回数カウント・5回失敗ロックを確認
 - ⚠️ **test_daily_limit.ps1**: カウントロジック調整必要
   - 日次制限機能は実装済み、テストスクリプトの期待値要調整
 

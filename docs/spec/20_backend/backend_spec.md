@@ -99,6 +99,8 @@
   - `user_id`（匿名ID）
   - `feature_tier`（free/plus）
   - `billing_tier`（free/pro_store/pro_comp）
+  - `failed_pro_comp_attempts`（pro_comp承認依頼の失敗累積）
+  - `is_locked`（不正アクセス抑止のロック状態）
   - `created_at`, `updated_at`
 - `user_settings`
   - `user_id`
@@ -155,6 +157,10 @@
   - 移行コード発行（12桁、期限あり、レート制限）
 - `POST /api/v1/migration/consume`
   - 移行コード消費（1回限り、期限あり、レート制限）
+- `POST /api/v1/pro-comp/request`
+  - pro_comp承認依頼（隠し導線用）
+  - 入力メールを正規化（trim + lower）し、事前登録メールと一致する場合のみ承認判定
+  - 失敗時は `remaining_attempts` を返却（5回失敗で `ACCOUNT_LOCKED`）
 - `POST /api/v1/billing/verify`
   - ストア購入の検証結果を反映
   - Request:
@@ -232,12 +238,20 @@
 - 管理画面は作らない。
 - `pro_comp` は機能面ではProと同等（`feature_tier=plus`）だが、課金は区別する（`billing_tier=pro_comp`）。
 
-### 8.2 付与方法（推奨：運用CLI）
-- 公開HTTPの管理APIを増やさず、リポジトリ内の管理用CLIでDBを直接更新する。
-- 例：`tools/grant_comp_user.py --user-id <id>`
-  - `feature_tier=plus`
-  - `billing_tier=pro_comp`
-- 実行権限は運用者のみ（本番DB接続権限の管理で担保）。
+### 8.2 付与方法（運用CLI + 承認依頼API）
+- 管理者は対象メールをCLIで事前登録する。
+  - 例：`python tools/pro_comp/register_comp_email.py target@example.com 田中太郎`
+- ユーザーは `POST /api/v1/pro-comp/request` で承認依頼する。
+- 承認判定は「入力メール（正規化後）」と `pro_comp_grant_requests.email` の一致で行う。
+- 承認成功時に以下を更新する。
+  - `users.feature_tier=plus`
+  - `users.billing_tier=pro_comp`
+  - `plan_status.plan=pro`
+
+### 8.3 不正アクセス対策
+- 承認失敗ごとに `users.failed_pro_comp_attempts` を +1 する。
+- 5回失敗で `users.is_locked=true` とし、以後 `/api/v1/pro-comp/request` は `ACCOUNT_LOCKED` を返す。
+- 失敗時はエラー詳細に `remaining_attempts`（ロックまでの残回数）を含める。
 
 ---
 

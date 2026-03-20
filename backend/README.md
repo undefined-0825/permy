@@ -69,8 +69,8 @@ cd tools
 # Followup 機能テスト
 .\test_followup.ps1
 
-# Pro_comp tier テスト
-.\test_pro_comp.ps1
+# Pro_comp 承認フロー契約テスト
+pytest tests/test_contract_pro_comp.py -v
 ```
 
 ### ユニットテスト（pytest）
@@ -104,7 +104,9 @@ backend/
     scripts/             # ユーティリティスクリプト
   tools/
     export_openapi.py    # OpenAPI スキーマ出力
-    grant_comp_user.py   # Pro_comp 権限付与
+    pro_comp/
+      register_comp_email.py   # Pro_comp対象メール事前登録
+      reset_comp_request_count.py # 承認依頼回数の管理者リセット
   tests/                 # テスト
 ```
 

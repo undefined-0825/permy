@@ -92,6 +92,11 @@ class MockMigrationApiClient implements AppApiClient {
     required String productId,
     required String purchaseToken,
   }) async {}
+
+  @override
+  Future<ProCompRequestResult> requestProComp(String email) async {
+    return ProCompRequestResult(approved: true, requestCount: 1);
+  }
 }
 
 void main() {

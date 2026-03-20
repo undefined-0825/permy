@@ -3,11 +3,14 @@ class ApiError implements Exception {
     required this.errorCode,
     required this.message,
     required this.httpStatus,
+    this.remainingAttempts,
   });
 
   final String errorCode;
   final String message;
   final int httpStatus;
+  // pro_comp失敗時のロックまでの残り回数（null = 関係なし）
+  final int? remainingAttempts;
 
   factory ApiError.fromBody({
     required int httpStatus,
@@ -19,9 +22,15 @@ class ApiError implements Exception {
     final error = body?['error'];
     String? errorCode;
     String? message;
+    int? remainingAttempts;
     if (error is Map<String, dynamic>) {
       errorCode = error['code']?.toString() ?? error['error_code']?.toString();
       message = error['message']?.toString();
+      final errorDetail = error['detail'];
+      if (errorDetail is Map<String, dynamic>) {
+        remainingAttempts = (errorDetail['remaining_attempts'] as num?)
+            ?.toInt();
+      }
     }
 
     final detail = body?['detail'];
@@ -30,6 +39,11 @@ class ApiError implements Exception {
       if (detailError is Map<String, dynamic>) {
         errorCode ??= detailError['code']?.toString();
         message ??= detailError['message']?.toString();
+        final detailErrorDetail = detailError['detail'];
+        if (detailErrorDetail is Map<String, dynamic>) {
+          remainingAttempts ??=
+              (detailErrorDetail['remaining_attempts'] as num?)?.toInt();
+        }
       }
       errorCode ??= detail['error_code']?.toString();
       message ??= detail['message']?.toString();
@@ -39,6 +53,7 @@ class ApiError implements Exception {
       errorCode: rootCode ?? errorCode ?? _fallbackCode(httpStatus),
       message: rootMessage ?? message ?? 'うまくつながらなかった',
       httpStatus: httpStatus,
+      remainingAttempts: remainingAttempts,
     );
   }
 
@@ -235,6 +250,26 @@ class MigrationConsumeResult {
     return MigrationConsumeResult(
       token: json['token']?.toString() ?? '',
       userId: json['user_id']?.toString() ?? '',
+    );
+  }
+}
+
+class ProCompRequestResult {
+  ProCompRequestResult({
+    required this.approved,
+    required this.requestCount,
+    this.remainingAttempts,
+  });
+
+  final bool approved;
+  final int requestCount;
+  final int? remainingAttempts;
+
+  factory ProCompRequestResult.fromJson(Map<String, dynamic> json) {
+    return ProCompRequestResult(
+      approved: json['approved'] == true,
+      requestCount: (json['request_count'] as num?)?.toInt() ?? 0,
+      remainingAttempts: (json['remaining_attempts'] as num?)?.toInt(),
     );
   }
 }

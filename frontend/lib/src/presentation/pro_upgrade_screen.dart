@@ -8,17 +8,59 @@ import 'package:sample_app/core/widgets/app_button.dart';
 import 'package:sample_app/core/widgets/app_scaffold.dart';
 import 'package:sample_app/core/widgets/app_section_header.dart';
 
-class ProUpgradeScreen extends StatelessWidget {
-  const ProUpgradeScreen({required this.onTapChangePlus, super.key});
+class ProUpgradeScreen extends StatefulWidget {
+  const ProUpgradeScreen({
+    required this.onTapChangePlus,
+    required this.onOpenHiddenPage,
+    required this.isProActive,
+    super.key,
+  });
 
   static const String _heroImagePath = 'assets/images/pro_upgrade/hero_01.png';
 
   final VoidCallback onTapChangePlus;
+  final VoidCallback onOpenHiddenPage;
+  final bool isProActive;
+
+  @override
+  State<ProUpgradeScreen> createState() => _ProUpgradeScreenState();
+}
+
+class _ProUpgradeScreenState extends State<ProUpgradeScreen> {
+  int _hiddenTapCount = 0;
+
+  void _onHiddenTap() {
+    if (widget.isProActive) {
+      return;
+    }
+    final nextCount = _hiddenTapCount + 1;
+    if (nextCount >= 10) {
+      setState(() {
+        _hiddenTapCount = 0;
+      });
+      widget.onOpenHiddenPage();
+      return;
+    }
+    setState(() {
+      _hiddenTapCount = nextCount;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      appBar: AppBar(title: const Text('Plusのご案内')),
+      appBar: AppBar(
+        title: const Text('Plusのご案内'),
+        actions: [
+          if (!widget.isProActive)
+            GestureDetector(
+              key: const Key('pro_upgrade_hidden_tap_area'),
+              behavior: HitTestBehavior.opaque,
+              onTap: _onHiddenTap,
+              child: const SizedBox(width: 56, height: 56),
+            ),
+        ],
+      ),
       scrollable: true,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -29,7 +71,10 @@ class ProUpgradeScreen extends StatelessWidget {
             aspectRatio: 2 / 3,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(AppRadius.md),
-              child: Image.asset(_heroImagePath, fit: BoxFit.cover),
+              child: Image.asset(
+                ProUpgradeScreen._heroImagePath,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -57,7 +102,7 @@ class ProUpgradeScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
-          AppButton(text: 'Plusに変更', onPressed: onTapChangePlus),
+          AppButton(text: 'Plusに変更', onPressed: widget.onTapChangePlus),
           const SizedBox(height: AppSpacing.sm),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
