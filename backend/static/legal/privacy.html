@@ -23,10 +23,12 @@
 
       <h2>2. 取得する情報</h2>
       <ul>
+        <li>ユーザーが入力したテキスト（返信候補生成に必要な範囲）</li>
         <li>匿名認証用のユーザー識別子</li>
         <li>設定情報（診断タイプ、NG設定、生成方針等）</li>
         <li>利用状況メタデータ（イベント名、アプリ版、OS、エラーコード等）</li>
       </ul>
+      <p>ユーザー入力テキストは返信候補生成にのみ使用し、履歴として永続保存しません。</p>
 
       <h2>3. 保存しない情報（重要）</h2>
       <ul>
@@ -34,6 +36,7 @@
         <li>AIが生成した返信本文</li>
         <li>本文を復元可能な派生データ</li>
       </ul>
+      <p>ユーザーが送信したテキストはAI応答生成のため外部AIサービスへ送信される場合がありますが、本アプリ側では履歴として保存しません。</p>
 
       <h2>4. 利用目的</h2>
       <ul>
@@ -44,6 +47,11 @@
 
       <h2>5. 第三者提供</h2>
       <p>法令に基づく場合を除き、個人データを第三者へ提供しません。</p>
+      <p>本サービスは以下の第三者サービスを利用する場合があります。</p>
+      <ul>
+        <li>AIテキスト生成サービス</li>
+        <li>クラウドインフラ</li>
+      </ul>
 
       <h2>6. 安全管理</h2>
       <ul>
@@ -63,6 +71,8 @@
 
       <hr />
       <p>運営者: 隙間産業ラボ 中野家<br />連絡先: sukima.lab.nakanoya@gmail.com</p>
+      <p>公式利用規約: <a href="https://sites.google.com/view/permy-terms/terms">https://sites.google.com/view/permy-terms/terms</a><br />
+      公式プライバシーポリシー: <a href="https://sites.google.com/view/permy-privacy-policy/privacy-policy">https://sites.google.com/view/permy-privacy-policy/privacy-policy</a></p>
     </div>
   </main>
 </body>

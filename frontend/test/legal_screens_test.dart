@@ -11,7 +11,7 @@ void main() {
 
       expect(find.text('利用規約'), findsWidgets);
       expect(find.text('第1条（適用）'), findsOneWidget);
-      expect(find.text('第7条（免責）'), findsOneWidget);
+      expect(find.text('第10条（免責事項）'), findsOneWidget);
       expect(find.textContaining('隙間産業ラボ 中野家'), findsWidgets);
     });
 
