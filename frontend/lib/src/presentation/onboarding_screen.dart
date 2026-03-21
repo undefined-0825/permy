@@ -6,6 +6,7 @@ import 'package:sample_app/core/theme/app_text_styles.dart';
 import 'package:sample_app/core/utils/haptics.dart';
 import 'package:sample_app/core/widgets/app_button.dart';
 import 'package:sample_app/core/widgets/app_scaffold.dart';
+import 'widgets/app_version_footer.dart';
 import 'widgets/top_brand_header.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -145,6 +146,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   onPressed: _skipOnboarding,
                   child: const Text('スキップ'),
                 ),
+                const SizedBox(height: AppSpacing.md),
+                const AppVersionFooter(),
               ],
             ),
           ),

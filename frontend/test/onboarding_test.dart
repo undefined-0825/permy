@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:sample_app/src/presentation/onboarding_screen.dart';
 
@@ -15,6 +16,16 @@ void main() {
           }
           return null;
         });
+  });
+
+  setUp(() {
+    PackageInfo.setMockInitialValues(
+      appName: 'Permy',
+      packageName: 'jp.sukimalab.permy',
+      version: '1.1.0',
+      buildNumber: '11',
+      buildSignature: '',
+    );
   });
 
   tearDownAll(() {
@@ -123,6 +134,16 @@ void main() {
 
       // インジケーターが更新されていることを確認
       expect(find.text('トーク履歴を送ろう'), findsOneWidget);
+    });
+
+    testWidgets('画面下部にバージョンとコピーライトを表示する', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(home: OnboardingScreen(onCompleted: () {})),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Version:1.1.0'), findsOneWidget);
+      expect(find.text('©Sukima,Lab Nakanoya'), findsOneWidget);
     });
   });
 }
