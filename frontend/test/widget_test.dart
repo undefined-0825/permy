@@ -560,6 +560,31 @@ void main() {
     await shareInput.close();
   });
 
+  testWidgets('共有直後の inactive では本文を破棄しない', (WidgetTester tester) async {
+    final shareInput = _FakeShareInput(
+      SharePayload(text: '共有本文', fileName: 'line.txt'),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: _FakeApiClient(),
+          shareReceiver: shareInput,
+          telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+
+    // ExpansionTileは折りたたみ状態のため、ヘッダーのみ確認（本文はchildren内で非表示）
+    expect(find.text('共有されたトーク履歴（確認用）'), findsOneWidget);
+    await shareInput.close();
+  });
+
   testWidgets('Followup選択でsettingsを保存して返信案を更新できる', (WidgetTester tester) async {
     final apiClient = _FakeApiClient(
       generateResults: [

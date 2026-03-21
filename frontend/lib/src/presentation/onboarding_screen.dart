@@ -163,7 +163,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(imagePath, width: double.infinity, fit: BoxFit.contain),
+          Flexible(child: Image.asset(imagePath, fit: BoxFit.contain)),
           const SizedBox(height: AppSpacing.lg),
           Text(
             title,
