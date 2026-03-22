@@ -12,7 +12,11 @@ import 'token_store.dart';
 abstract class AppApiClient {
   Future<void> bootstrapAuth();
 
-  Future<GenerateResult> generate({required String historyText, int comboId});
+  Future<GenerateResult> generate({
+    required String historyText,
+    int comboId,
+    String? myLineName,
+  });
 
   Future<SettingsSnapshot> getSettings();
 
@@ -67,6 +71,7 @@ class ApiClient implements AppApiClient {
   Future<GenerateResult> generate({
     required String historyText,
     int comboId = 0,
+    String? myLineName,
   }) async {
     await bootstrapAuth();
     return _runWithAuthRetry(() async {
@@ -83,6 +88,7 @@ class ApiClient implements AppApiClient {
             'history_text': historyText,
             'combo_id': comboId,
             'tuning': null,
+            if (myLineName != null) 'my_line_name': myLineName,
           }),
         ),
         method: 'POST',

@@ -25,6 +25,7 @@ class GenerateContext:
     ng_tags: list[str]
     ng_free_phrases: list[str]
     tuning: dict | None
+    my_line_name: str | None = None
 
 
 class AiClient:

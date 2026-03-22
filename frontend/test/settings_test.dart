@@ -81,6 +81,7 @@ class MockApiClient implements AppApiClient {
   Future<GenerateResult> generate({
     required String historyText,
     int comboId = 0,
+    String? myLineName,
   }) async {
     throw UnimplementedError();
   }

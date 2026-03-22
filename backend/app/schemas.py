@@ -52,6 +52,7 @@ class GenerateRequest(BaseModel):
     history_text: str = Field(..., description="トーク履歴の原文（本文保存なし）")
     combo_id: int = Field(..., ge=0, le=5)
     tuning: dict | None = None  # Proのみ（クライアントが付与）
+    my_line_name: str | None = None  # ユーザー自身のLINE名（フロントが付与）
 
 
 class Candidate(BaseModel):

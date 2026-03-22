@@ -148,8 +148,13 @@
   - 設定更新（`If-Match`必須。競合は409 `ETAG_MISMATCH`）
 - `POST /api/v1/generate`
   - 返信案生成（本文を受け取るが保存しない）
+  - Request（追記）:
+    - `history_text`（必須）
+    - `combo_id`（必須）
+    - `my_line_name`（任意）: ユーザー本人のLINE表示名。クライアントが判別できた場合のみ付与する。
   - `Idempotency-Key` 必須（リトライ二重実行防止）
   - 日次回数制限・レート制限をサーバで判定
+  - `my_line_name` は生成品質向上のための一時入力として扱い、永続化しない（DB保存・ログ出力禁止）。
   - レスポンス `meta.plan` は互換のため `free/pro` の2値
     - `feature_tier=free` → `plan=free`
     - `feature_tier=plus` → `plan=pro`

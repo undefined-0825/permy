@@ -137,6 +137,7 @@ async def generate(
             ng_tags=_to_list(settings_for_generate.get("ng_tags")),
             ng_free_phrases=_to_list(settings_for_generate.get("ng_free_phrases")),
             tuning=req.tuning,
+            my_line_name=req.my_line_name,
         )
         candidates = await ai_client.generate_abc(req.history_text, ctx)
         daily = DailyInfo(date=jst_today_ymd(), limit=limit, used=used, remaining=max(0, limit - used))

@@ -118,6 +118,7 @@ class _FakeApiClient implements AppApiClient {
   Future<GenerateResult> generate({
     required String historyText,
     int comboId = 0,
+    String? myLineName,
   }) async {
     generateCallCount += 1;
 

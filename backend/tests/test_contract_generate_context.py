@@ -66,3 +66,34 @@ def test_generate_uses_default_followup_settings_for_new_user(client):
 
     body = res.json()
     assert body.get("followup") is None
+
+
+def test_generate_accepts_my_line_name(client):
+    """my_line_name フィールドを含むリクエストが正常に処理される"""
+    headers = _auth_headers(client)
+
+    res = client.post(
+        "/api/v1/generate",
+        json={
+            "history_text": "田中太郎\tこんにちは\n山田花子\tこんにちは",
+            "combo_id": 0,
+            "my_line_name": "田中太郎",
+        },
+        headers={**headers, "Idempotency-Key": "test-generate-my-line-name-001"},
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert len(body["candidates"]) == 3
+
+
+def test_generate_my_line_name_is_optional(client):
+    """my_line_name が省略された場合も正常に処理される（後方互換）"""
+    headers = _auth_headers(client)
+
+    res = client.post(
+        "/api/v1/generate",
+        json={"history_text": "User: hello\nShop: hi", "combo_id": 0},
+        headers={**headers, "Idempotency-Key": "test-generate-no-line-name-001"},
+    )
+    assert res.status_code == 200
+    assert len(res.json()["candidates"]) == 3
