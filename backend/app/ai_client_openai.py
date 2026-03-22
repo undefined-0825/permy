@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import json
+import importlib
 import re
 from typing import List
-
-from openai import AsyncOpenAI
 
 from app.ai_client import AiClient, GenerateContext
 from app.config import settings
@@ -141,7 +140,12 @@ class OpenAiChatClient(AiClient):
     def __init__(self) -> None:
         if not settings.openai_api_key:
             raise RuntimeError("OPENAI_API_KEY is required for AI_PROVIDER=openai")
-        self._client = AsyncOpenAI(api_key=settings.openai_api_key)
+        try:
+            openai_module = importlib.import_module("openai")
+            async_openai_cls = getattr(openai_module, "AsyncOpenAI")
+        except Exception as exc:
+            raise RuntimeError("openai package is required for AI_PROVIDER=openai") from exc
+        self._client = async_openai_cls(api_key=settings.openai_api_key)
 
     async def generate_abc(self, history_text: str, ctx: GenerateContext) -> List[str]:
         ng_lines: list[str] = []

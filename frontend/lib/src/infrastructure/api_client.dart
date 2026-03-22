@@ -76,6 +76,14 @@ class ApiClient implements AppApiClient {
     await bootstrapAuth();
     return _runWithAuthRetry(() async {
       final token = await tokenStore.read();
+      final requestBody = <String, dynamic>{
+        'history_text': historyText,
+        'combo_id': comboId,
+        'tuning': null,
+      };
+      if (myLineName != null) {
+        requestBody['my_line_name'] = myLineName;
+      }
       final response = await _sendWithTimeout(
         () => _httpClient.post(
           Uri.parse('$baseUrl/api/v1/generate'),
@@ -84,12 +92,7 @@ class ApiClient implements AppApiClient {
             'Authorization': 'Bearer $token',
             'Idempotency-Key': _uuid.v4(),
           },
-          body: jsonEncode({
-            'history_text': historyText,
-            'combo_id': comboId,
-            'tuning': null,
-            if (myLineName != null) 'my_line_name': myLineName,
-          }),
+          body: jsonEncode(requestBody),
         ),
         method: 'POST',
         path: '/api/v1/generate',

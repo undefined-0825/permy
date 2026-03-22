@@ -48,6 +48,7 @@ class _ProCompHiddenScreenState extends State<ProCompHiddenScreen> {
       if (!mounted) return;
       if (result.approved) {
         await Haptics.mediumImpact();
+        if (!mounted) return;
         Navigator.of(context).pop(true);
         return;
       }

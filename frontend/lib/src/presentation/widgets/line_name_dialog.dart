@@ -37,13 +37,20 @@ class _LineNameDialogState extends State<LineNameDialog> {
         children: [
           Text('このトーク履歴の中で、きみはどっちかな？', style: AppTextStyles.body),
           const SizedBox(height: AppSpacing.md),
-          ...widget.names.map(
-            (name) => RadioListTile<String>(
-              title: Text(name, style: AppTextStyles.body),
-              value: name,
-              groupValue: _selected,
-              contentPadding: EdgeInsets.zero,
-              onChanged: (v) => setState(() => _selected = v),
+          RadioGroup<String>(
+            groupValue: _selected,
+            onChanged: (value) => setState(() => _selected = value),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ...widget.names.map(
+                  (name) => RadioListTile<String>(
+                    title: Text(name, style: AppTextStyles.body),
+                    value: name,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
