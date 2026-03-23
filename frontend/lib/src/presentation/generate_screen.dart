@@ -286,9 +286,20 @@ class _GenerateScreenState extends State<GenerateScreen>
                           sharedText: _sharedText!,
                         ),
                         const SizedBox(height: AppSpacing.lg),
-                        AppButton(
-                          text: _loading ? '生成中...' : 'ぼくが返信案を考えるよ',
-                          onPressed: canGenerate ? _onGeneratePressed : null,
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.md,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.white.withValues(alpha: 0.8),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                          ),
+                          child: AppButton(
+                            text: _loading ? '生成中...' : 'ぼくが返信案を考えるよ',
+                            onPressed: canGenerate ? _onGeneratePressed : null,
+                          ),
                         ),
                         if (_candidates.isNotEmpty) ...[
                           const SizedBox(height: AppSpacing.xl),

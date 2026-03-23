@@ -78,7 +78,8 @@ APIのエラーは原則として以下を返す。
 |---|---:|---|---|---|
 | MIGRATION_CODE_INVALID | 404 | 移行コードが存在しない/形式不正 | 入力ミス、無効コード | 入力し直し |
 | MIGRATION_CODE_EXPIRED | 410 | 移行コード期限切れ | 期限超過 | 再発行を促す |
-| MIGRATION_CODE_ALREADY_USED | 409 | 移行コードは使用済み | 既に消費済み | 再発行を促す |
+| MIGRATION_CODE_USED | 400 | 移行コードは使用済み | 既に消費済み | 再発行を促す |
+| MIGRATION_CODE_ALREADY_USED | 409 | 移行コードは使用済み（旧名、後方互換用） | 既に消費済み | `MIGRATION_CODE_USED` に統一推奨 |
 | MIGRATION_RATE_LIMITED | 429 | 移行関連のレート制限 | 試行回数過多 | 待機→再試行 |
 
 ---

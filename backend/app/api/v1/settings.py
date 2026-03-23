@@ -23,9 +23,16 @@ async def get_settings(
 ):
     row = await db.execute(select(UserSettings).where(UserSettings.user_id == auth.user_id))
     st = row.scalar_one_or_none()
+    desired_feature_tier = auth.feature_tier
+    desired_billing_tier = auth.billing_tier
+    desired_plan = auth.plan
+
     if not st:
         # 自動復旧（本文保存なし・設定メタのみ）
         settings_json = with_default_settings({})
+        settings_json["feature_tier"] = desired_feature_tier
+        settings_json["billing_tier"] = desired_billing_tier
+        settings_json["plan"] = desired_plan
         etag = etag_for_json(settings_json)
         st = UserSettings(
             user_id=auth.user_id,
@@ -39,6 +46,10 @@ async def get_settings(
     else:
         # 旧データ等で不足キーやetag欠損がある場合は自動修復する
         settings_json = with_default_settings(dict(st.settings_json or {}))
+        # 認証コンテキストを正としてプラン系メタを同期（UI表示と制限判定のズレ防止）
+        settings_json["feature_tier"] = desired_feature_tier
+        settings_json["billing_tier"] = desired_billing_tier
+        settings_json["plan"] = desired_plan
         new_etag = etag_for_json(settings_json)
         if settings_json != dict(st.settings_json or {}) or not (st.etag or "").strip():
             st.settings_json = settings_json
@@ -71,6 +82,10 @@ async def put_settings(
 
     # settings_schema_version必須（未知フィールド許容）
     s = with_default_settings(dict(req.settings or {}))
+    # 権限系メタはサーバで上書きする
+    s["feature_tier"] = auth.feature_tier
+    s["billing_tier"] = auth.billing_tier
+    s["plan"] = auth.plan
     if "settings_schema_version" not in s:
         # サーバがSSOTなので補完（ただしクライアントのバージョン管理を壊さない最小）
         s["settings_schema_version"] = st.settings_schema_version or 1

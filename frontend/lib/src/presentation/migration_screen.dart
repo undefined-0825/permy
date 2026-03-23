@@ -107,7 +107,8 @@ class _MigrationScreenState extends State<MigrationScreen> {
         message = 'コードが無効です。入力を確認してください。';
       } else if (e.errorCode == 'MIGRATION_CODE_EXPIRED') {
         message = 'コードの有効期限が切れました。新しいコードを発行してください。';
-      } else if (e.errorCode == 'MIGRATION_CODE_ALREADY_USED') {
+      } else if (e.errorCode == 'MIGRATION_CODE_ALREADY_USED' ||
+          e.errorCode == 'MIGRATION_CODE_USED') {
         message = 'このコードは既に使用済みです。新しいコードを発行してください。';
       } else if (e.errorCode == 'RATE_LIMITED') {
         message = '試行回数が多すぎます。しばらく待ってからお試しください。';
