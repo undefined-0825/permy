@@ -38,9 +38,9 @@ services:
       - key: TELEMETRY_HASH_SECRET
         sync: false
 
-      # Database (SQLite on Persistent Disk)
+      # Database (SQLite: Free=ephemeral, Starter+=persistent disk)
       - key: DATABASE_URL
-        value: sqlite+aiosqlite:////var/data/permy_stg.db
+        value: sqlite+aiosqlite:///./permy_stg.db
 
       # Redis (optional for stg: not required)
       - key: REDIS_URL
