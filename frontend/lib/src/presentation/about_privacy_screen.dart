@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:sample_app/core/theme/app_colors.dart';
+import 'package:sample_app/core/theme/app_radius.dart';
 import 'package:sample_app/core/theme/app_spacing.dart';
 import 'package:sample_app/core/theme/app_text_styles.dart';
 import 'package:sample_app/core/widgets/app_scaffold.dart';
@@ -16,8 +17,13 @@ class AboutPrivacyScreen extends StatelessWidget {
     return AppScaffold(
       appBar: const TopBrandHeader(),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.white.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

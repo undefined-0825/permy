@@ -248,7 +248,8 @@ class MigrationConsumeResult {
 
   factory MigrationConsumeResult.fromJson(Map<String, dynamic> json) {
     return MigrationConsumeResult(
-      token: json['token']?.toString() ?? '',
+      token:
+          json['access_token']?.toString() ?? json['token']?.toString() ?? '',
       userId: json['user_id']?.toString() ?? '',
     );
   }

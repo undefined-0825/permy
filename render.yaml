@@ -2,6 +2,68 @@
 # PostgreSQL + Redis 本番構成
 
 services:
+  # Backend Web Service (Staging Configuration)
+  # SQLite + Persistent Disk
+  - type: web
+    name: permy-backend-stg
+    runtime: python
+    plan: starter
+    region: singapore
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --app-dir backend
+    healthCheckPath: /api/v1/health
+    autoDeploy: false  # MUST: 自動デプロイ無効
+    disk:
+      name: stg-db-disk
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      # Application Settings
+      - key: APP_ENV
+        value: staging
+      - key: APP_NAME
+        value: permy-serverside-stg
+      - key: APP_VERSION
+        value: 1.1.0-stg
+
+      # AI Provider
+      - key: AI_PROVIDER
+        value: openai
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-5.2
+
+      # Telemetry
+      - key: TELEMETRY_HASH_SECRET
+        sync: false
+
+      # Database (SQLite: Free=ephemeral, Starter+=persistent disk)
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///./permy_stg.db
+
+      # Redis (optional for stg: not required)
+      - key: REDIS_URL
+        value: redis://localhost:6379/0
+
+      # Rate Limiting & Security
+      - key: RL_AUTH_IP_LIMIT
+        value: 100
+      - key: RL_AUTH_DF_LIMIT
+        value: 30
+      - key: RL_GENERATE_MINUTE_LIMIT
+        value: 10
+
+      # Daily Limits
+      - key: FREE_GENERATE_DAILY_LIMIT
+        value: 3
+      - key: PRO_GENERATE_DAILY_LIMIT
+        value: 100
+
+      # Logging
+      - key: UVICORN_ACCESS_LOG
+        value: false
+
   # Backend Web Service (FastAPI + Uvicorn)
   - type: web
     name: permy-backend
@@ -9,7 +71,7 @@ services:
     plan: starter  # 有料プラン（常時稼働）
     region: singapore  # または oregon（レイテンシーとコストで選択）
     buildCommand: pip install -r backend/requirements.txt
-    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --app-dir backend
     healthCheckPath: /api/v1/health
     autoDeploy: false  # MUST: 自動デプロイ無効（deploy_strategy.md に準拠）
     envVars:

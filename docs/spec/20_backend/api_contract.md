@@ -149,6 +149,11 @@ Body:
 ```
 ※ `settings` の具体フィールドはフロント/プロダクトSpecを正とし、ここでは「JSONで返す」ことのみを契約とする（破壊的変更はv2）。
 
+**Plan フィールド注入（MUST）**  
+`settings` 内の `feature_tier`, `billing_tier`, `plan` は、クライアントが保持する値に依らず、  
+サーバが `AuthContext`（`users` テーブル）の最新値で **必ず上書き** して返す。  
+フロントエンドはこれらの値を唯一の正として扱い、ローカルキャッシュより優先すること。
+
 ### Errors
 - `401 AUTH_INVALID`
 - `500 INTERNAL_ERROR`
@@ -194,6 +199,8 @@ Body:
 - `401 AUTH_INVALID`
 - `409 ETAG_MISMATCH`
 - `500 INTERNAL_ERROR`
+
+**Note**: レスポンスの `feature_tier`, `billing_tier`, `plan` は GET と同様に AuthContext の値で上書きされる（リクエストボディの值を無視）。
 
 ---
 
@@ -313,7 +320,7 @@ Body:
 
 ---
 
-## 2.5 POST /migration/issue
+## 2.5 POST /migration/start
 移行コード（12桁）を発行する。
 
 ### Request
@@ -329,7 +336,7 @@ Body:
 ```json
 {
   "migration_code": "string (12 digits)",
-  "expires_at": "string (ISO-8601)"
+  "ticket_id": "string"
 }
 ```
 
@@ -340,8 +347,8 @@ Body:
 
 ---
 
-## 2.6 POST /migration/consume
-移行コードを消費して、別端末でユーザーを引き継ぐ。
+## 2.6 POST /migration/complete
+移行コードを消費して、別端末でユーザーを引き継ぐ。認証不要（新端末から呼ばれるため）。
 
 ### Request
 Body:
@@ -354,15 +361,15 @@ Body:
 ### Response 200
 ```json
 {
-  "token": "string",
-  "user_id": "string"
+  "user_id": "string",
+  "access_token": "string"
 }
 ```
 
 ### Errors
 - `400 VALIDATION_ERROR`
+- `400 MIGRATION_CODE_USED`
 - `404 MIGRATION_CODE_INVALID`
-- `409 MIGRATION_CODE_ALREADY_USED`
 - `410 MIGRATION_CODE_EXPIRED`
 - `429 RATE_LIMITED`
 - `500 INTERNAL_ERROR`
@@ -437,7 +444,8 @@ Body:
 - `DAILY_LIMIT_EXCEEDED`
 - `MIGRATION_CODE_INVALID`
 - `MIGRATION_CODE_EXPIRED`
-- `MIGRATION_CODE_ALREADY_USED`
+- `MIGRATION_CODE_USED`
+- `MIGRATION_CODE_ALREADY_USED`（後方互換用。`MIGRATION_CODE_USED` に統一推奨）
 - `OPENAI_DISABLED`
 - `UPSTREAM_UNAVAILABLE`
 - `INTERNAL_ERROR`
@@ -448,4 +456,4 @@ Body:
 - 価格・回数上限の数値（別Spec）
 - プロンプト内容や世界観文言（別Spec）
 - 課金検証（`/billing/verify` など）は導入時に別途契約追加
-- 内部の `feature_tier` / `billing_tier` の返却（外部APIには露出させない）
+- `feature_tier` / `billing_tier` を独立した typed レスポンスフィールドとして定義すること（`settings_json` 内に注入する形のみ許容）

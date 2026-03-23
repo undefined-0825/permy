@@ -158,10 +158,12 @@
   - レスポンス `meta.plan` は互換のため `free/pro` の2値
     - `feature_tier=free` → `plan=free`
     - `feature_tier=plus` → `plan=pro`
-- `POST /api/v1/migration/issue`
+- `POST /api/v1/migration/start`
   - 移行コード発行（12桁、期限あり、レート制限）
-- `POST /api/v1/migration/consume`
+  - Response: `migration_code`, `ticket_id`
+- `POST /api/v1/migration/complete`
   - 移行コード消費（1回限り、期限あり、レート制限）
+  - 新端末側から認証なしで呼ぶ。成功時 `access_token` と `user_id` を返す。
 - `POST /api/v1/pro-comp/request`
   - pro_comp承認依頼（隠し導線用）
   - 入力メールを正規化（trim + lower）し、事前登録メールと一致する場合のみ承認判定

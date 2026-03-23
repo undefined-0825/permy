@@ -11,12 +11,17 @@ class AppSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isArticleTitle = title.startsWith('第') && title.contains('条');
+    final titleStyle = isArticleTitle
+        ? AppTextStyles.sectionHeader.copyWith(fontWeight: FontWeight.w700)
+        : AppTextStyles.sectionHeader;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: AppTextStyles.sectionHeader),
+          Text(title, style: titleStyle),
           if (subtitle != null) ...[
             const SizedBox(height: AppSpacing.xs),
             Text(subtitle!, style: AppTextStyles.meta),

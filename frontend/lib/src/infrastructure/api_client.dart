@@ -305,7 +305,7 @@ class ApiClient implements AppApiClient {
       final token = await tokenStore.read();
       final response = await _sendWithTimeout(
         () => _httpClient.post(
-          Uri.parse('$baseUrl/api/v1/migration/issue'),
+          Uri.parse('$baseUrl/api/v1/migration/start'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -313,7 +313,7 @@ class ApiClient implements AppApiClient {
           body: '{}',
         ),
         method: 'POST',
-        path: '/api/v1/migration/issue',
+        path: '/api/v1/migration/start',
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -332,12 +332,12 @@ class ApiClient implements AppApiClient {
   Future<MigrationConsumeResult> consumeMigrationCode(String code) async {
     final response = await _sendWithTimeout(
       () => _httpClient.post(
-        Uri.parse('$baseUrl/api/v1/migration/consume'),
+        Uri.parse('$baseUrl/api/v1/migration/complete'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'migration_code': code}),
       ),
       method: 'POST',
-      path: '/api/v1/migration/consume',
+      path: '/api/v1/migration/complete',
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
