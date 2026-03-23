@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:sample_app/core/widgets/app_button.dart';
 import 'package:sample_app/core/widgets/app_list_item.dart';
@@ -80,6 +81,7 @@ class MockApiClient implements AppApiClient {
   Future<GenerateResult> generate({
     required String historyText,
     int comboId = 0,
+    String? myLineName,
   }) async {
     throw UnimplementedError();
   }
@@ -199,6 +201,11 @@ class MockApiClient implements AppApiClient {
   }
 
   @override
+  Future<ProCompRequestResult> requestProComp(String email) async {
+    return ProCompRequestResult(approved: true, requestCount: 1);
+  }
+
+  @override
   Future<void> deleteAccount() async {}
 }
 
@@ -213,6 +220,16 @@ void main() {
           }
           return null;
         });
+  });
+
+  setUp(() {
+    PackageInfo.setMockInitialValues(
+      appName: 'Permy',
+      packageName: 'jp.sukimalab.permy',
+      version: '1.1.0',
+      buildNumber: '11',
+      buildSignature: '',
+    );
   });
 
   tearDownAll(() {
@@ -718,6 +735,24 @@ void main() {
 
       expect(find.text('課金検証は準備中だよ'), findsOneWidget);
       expect(find.text('運用設定が完了するまで少し待ってね。'), findsOneWidget);
+    });
+
+    testWidgets('画面下部にバージョンとコピーライトを表示する', (WidgetTester tester) async {
+      final mockApi = MockApiClient();
+      final mockPurchase = MockPurchaseService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: mockApi,
+            purchaseService: mockPurchase,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Version:1.1.0'), findsOneWidget);
+      expect(find.text('©Sukima,Lab Nakanoya'), findsOneWidget);
     });
   });
 }

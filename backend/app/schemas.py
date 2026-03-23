@@ -52,6 +52,7 @@ class GenerateRequest(BaseModel):
     history_text: str = Field(..., description="トーク履歴の原文（本文保存なし）")
     combo_id: int = Field(..., ge=0, le=5)
     tuning: dict | None = None  # Proのみ（クライアントが付与）
+    my_line_name: str | None = None  # ユーザー自身のLINE名（フロントが付与）
 
 
 class Candidate(BaseModel):
@@ -113,6 +114,16 @@ class BillingVerifyRequest(BaseModel):
 class BillingVerifyResponse(BaseModel):
     plan: Literal["free", "pro"]
     verified: bool
+
+
+class ProCompGrantRequestRequest(BaseModel):
+    email: str = Field(..., min_length=3, max_length=320)
+
+
+class ProCompGrantRequestResponse(BaseModel):
+    approved: bool
+    request_count: int = Field(..., ge=0)
+    remaining_attempts: int | None = None  # 失敗時: ロックまでの残り回数、承認時: None
 
 
 # Telemetry Schemas（本文ゼロ厳守）

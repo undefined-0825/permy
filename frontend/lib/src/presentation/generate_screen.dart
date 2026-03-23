@@ -17,12 +17,16 @@ import '../domain/models.dart';
 import '../domain/persona_type_helper.dart';
 import '../domain/telemetry_event.dart';
 import '../domain/history_text.dart';
+import '../domain/line_history_parser.dart';
 import '../infrastructure/api_client.dart';
+import '../infrastructure/line_name_store.dart';
 import '../infrastructure/purchase_service.dart';
 import '../infrastructure/share_receiver.dart';
 import '../infrastructure/telemetry_queue.dart';
+import 'pro_comp_hidden_screen.dart';
 import 'pro_upgrade_screen.dart';
 import 'settings_screen.dart';
+import 'widgets/line_name_dialog.dart';
 import 'widgets/top_brand_header.dart';
 
 class GenerateScreen extends StatefulWidget {
@@ -98,6 +102,7 @@ class _GenerateScreenState extends State<GenerateScreen>
   String _candidateTapAction = 'copy';
   bool _savingAdjustments = false;
   int _dropdownResetVersion = 0;
+  final _lineNameStore = LineNameStore();
 
   @override
   void initState() {
@@ -172,7 +177,15 @@ class _GenerateScreenState extends State<GenerateScreen>
       final candidateTapAction = snapshot.settings['candidate_tap_action']
           ?.toString();
       final isProActive = _isProActive();
+      final featureTier = snapshot.settings['feature_tier']?.toString();
+      final billingTier = snapshot.settings['billing_tier']?.toString();
+      final plan = snapshot.settings['plan']?.toString();
+      final inferredPlan =
+          (featureTier == 'plus' || billingTier == 'pro_comp' || plan == 'pro')
+          ? 'pro'
+          : _plan;
       setState(() {
+        _plan = inferredPlan;
         _trueTypeValue = trueType;
         _nightTypeValue = nightType;
         _trueTypeLabel = (trueType == null || trueType.isEmpty)
@@ -213,8 +226,7 @@ class _GenerateScreenState extends State<GenerateScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused ||
+    if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
       _discardSensitiveState();
     }
@@ -388,6 +400,20 @@ class _GenerateScreenState extends State<GenerateScreen>
     await _generateCandidates(triggerHaptics: true);
   }
 
+  /// 保存済みLINE名を確認し、必要なら「きみはどっち？」ダイアログを表示する
+  Future<String?> _resolveMyLineName(List<String> names) async {
+    final savedName = await _lineNameStore.read();
+    if (savedName != null && names.contains(savedName)) {
+      return savedName;
+    }
+    if (!mounted) return null;
+    final selected = await LineNameDialog.show(context, names);
+    if (selected != null) {
+      await _lineNameStore.write(selected);
+    }
+    return selected;
+  }
+
   Future<void> _generateCandidates({bool triggerHaptics = false}) async {
     if (triggerHaptics) {
       unawaited(Haptics.mediumImpact());
@@ -407,6 +433,30 @@ class _GenerateScreenState extends State<GenerateScreen>
       setState(() {});
       _showErrorMessageBox(error);
       return;
+    }
+
+    // LINE名解決
+    final parsedLine = LineHistoryParser.parse(rawText);
+    if (parsedLine is LineGroupResult) {
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('グループトークには対応していないよ'),
+          content: const Text('2名のトーク履歴を共有してね'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    String? myLineName;
+    if (parsedLine is LineDuoResult) {
+      myLineName = await _resolveMyLineName(parsedLine.names);
     }
 
     // Pro専用コンボ（2,3,4,5）をFreeで選択した場合
@@ -466,6 +516,7 @@ class _GenerateScreenState extends State<GenerateScreen>
       final result = await widget.apiClient.generate(
         historyText: text,
         comboId: _comboId,
+        myLineName: myLineName,
       );
       await minSequenceFuture;
       final latencyMs = DateTime.now().difference(startTime).inMilliseconds;
@@ -617,9 +668,13 @@ class _GenerateScreenState extends State<GenerateScreen>
   }
 
   void _openProUpgradePage() {
+    if (_isProActive()) {
+      return;
+    }
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (upgradeContext) => ProUpgradeScreen(
+          isProActive: _isProActive(),
           onTapChangePlus: () {
             Navigator.of(upgradeContext).push(
               MaterialPageRoute(
@@ -629,6 +684,22 @@ class _GenerateScreenState extends State<GenerateScreen>
                 ),
               ),
             );
+          },
+          onOpenHiddenPage: () {
+            Navigator.of(upgradeContext)
+                .push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        ProCompHiddenScreen(apiClient: widget.apiClient),
+                  ),
+                )
+                .then((approved) {
+                  if (approved == true && mounted) {
+                    setState(() {
+                      _plan = 'pro';
+                    });
+                  }
+                });
           },
         ),
       ),

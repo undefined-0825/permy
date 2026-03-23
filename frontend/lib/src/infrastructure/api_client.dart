@@ -12,7 +12,11 @@ import 'token_store.dart';
 abstract class AppApiClient {
   Future<void> bootstrapAuth();
 
-  Future<GenerateResult> generate({required String historyText, int comboId});
+  Future<GenerateResult> generate({
+    required String historyText,
+    int comboId,
+    String? myLineName,
+  });
 
   Future<SettingsSnapshot> getSettings();
 
@@ -33,6 +37,8 @@ abstract class AppApiClient {
     required String productId,
     required String purchaseToken,
   });
+
+  Future<ProCompRequestResult> requestProComp(String email);
 
   Future<void> deleteAccount();
 }
@@ -65,10 +71,19 @@ class ApiClient implements AppApiClient {
   Future<GenerateResult> generate({
     required String historyText,
     int comboId = 0,
+    String? myLineName,
   }) async {
     await bootstrapAuth();
     return _runWithAuthRetry(() async {
       final token = await tokenStore.read();
+      final requestBody = <String, dynamic>{
+        'history_text': historyText,
+        'combo_id': comboId,
+        'tuning': null,
+      };
+      if (myLineName != null) {
+        requestBody['my_line_name'] = myLineName;
+      }
       final response = await _sendWithTimeout(
         () => _httpClient.post(
           Uri.parse('$baseUrl/api/v1/generate'),
@@ -77,11 +92,7 @@ class ApiClient implements AppApiClient {
             'Authorization': 'Bearer $token',
             'Idempotency-Key': _uuid.v4(),
           },
-          body: jsonEncode({
-            'history_text': historyText,
-            'combo_id': comboId,
-            'tuning': null,
-          }),
+          body: jsonEncode(requestBody),
         ),
         method: 'POST',
         path: '/api/v1/generate',
@@ -419,6 +430,36 @@ class ApiClient implements AppApiClient {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return;
+      }
+
+      throw ApiError.fromBody(
+        httpStatus: response.statusCode,
+        body: _tryJson(response.body),
+      );
+    });
+  }
+
+  @override
+  Future<ProCompRequestResult> requestProComp(String email) async {
+    await bootstrapAuth();
+    return _runWithAuthRetry(() async {
+      final token = await tokenStore.read();
+      final response = await _sendWithTimeout(
+        () => _httpClient.post(
+          Uri.parse('$baseUrl/api/v1/pro-comp/request'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({'email': email}),
+        ),
+        method: 'POST',
+        path: '/api/v1/pro-comp/request',
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final body = _tryJson(response.body) ?? <String, dynamic>{};
+        return ProCompRequestResult.fromJson(body);
       }
 
       throw ApiError.fromBody(

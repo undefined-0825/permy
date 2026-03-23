@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import json
+import importlib
 import re
 from typing import List
-
-from openai import AsyncOpenAI
 
 from app.ai_client import AiClient, GenerateContext
 from app.config import settings
@@ -104,11 +103,49 @@ def _partner_name_usage_guidance(pref: str | None) -> str:
     return "相手の名前や呼び方が履歴から自然に分かる場合のみ、各案で1回程度まで使う。分からない場合は無理に補わない。"
 
 
+def _identity_analysis_guidance() -> str:
+    return (
+        "返信案の作成前に、履歴から次を正確に分析する。"
+        "ユーザーの口調、相手の呼び方、返信の内容傾向、文体・温度感・改行・絵文字の使い方を必ず捉える。"
+        "その分析結果を反映し、ユーザー本人が送ったと錯覚する自然さで書く。"
+        "汎用テンプレートは使わず、常に『ユーザーの分身』として返信案を作る。"
+    )
+
+
+def _noise_control_guidance() -> str:
+    return (
+        "以下は自然さのための必須制約。"
+        "1) 情報を説明しすぎない。理由や主語は必要な範囲で省略する。"
+        "2) 丁寧すぎる敬語・ビジネス文体を避け、少し崩した口語を使う。"
+        "3) 毎回同じ文構造を使わない。文の長さと改行位置に揺らぎを持たせる。"
+        "4) 『ちょっと』『なんか』『たぶん』など曖昧語を必要に応じて自然に混ぜる。"
+        "5) 1メッセージの意図は1つに絞る。"
+        "6) 余白を残し、言い切りすぎない。疑問形や余韻で終えてよい。"
+        "7) 完璧さより自然さを優先する。"
+        "ただし意味は変えない。NGポリシー・安全制約・ユーザー設定を最優先する。"
+    )
+
+
+def _min_a_chars(pref: str | None) -> int:
+    if pref == "long":
+        return 70
+    return 45
+
+
+def _is_a_too_short(a: str, pref: str | None) -> bool:
+    return len((a or "").strip()) < _min_a_chars(pref)
+
+
 class OpenAiChatClient(AiClient):
     def __init__(self) -> None:
         if not settings.openai_api_key:
             raise RuntimeError("OPENAI_API_KEY is required for AI_PROVIDER=openai")
-        self._client = AsyncOpenAI(api_key=settings.openai_api_key)
+        try:
+            openai_module = importlib.import_module("openai")
+            async_openai_cls = getattr(openai_module, "AsyncOpenAI")
+        except Exception as exc:
+            raise RuntimeError("openai package is required for AI_PROVIDER=openai") from exc
+        self._client = async_openai_cls(api_key=settings.openai_api_key)
 
     async def generate_abc(self, history_text: str, ctx: GenerateContext) -> List[str]:
         ng_lines: list[str] = []
@@ -150,8 +187,15 @@ class OpenAiChatClient(AiClient):
             settings.openai_instructions
             + "\n\n【A/B/Cの役割（固定）】\n"
             + "- A：おすすめ（最も自然で刺さる）。相手の温度感に合わせつつ、次に進める“軽い一手”を入れる。\n"
+            + "  さらにAは最優先で『ユーザーの分身』として書く。語尾・言い回し・テンポ・改行癖・絵文字癖を履歴に最大限寄せ、汎用表現を避ける。\n"
             + "- B：無難（角が立たない）。丁寧で安全運転、確認質問は1つまで。\n"
             + "- C：攻め（距離を詰める/提案強め）。ただし圧はかけない、断定しない。\n"
+            + "\n【分身モード（最重要）】\n"
+            + _identity_analysis_guidance()
+            + "\n"
+            + "\n【ノイズ制御（自然さ強制）】\n"
+            + _noise_control_guidance()
+            + "\n"
             + "\n【長さ】\n"
             + _length_guidance(ctx.reply_length_pref)
             + "\n"
@@ -169,6 +213,7 @@ class OpenAiChatClient(AiClient):
             + "\n"
             + "\n【制約】\n"
             + "- 出力は必ず3案（A/B/C）。それぞれ狙いを変えて“別案”にする。\n"
+            + f"- Aは最低{_min_a_chars(ctx.reply_length_pref)}文字以上で、ユーザーの口調再現を最優先する。\n"
             + "- 断定せず提案として書く（命令・詰問・強要は禁止）。\n"
             + "- 記号や箇条書き多用は避ける（会話文）。\n"
             + "- 相手の名前が不明なら「○○」などのプレースホルダは使わない。\n"
@@ -190,7 +235,8 @@ class OpenAiChatClient(AiClient):
 
         user_input = (
             "以下はトーク履歴。文脈を読んで返信案を作って。\n"
-            "----\n"
+            + (f"【重要】このトーク履歴において「{ctx.my_line_name}」が返信を送るユーザーです。「{ctx.my_line_name}」の相手に向けた返信案を作ってください。\n" if ctx.my_line_name else "")
+            + "----\n"
             f"{history_text}\n"
             "----\n"
             "出力は JSON で、必ずキー A/B/C を含めてください。\n"
@@ -216,6 +262,7 @@ class OpenAiChatClient(AiClient):
                     + (" / ".join(ctx.ng_free_phrases) if ctx.ng_free_phrases else "(なし)")
                     + "。"
                     "また、相手の名前が不明なら○○などのプレースホルダは使わないでください。"
+                    f"A案は最低{_min_a_chars(ctx.reply_length_pref)}文字以上にしてください。"
                 )
 
             try:
@@ -269,6 +316,16 @@ class OpenAiChatClient(AiClient):
                     "AI_BAD_OUTPUT",
                     "AI出力に禁止表現が含まれました",
                     {"message": "ng/placeholder violation"},
+                    status_code=502,
+                )
+
+            if _is_a_too_short(a, ctx.reply_length_pref):
+                if attempt == 0:
+                    continue
+                raise err(
+                    "AI_BAD_OUTPUT",
+                    "A案が短すぎます",
+                    {"message": "A candidate too short"},
                     status_code=502,
                 )
 

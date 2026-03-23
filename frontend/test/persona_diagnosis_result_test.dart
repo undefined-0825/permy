@@ -30,7 +30,7 @@ void main() {
         ),
       );
 
-      expect(find.text('癒しタイプ'), findsOneWidget);
+      expect(find.text('癒し系タイプ'), findsOneWidget);
     });
 
     testWidgets('ペルソナパラメータが表示される', (WidgetTester tester) async {

@@ -27,6 +27,7 @@ import 'onboarding_screen.dart';
 import 'persona_diagnosis_result_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'terms_of_service_screen.dart';
+import 'widgets/app_version_footer.dart';
 import 'widgets/top_brand_header.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -445,6 +446,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: AppSpacing.md),
+                  const AppVersionFooter(),
                   const SizedBox(height: AppSpacing.md),
                 ],
               ),
