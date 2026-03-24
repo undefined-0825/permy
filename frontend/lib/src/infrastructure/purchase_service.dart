@@ -13,14 +13,36 @@ enum AppPurchaseStatus { free, pro, pending, error }
 /// - backend 検証連携あり（BillingProof 経由）
 /// - 購入・復元・サブスク管理導線を提供
 class PurchaseService {
-  PurchaseService({required this.storage, InAppPurchase? iapInstance})
-    : _iap = iapInstance ?? InAppPurchase.instance;
+  PurchaseService({
+    required this.storage,
+    InAppPurchase? iapInstance,
+    this.platformOverride,
+    this.queryProductDetailsOverride,
+    this.buyNonConsumableOverride,
+    this.restorePurchasesOverride,
+    Stream<List<PurchaseDetails>>? purchaseStreamOverride,
+  }) : _iap = iapInstance,
+       _purchaseStreamOverride = purchaseStreamOverride;
 
   final FlutterSecureStorage storage;
-  final InAppPurchase _iap;
+  final InAppPurchase? _iap;
+  final Stream<List<PurchaseDetails>>? _purchaseStreamOverride;
+
+  /// テスト用の実行プラットフォーム上書き（"android" / "ios"）。
+  final String? platformOverride;
+
+  /// テスト用のストア呼び出し差し替え。
+  final Future<ProductDetailsResponse> Function(Set<String> identifiers)?
+  queryProductDetailsOverride;
+  final Future<bool> Function({required PurchaseParam purchaseParam})?
+  buyNonConsumableOverride;
+  final Future<void> Function({String? applicationUserName})?
+  restorePurchasesOverride;
 
   // Android Google Play 定期購入ID（SSOT）
   static const String _productIdAndroid = 'permy_pro_monthly';
+  // iOS App Store 定期購入ID（SSOT）
+  static const String _productIdIos = 'com.sukimalab.permy.pro_monthly';
 
   static const String _storageKeyPurchaseStatus = 'purchase_status';
 
@@ -35,7 +57,8 @@ class PurchaseService {
     await _loadPurchaseStatus();
 
     // 購入イベントのリスニング開始
-    final purchaseUpdated = _iap.purchaseStream;
+    final purchaseUpdated =
+        _purchaseStreamOverride ?? _iapClient.purchaseStream;
     _subscription = purchaseUpdated.listen(
       _onPurchaseUpdate,
       onDone: _onPurchaseDone,
@@ -60,16 +83,18 @@ class PurchaseService {
 
   /// 購入可能かチェック
   Future<bool> isAvailable() async {
-    return await _iap.isAvailable();
+    return await _iapClient.isAvailable();
   }
 
   /// 商品情報を取得
   Future<List<ProductDetails>> getProducts() async {
-    if (!Platform.isAndroid) {
-      throw Exception('現在の課金実装はAndroidのみ対応です');
+    final platform = _effectivePlatform();
+    if (platform == 'unsupported') {
+      throw Exception('現在の課金実装はiOS/Androidのみ対応です');
     }
-    final productId = _productIdAndroid;
-    final response = await _iap.queryProductDetails({productId});
+    final productId = platform == 'ios' ? _productIdIos : _productIdAndroid;
+    final query = queryProductDetailsOverride ?? _iapClient.queryProductDetails;
+    final response = await query({productId});
 
     if (response.error != null) {
       throw Exception('商品情報の取得に失敗しました: ${response.error}');
@@ -80,8 +105,9 @@ class PurchaseService {
 
   /// 購入を開始
   Future<void> purchase() async {
-    if (!Platform.isAndroid) {
-      throw Exception('現在の課金実装はAndroidのみ対応です');
+    final platform = _effectivePlatform();
+    if (platform == 'unsupported') {
+      throw Exception('現在の課金実装はiOS/Androidのみ対応です');
     }
     final products = await getProducts();
     if (products.isEmpty) {
@@ -91,16 +117,18 @@ class PurchaseService {
     final product = products.first;
     final purchaseParam = PurchaseParam(productDetails: product);
 
-    await _iap.buyNonConsumable(purchaseParam: purchaseParam);
+    final buy = buyNonConsumableOverride ?? _iapClient.buyNonConsumable;
+    await buy(purchaseParam: purchaseParam);
   }
 
   /// 購入を復元
   Future<void> restorePurchases() async {
     try {
-      if (!Platform.isAndroid) {
-        throw Exception('現在の課金実装はAndroidのみ対応です');
+      if (_effectivePlatform() == 'unsupported') {
+        throw Exception('現在の課金実装はiOS/Androidのみ対応です');
       }
-      await _iap.restorePurchases();
+      final restore = restorePurchasesOverride ?? _iapClient.restorePurchases;
+      await restore();
       // 復元結果は _onPurchaseUpdate で処理される
     } catch (e) {
       throw Exception('購入の復元に失敗しました: $e');
@@ -126,7 +154,7 @@ class PurchaseService {
         _savePurchaseStatus(AppPurchaseStatus.pro);
 
         final productId = purchase.productID;
-        final platform = Platform.isIOS ? 'ios' : 'android';
+        final platform = _effectivePlatform() == 'ios' ? 'ios' : 'android';
         final purchaseToken =
             purchase.verificationData.serverVerificationData.isNotEmpty
             ? purchase.verificationData.serverVerificationData
@@ -144,7 +172,7 @@ class PurchaseService {
 
         // 購入完了処理（ストアへの確認）
         if (purchase.pendingCompletePurchase) {
-          _iap.completePurchase(purchase);
+          _iapClient.completePurchase(purchase);
         }
       } else if (purchase.status == PurchaseStatus.error) {
         // 購入エラー
@@ -156,7 +184,7 @@ class PurchaseService {
 
       // 購入完了時の処理
       if (purchase.pendingCompletePurchase) {
-        _iap.completePurchase(purchase);
+        _iapClient.completePurchase(purchase);
       }
     }
   }
@@ -185,4 +213,16 @@ class PurchaseService {
     final statusString = status == AppPurchaseStatus.pro ? 'pro' : 'free';
     await storage.write(key: _storageKeyPurchaseStatus, value: statusString);
   }
+
+  String _effectivePlatform() {
+    final override = platformOverride?.trim().toLowerCase();
+    if (override == 'ios' || override == 'android') {
+      return override!;
+    }
+    if (Platform.isIOS) return 'ios';
+    if (Platform.isAndroid) return 'android';
+    return 'unsupported';
+  }
+
+  InAppPurchase get _iapClient => _iap ?? InAppPurchase.instance;
 }

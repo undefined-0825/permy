@@ -19,6 +19,7 @@ router = APIRouter()
 
 _ALLOWED_PRODUCT_IDS = {
     "android": {"permy_pro_monthly"},
+    "ios": {"com.sukimalab.permy.pro_monthly"},
 }
 
 

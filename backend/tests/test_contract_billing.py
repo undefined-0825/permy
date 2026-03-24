@@ -61,6 +61,31 @@ def test_billing_verify_returns_pro_and_allows_pro_combo(client):
         settings.app_env = old_app_env
 
 
+def test_billing_verify_ios_returns_pro(client):
+    old_app_env = settings.app_env
+    settings.app_env = "dev"
+
+    try:
+        auth_res = client.post("/api/v1/auth/anonymous")
+        assert auth_res.status_code == 200
+        token = auth_res.json()["access_token"]
+
+        verify_res = client.post(
+            "/api/v1/billing/verify",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "platform": "ios",
+                "product_id": "com.sukimalab.permy.pro_monthly",
+                "purchase_token": "dummy-token",
+            },
+        )
+        assert verify_res.status_code == 200
+        assert verify_res.json()["plan"] == "pro"
+        assert verify_res.json()["verified"] is True
+    finally:
+        settings.app_env = old_app_env
+
+
 def test_billing_verify_rejects_invalid_product(client):
     old_app_env = settings.app_env
     settings.app_env = "dev"

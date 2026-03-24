@@ -84,6 +84,15 @@ APIのエラーは原則として以下を返す。
 
 ---
 
+### 2.6.1 課金（Billing）
+| error_code | HTTP | 意味 | 典型原因 | クライアント推奨動作 |
+|---|---:|---|---|---|
+| BILLING_NOT_CONFIGURED | 503 | 課金検証が未設定 | 本番で実ストア検証未導入 | 準備中案内を表示 |
+| BILLING_PRODUCT_INVALID | 400 | 商品IDが不正 | 未登録商品ID、platform と product_id の不一致 | アプリ更新/再試行を促す |
+| BILLING_RECEIPT_INVALID | 400 | 購入情報が不正 | purchase_token / receipt 不正、空文字 | 購入復元や再試行を促す |
+
+---
+
 ### 2.7 依存サービス（Upstream / LLM）
 | error_code | HTTP | 意味 | 典型原因 | クライアント推奨動作 |
 |---|---:|---|---|---|

@@ -401,7 +401,7 @@ NightSelf:
   - 購入成功時に feature_tier/billing_tier を自動更新
   - mock mode で動作確認済み（実ストアサーバ検証は将来実装）
 - Android 商品ID（SSOT）：`permy_pro_monthly`
-- iOS 商品IDは将来実装時に別途確定
+- iOS 商品ID（SSOT）：`com.sukimalab.permy.pro_monthly`
 
 ### 15.1.2 アカウント削除実装状況（2026-03-07追加）
 - 設定画面に「アカウントを削除する」導線と確認ダイアログを実装済み。

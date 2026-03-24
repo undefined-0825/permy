@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 
     app_name: str = "permy-serverside"
     app_env: str = "dev"
-    app_version: str = "1.1.1"
+    app_version: str = "1.1.2"
     app_min_supported_version: str = "0.1.0"
     commit_sha: str = "dev"
     app_android_store_url: str = ""

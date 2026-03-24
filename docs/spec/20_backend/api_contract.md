@@ -376,6 +376,46 @@ Body:
 
 ---
 
+## 2.6.1 POST /billing/verify
+ストア購入の検証結果を反映する。
+
+### Request
+Headers:
+- `Authorization: Bearer <token>`
+
+Body:
+```json
+{
+  "platform": "ios",
+  "product_id": "com.sukimalab.permy.pro_monthly",
+  "purchase_token": "string"
+}
+```
+
+**Rules**
+- `platform`: `"ios" | "android"`
+- 許可された `product_id` は以下のみ
+  - Android: `permy_pro_monthly`
+  - iOS: `com.sukimalab.permy.pro_monthly`
+- 現時点の検証は mock mode。`purchase_token` 非空を最低条件として検証する。
+
+### Response 200
+```json
+{
+  "plan": "pro",
+  "verified": true
+}
+```
+
+### Errors
+- `400 BILLING_PRODUCT_INVALID`
+- `400 BILLING_RECEIPT_INVALID`
+- `401 AUTH_INVALID`
+- `503 BILLING_NOT_CONFIGURED`
+- `500 INTERNAL_ERROR`
+
+---
+
 ## 2.7 POST /telemetry/events
 クライアントから複数のテレメトリイベントをバッチ送信する。
 
@@ -455,5 +495,4 @@ Body:
 ## 4. Non-Goals（この契約で定義しない）
 - 価格・回数上限の数値（別Spec）
 - プロンプト内容や世界観文言（別Spec）
-- 課金検証（`/billing/verify` など）は導入時に別途契約追加
 - `feature_tier` / `billing_tier` を独立した typed レスポンスフィールドとして定義すること（`settings_json` 内に注入する形のみ許容）

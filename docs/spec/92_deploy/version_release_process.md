@@ -33,7 +33,7 @@
 app_version: str = "1.1.0"  # 新バージョン
 app_min_supported_version: str = "1.0.0"  # 古いバージョン切り捨て時に更新
 app_android_store_url: str = "https://play.google.com/store/apps/details?id=..."
-app_ios_store_url: str = ""  # iOS は未対応。将来のための枠
+app_ios_store_url: str = ""  # iOS ストアURL未設定の例。公開時は App Store URL を設定
 ```
 
 **判定ロジック:**

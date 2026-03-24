@@ -232,7 +232,7 @@
 ### 8.5.1 概要
 - ストア課金（iOS/Android）と backend を連携し、購入成功時に自動的に feature_tier/billing_tier を更新する。
 - 購入イベントを PurchaseService で監視し、backend へ検証リクエストを送信する。
-- 現行実装は Android 先行（iOSは将来実装）。
+- 現行実装は iOS / Android の両方で BillingProof 送信まで対応済み。サーバ側検証は mock mode で、本番では未有効。
 
 ### 8.5.2 BillingProof モデル
 - PurchaseService から Settings画面へ購入情報を伝達するための軽量モデル
@@ -259,6 +259,7 @@
 ### 8.5.5 注意事項
 - 現時点は mock mode での動作（実ストアサーバ検証は将来実装）
 - 本番環境では `/billing/verify` が 503 を返すため、ストア検証実装後に有効化
+- 商品ID（SSOT）：Android=`permy_pro_monthly` / iOS=`com.sukimalab.permy.pro_monthly`
 
 ---
 

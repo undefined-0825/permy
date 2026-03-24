@@ -525,7 +525,7 @@ void main() {
       await tapAppListItem(tester, 'プライバシーポリシー');
 
       expect(find.byType(PrivacyPolicyScreen), findsOneWidget);
-      expect(find.text('1. 基本方針'), findsOneWidget);
+      expect(find.text('第1条（基本方針）'), findsOneWidget);
     });
 
     testWidgets('ヘルプリンクでヘルプ画面へ遷移できる', (WidgetTester tester) async {
