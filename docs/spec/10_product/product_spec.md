@@ -381,6 +381,15 @@ NightSelf:
 2) プライバシー短文コピー（例：「トーク履歴は残さないよ。送信するのはきみだよ」）のSSOT配置先が本Specか別copybookか。  
 3) NightSelf画像ファイル名が `night_balance.png` で確定で良いか（過去資産に `night_flow.png` があるため、差し替え運用の整理が必要）。  
 
+### 15.1.2 アカウント削除実装状況（2026-03-07追加）
+- 設定画面に「アカウントを削除する」導線と確認ダイアログを実装済み。
+- backendに `DELETE /api/v1/auth/me` を実装済み。
+- 削除時に関連メタ情報の削除とセッション無効化を実施。
+
+### 15.1 備考
+- 本TODOは「MVP機能」ではなく「公開審査・運用」観点の最低限チェック項目である。
+- 課金機能を有効化しない段階でも、利用規約/プライバシーポリシー/ヘルプは必須とする。
+
 ---
 
 ## 16. 公開前TODO（法務/ストア審査の最低限）
@@ -403,13 +412,245 @@ NightSelf:
 - Android 商品ID（SSOT）：`permy_pro_monthly`
 - iOS 商品ID（SSOT）：`com.sukimalab.permy.pro_monthly`
 
-### 15.1.2 アカウント削除実装状況（2026-03-07追加）
-- 設定画面に「アカウントを削除する」導線と確認ダイアログを実装済み。
-- backendに `DELETE /api/v1/auth/me` を実装済み。
-- 削除時に関連メタ情報の削除とセッション無効化を実施。
-
-### 15.1 備考
-- 本TODOは「MVP機能」ではなく「公開審査・運用」観点の最低限チェック項目である。
-- 課金機能を有効化しない段階でも、利用規約/プライバシーポリシー/ヘルプは必須とする。
 
 
+
+
+---
+
+## 17. 顧客管理機能（夜職向け顧客管理 / MUST）
+
+### 17.1 目的（MUST）
+- 夜職ユーザーが、お客様ごとの接客情報・関係性・注意点を構造化して管理できるようにする。
+- 目的は「CRMそのもの」ではなく、**次回接客・返信生成・検索・リマインド**に使える最小限の顧客情報基盤を提供すること。
+- 本機能は、返信生成と独立したメモ機能ではなく、**Permyの提案精度と再来店支援を高めるための補助機能**として扱う。
+
+### 17.2 絶対制約（MUST）
+- **会話本文・生成本文は保存しない**。
+- 保存してよいのは、ユーザーが明示的に登録した **構造化メタ情報** のみとする。
+- LINEトーク履歴 `.txt` の本文を顧客メモへ自動保存してはならない。
+- 顧客メモは、本文復元可能な長文ログ・全文検索インデックス・可逆圧縮データを保持しない。
+- 自動送信は行わない。顧客メモはあくまで提案補助である。
+
+### 17.3 顧客メモの位置づけ（MUST）
+- 本機能の正式名称は **「顧客メモ」** とする。
+- ユーザー向けには「管理」「営業支配」「CRM」等の硬い表現を避け、**覚えておきたいことを整理する機能**として扱う。
+- 世界観上、説教・圧・成績強要に繋がる見せ方は禁止する。
+
+### 17.4 顧客エンティティ（SSOT / MUST）
+顧客メモは以下の単位で保持する。
+
+#### 17.4.1 Customer（顧客基本情報）
+- `customer_id: string`
+- `display_name: string`  
+  - 顧客の表示名
+- `nickname: string | null`
+  - ユーザー側の管理用呼称
+- `call_name: string | null`
+  - 相手を呼ぶときの呼称（例：たかしさん / たかちゃん）
+- `area_tag: string | null`
+  - 居住地・活動地の簡易タグ（例：梅田 / ミナミ / 西宮）
+- `age_range: string | null`
+  - `unknown|20s_early|20s_late|30s|40s|50s_plus`
+- `job_tag: string | null`
+  - 職業や属性の簡易タグ（例：経営 / 営業 / 飲食）
+- `relationship_stage: string`
+  - `new|regular|important|caution|inactive`
+- `visit_frequency_tag: string | null`
+  - `unknown|weekly|biweekly|monthly|rare`
+- `drink_style_tag: string | null`
+  - `unknown|light|normal|heavy|gets_drunk_fast`
+- `last_visit_at: datetime | null`
+- `last_contact_at: datetime | null`
+- `memo_summary: string | null`
+  - 120文字以内の短い要約。本文ではなく、ユーザーが整理した要点のみ
+- `is_archived: bool`
+- `created_at: datetime`
+- `updated_at: datetime`
+
+#### 17.4.2 CustomerTag（顧客タグ）
+- 顧客ごとに複数タグを保持できる
+- タグは以下のカテゴリで管理する
+
+カテゴリ:
+- `personality`
+- `topic`
+- `ng`
+- `lifestyle`
+- `relationship`
+- `sales_hint`
+- `event`
+
+例:
+- personality: `lonely`, `proud`, `gentle`
+- topic: `work`, `romance`, `family`, `hobby_car`
+- ng: `no_money_talk`, `no_push`, `avoid_late_night`
+- lifestyle: `last_train_sensitive`, `busy_weekdays`
+- relationship: `likes_meeting`, `slow_reply_ok`
+- sales_hint: `visit_push_ok`, `heal_prefer`
+- event: `birthday_soon`, `job_change`
+
+#### 17.4.3 CustomerVisitLog（来店ログ）
+- `visit_log_id: string`
+- `customer_id: string`
+- `visited_on: date`
+- `visit_type: string`
+  - `store|douhan|after|other`
+- `stay_minutes: int | null`
+- `spend_level: string | null`
+  - `unknown|low|middle|high|very_high`
+- `drink_amount_tag: string | null`
+  - `light|normal|heavy`
+- `mood_tag: string | null`
+  - `good|normal|bad|unstable`
+- `memo_short: string | null`
+  - 80文字以内の短文要点
+- `created_at: datetime`
+
+#### 17.4.4 CustomerEvent（顧客イベント）
+- `event_id: string`
+- `customer_id: string`
+- `event_type: string`
+  - `birthday|first_visit_anniversary|last_visit_reminder|special_day|custom`
+- `event_date: date`
+- `title: string`
+- `note: string | null`
+  - 80文字以内
+- `remind_days_before: int`
+- `is_active: bool`
+
+### 17.5 本文非保存と両立するメモ方針（MUST）
+- 保存対象は以下に限定する
+  - 顧客属性
+  - タグ
+  - 来店日時
+  - 金額レンジ
+  - 短い要約メモ
+  - イベント日付
+- 保存禁止
+  - LINE本文
+  - 会話の逐語記録
+  - 返信案本文
+  - 顧客とのやり取り全文
+  - 本文を再現可能な長文サマリ
+
+### 17.6 検索機能（中核 / MUST）
+#### 17.6.1 検索目的
+- ユーザーが「名前を忘れたが特徴は覚えている」状態でも顧客を探せるようにする。
+
+#### 17.6.2 検索対象
+検索対象は本文ではなく、以下の構造化項目のみとする。
+- `display_name`
+- `nickname`
+- `call_name`
+- `area_tag`
+- `job_tag`
+- `memo_summary`
+- `CustomerTag`
+- `CustomerVisitLog.memo_short`
+- `CustomerEvent.title`
+
+#### 17.6.3 検索仕様
+- 単一検索窓から横断検索する
+- 名前完全一致を前提にしない
+- 部分一致で候補表示してよい
+- 並び順は以下を優先
+  1. 名前一致
+  2. タグ一致
+  3. 要約メモ一致
+  4. 最終更新日時が新しい順
+
+#### 17.6.4 想定クエリ例
+- 「終電」
+- 「梅田」
+- 「転職」
+- 「誕生日」
+- 「不機嫌」
+- 「重い酒」
+- 「アフター」
+
+### 17.7 リマインド機能（MUST）
+#### 17.7.1 目的
+- 顧客ごとの連絡・再来店・記念日対応漏れを減らす。
+
+#### 17.7.2 リマインド種別
+- 誕生日
+- 初回来店記念日
+- 最終来店から一定日数経過
+- 最終連絡から一定日数経過
+- ユーザー手動登録イベント
+
+#### 17.7.3 期限系の初期候補
+- `3日連絡なし`
+- `7日連絡なし`
+- `14日来店なし`
+- `30日来店なし`
+
+※日数閾値は将来設定化してよいが、MVPでは固定値でよい。
+
+### 17.8 Generateとの連携（MUST）
+- 顧客を選択して生成する場合、以下の構造化情報のみ生成に利用してよい
+  - 呼称
+  - relationship_stage
+  - visit_frequency_tag
+  - drink_style_tag
+  - 顧客タグ
+  - last_visit_at / last_contact_at
+  - memo_summary
+- 来店ログやイベントは、必要に応じて短い特徴量に変換して生成へ渡してよい
+- 生成時も本文保存禁止を破ってはならない
+- 顧客メモ由来のNGは、既存 `ng_tags` より弱くしてはならない
+
+### 17.9 UI要件（MUST）
+#### 17.9.1 画面一覧
+- 顧客一覧
+- 顧客詳細
+- 顧客編集
+- 来店ログ追加
+- イベント追加
+- 顧客検索結果一覧
+
+#### 17.9.2 顧客一覧
+- 名前
+- 関係性ラベル
+- 最終来店日
+- 最終連絡日
+- 主要タグ2〜3個
+- 検索導線を上部固定
+
+#### 17.9.3 顧客詳細
+- 基本情報
+- タグ
+- 直近来店ログ
+- イベント
+- 「この顧客で返信を作る」導線
+
+#### 17.9.4 入力UX
+- 手入力負荷を減らすため、タグ選択UIを優先する
+- 自由記述は短文のみ
+- 音声入力は将来拡張とし、MVPでは必須にしない
+
+### 17.10 Free/Pro差分（MUST）
+- Free:
+  - 顧客登録数 上限あり（例：30件）
+  - 検索可
+  - 基本メモ可
+  - リマインドは主要種別のみ
+- Pro:
+  - 顧客登録数 上限拡大または無制限
+  - 全検索可
+  - イベント/来店ログをフル利用可
+  - 顧客連携生成を利用可
+
+※ 上限数の具体値は別途確定する。未確定の間は product_spec 本文に固定しない。
+
+### 17.11 NG / リスク制御（MUST）
+- 顧客メモ機能は、相手の個人情報を過剰に収集する設計にしてはならない
+- 住所・勤務先詳細・本名・機微情報の収集を前提にしない
+- 自由記述欄には、過度にセンシティブな情報入力を促す文言を置かない
+- ユーザーに「監視」「支配」「囲い込み」を想起させるコピーは禁止する
+
+### 17.12 未確定事項（最大3点）
+1. 顧客登録数のFree/Pro上限値
+2. 顧客メモを夜職版Permy本体へ入れるか、ホスト版のみ先行導入するか
+3. 来店ログの `spend_level` を5段階固定にするか、店側運用に合わせて将来設定化するか
