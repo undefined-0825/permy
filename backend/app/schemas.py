@@ -112,15 +112,15 @@ class BillingVerifyRequest(BaseModel):
 
 
 class BillingVerifyResponse(BaseModel):
-    plan: Literal["free", "pro"]
+    plan: Literal["free", "pro", "premium"]
     verified: bool
 
 
-class ProCompGrantRequestRequest(BaseModel):
+class PremiumCompGrantRequestRequest(BaseModel):
     email: str = Field(..., min_length=3, max_length=320)
 
 
-class ProCompGrantRequestResponse(BaseModel):
+class PremiumCompGrantRequestResponse(BaseModel):
     approved: bool
     request_count: int = Field(..., ge=0)
     remaining_attempts: int | None = None  # 失敗時: ロックまでの残り回数、承認時: None

@@ -243,10 +243,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final featureTier = settings[_featureTierKey]?.toString();
     final plan = settings[_planKey]?.toString();
 
-    if (statusTier == 'special' || billingTier == 'pro_comp') {
+    if (statusTier == 'special' || billingTier == 'premium_comp') {
       return true;
     }
     if (widget.purchaseService.isPro) {
+      return true;
+    }
+    if (featureTier == 'premium' ||
+        plan == 'premium' ||
+        billingTier == 'premium_store') {
       return true;
     }
     if (featureTier == 'pro' || plan == 'pro' || billingTier == 'pro_store') {
@@ -261,8 +266,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final featureTier = _settings[_featureTierKey]?.toString();
     final plan = _settings[_planKey]?.toString();
 
-    if (statusTier == 'special' || billingTier == 'pro_comp') {
+    if (statusTier == 'special' || billingTier == 'premium_comp') {
       return '特別会員';
+    }
+    if (widget.purchaseService.currentPlan == 'premium' ||
+        featureTier == 'premium' ||
+        plan == 'premium' ||
+        billingTier == 'premium_store') {
+      return 'Premium';
     }
     if (widget.purchaseService.isPro ||
         featureTier == 'pro' ||

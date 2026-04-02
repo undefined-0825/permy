@@ -4,16 +4,16 @@ import datetime as dt
 from sqlalchemy import delete, select
 
 from app.db import SessionLocal
-from app.models import ProCompGrantRequest, User
+from app.models import PremiumCompGrantRequest, User
 
 
 async def _seed_target(email: str, name: str = "target") -> None:
     async with SessionLocal() as db:
         await db.execute(
-            delete(ProCompGrantRequest).where(ProCompGrantRequest.email == email)
+            delete(PremiumCompGrantRequest).where(PremiumCompGrantRequest.email == email)
         )
         db.add(
-            ProCompGrantRequest(
+            PremiumCompGrantRequest(
                 email=email,
                 name=name,
                 request_count=0,
@@ -24,20 +24,20 @@ async def _seed_target(email: str, name: str = "target") -> None:
         await db.commit()
 
 
-async def _fetch_target(email: str) -> ProCompGrantRequest | None:
+async def _fetch_target(email: str) -> PremiumCompGrantRequest | None:
     async with SessionLocal() as db:
         row = await db.execute(
-            select(ProCompGrantRequest).where(ProCompGrantRequest.email == email)
+            select(PremiumCompGrantRequest).where(PremiumCompGrantRequest.email == email)
         )
         return row.scalar_one_or_none()
 
 
-def test_pro_comp_request_requires_auth(client):
-    res = client.post("/api/v1/pro-comp/request", json={"email": "target@example.com"})
+def test_premium_comp_request_requires_auth(client):
+    res = client.post("/api/v1/premium-comp/request", json={"email": "target@example.com"})
     assert res.status_code == 401
 
 
-def test_pro_comp_request_approves_only_once(client):
+def test_premium_comp_request_approves_only_once(client):
     email = "target@example.com"
     asyncio.run(_seed_target(email))
 
@@ -46,7 +46,7 @@ def test_pro_comp_request_approves_only_once(client):
     token1 = auth1.json()["access_token"]
 
     first = client.post(
-        "/api/v1/pro-comp/request",
+        "/api/v1/premium-comp/request",
         headers={"Authorization": f"Bearer {token1}"},
         json={"email": email},
     )
@@ -64,7 +64,7 @@ def test_pro_comp_request_approves_only_once(client):
         },
     )
     assert generate.status_code == 200
-    assert generate.json()["plan"] == "pro"
+    assert generate.json()["plan"] == "premium"
 
     stored_after_first = asyncio.run(_fetch_target(email))
     assert stored_after_first is not None
@@ -76,35 +76,35 @@ def test_pro_comp_request_approves_only_once(client):
     token2 = auth2.json()["access_token"]
 
     second = client.post(
-        "/api/v1/pro-comp/request",
+        "/api/v1/premium-comp/request",
         headers={"Authorization": f"Bearer {token2}"},
         json={"email": email},
     )
     assert second.status_code == 409
-    assert second.json()["detail"]["error"]["code"] == "PRO_COMP_EMAIL_ALREADY_APPROVED"
+    assert second.json()["detail"]["error"]["code"] == "PREMIUM_COMP_EMAIL_ALREADY_APPROVED"
 
     stored_after_second = asyncio.run(_fetch_target(email))
     assert stored_after_second is not None
     assert stored_after_second.request_count == 2
 
 
-def test_pro_comp_request_rejects_unregistered_email(client):
+def test_premium_comp_request_rejects_unregistered_email(client):
     auth = client.post("/api/v1/auth/anonymous")
     assert auth.status_code == 200
     token = auth.json()["access_token"]
 
     res = client.post(
-        "/api/v1/pro-comp/request",
+        "/api/v1/premium-comp/request",
         headers={"Authorization": f"Bearer {token}"},
         json={"email": "not-allowed@example.com"},
     )
     assert res.status_code == 403
-    assert res.json()["detail"]["error"]["code"] == "PRO_COMP_EMAIL_NOT_ALLOWED"
+    assert res.json()["detail"]["error"]["code"] == "PREMIUM_COMP_EMAIL_NOT_ALLOWED"
     # remaining_attempts が返ること
     assert res.json()["detail"]["error"]["detail"]["remaining_attempts"] == 4
 
 
-def test_pro_comp_locks_after_5_failures(client):
+def test_premium_comp_locks_after_5_failures(client):
     """5回失敗後にアカウントがロックされ、6回目はACCOUNT_LOCKEDになること"""
     auth = client.post("/api/v1/auth/anonymous")
     assert auth.status_code == 200
@@ -113,18 +113,18 @@ def test_pro_comp_locks_after_5_failures(client):
 
     for i in range(5):
         res = client.post(
-            "/api/v1/pro-comp/request",
+            "/api/v1/premium-comp/request",
             headers=headers,
             json={"email": "unknown@example.com"},
         )
         assert res.status_code == 403
-        assert res.json()["detail"]["error"]["code"] == "PRO_COMP_EMAIL_NOT_ALLOWED"
+        assert res.json()["detail"]["error"]["code"] == "PREMIUM_COMP_EMAIL_NOT_ALLOWED"
         expected_remaining = 4 - i
         assert res.json()["detail"]["error"]["detail"]["remaining_attempts"] == expected_remaining
 
     # 6回目はACCOUNT_LOCKED
     locked_res = client.post(
-        "/api/v1/pro-comp/request",
+        "/api/v1/premium-comp/request",
         headers=headers,
         json={"email": "unknown@example.com"},
     )

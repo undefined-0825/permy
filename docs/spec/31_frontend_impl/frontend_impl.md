@@ -138,7 +138,7 @@ ios/
 - `If-Match`（/me/settings PUTのみ必須）
 
 ### 4.4 レスポンスの扱い
-- `meta.plan` は `free|pro` の2値のみ。UI上は free/proとして扱う（pro_compは露出しない）。
+- `meta.plan` は `free|pro|premium` の3値のみ。UI上は free/pro/premiumとして扱う（billing_tierは露出しない）。
 - エラーは `error_code` を最優先で分岐。
 
 ### 4.4.1 Settings ETagのフォールバック（MUST）
@@ -568,8 +568,8 @@ class UpdateNoticeScreen extends StatelessWidget {
 
 - 値変更時は `_updateGenerateSetting(key, value)` で `/me/settings` を即時PUT保存する。
 - Pro専用値をFreeが選んだ場合は `_openProUpgradePage()` でProUpgradeScreenへ遷移する。
-- 読み込み時は `_isProActive()` でFree/Proを判定し、FreeならFree値にフォールバック正規化してからstateにセットする。
-- pro/freeの判定ロジック: `widget.purchaseService.isPro || _plan == 'pro'`。
+- 読み込み時は有料プラン状態（Pro/Premium）を判定し、FreeならFree値にフォールバック正規化してからstateにセットする。
+- 有料判定ロジック: `widget.purchaseService.isPro || _plan == 'pro' || _plan == 'premium'`。
 
 
 #### 7.3.1 Generate 画面のエラーハンドリング

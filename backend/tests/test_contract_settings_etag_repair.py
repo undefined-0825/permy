@@ -37,7 +37,7 @@ async def _tamper_settings_plan(user_id: str) -> None:
         assert st is not None
         settings = dict(st.settings_json or {})
         settings['feature_tier'] = 'pro'
-        settings['billing_tier'] = 'pro_comp'
+        settings['billing_tier'] = 'premium_comp'
         settings['plan'] = 'pro'
         st.settings_json = settings
         await session.commit()

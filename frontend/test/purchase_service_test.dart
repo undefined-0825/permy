@@ -85,5 +85,26 @@ void main() {
       expect(queriedIds, {'permy_pro_monthly'});
       expect(products.single.id, 'permy_pro_monthly');
     });
+
+    test('Premium指定時は Premium 商品IDで問い合わせる', () async {
+      Set<String>? queriedIds;
+
+      final service = PurchaseService(
+        storage: const FlutterSecureStorage(),
+        platformOverride: 'android',
+        queryProductDetailsOverride: (ids) async {
+          queriedIds = ids;
+          return ProductDetailsResponse(
+            productDetails: <ProductDetails>[_product('permy_premium_monthly')],
+            notFoundIDs: const <String>[],
+          );
+        },
+      );
+
+      final products = await service.getProducts(plan: 'premium');
+
+      expect(queriedIds, {'permy_premium_monthly'});
+      expect(products.single.id, 'permy_premium_monthly');
+    });
   });
 }

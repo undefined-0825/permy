@@ -9,8 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_db
 from app.errors import err
-from app.models import PlanStatus, ProCompGrantRequest, User, UserSettings
-from app.schemas import ProCompGrantRequestRequest, ProCompGrantRequestResponse
+from app.models import PlanStatus, PremiumCompGrantRequest, User, UserSettings
+from app.schemas import PremiumCompGrantRequestRequest, PremiumCompGrantRequestResponse
 from app.security import AuthContext, get_auth_context
 from app.settings_defaults import with_default_settings
 from app.utils import etag_for_json, sha256_hex
@@ -37,9 +37,9 @@ def _session_id_from_authorization(authorization: str | None) -> str | None:
     return sha256_hex(token)
 
 
-@router.post("/pro-comp/request", response_model=ProCompGrantRequestResponse)
-async def request_pro_comp(
-    req: ProCompGrantRequestRequest,
+@router.post("/premium-comp/request", response_model=PremiumCompGrantRequestResponse)
+async def request_premium_comp(
+    req: PremiumCompGrantRequestRequest,
     db: AsyncSession = Depends(get_db),
     auth: AuthContext = Depends(get_auth_context),
     authorization: str | None = Header(default=None),
@@ -59,8 +59,8 @@ async def request_pro_comp(
 
     async def _record_failure(code: str, message: str, status: int) -> None:
         """失敗をカウントし、上限到達でアカウントロック。その後例外を送出する。"""
-        new_count = int(user.failed_pro_comp_attempts or 0) + 1
-        user.failed_pro_comp_attempts = new_count
+        new_count = int(user.failed_premium_comp_attempts or 0) + 1
+        user.failed_premium_comp_attempts = new_count
         user.updated_at = dt.datetime.now(dt.timezone.utc)
         if new_count >= _MAX_FAILURES:
             user.is_locked = True
@@ -69,11 +69,11 @@ async def request_pro_comp(
         raise err(code, message, detail={"remaining_attempts": remaining}, status_code=status)
 
     row = await db.execute(
-        select(ProCompGrantRequest).where(ProCompGrantRequest.email == email)
+        select(PremiumCompGrantRequest).where(PremiumCompGrantRequest.email == email)
     )
     target = row.scalar_one_or_none()
     if not target:
-        await _record_failure("PRO_COMP_EMAIL_NOT_ALLOWED", "対象外のメールアドレスです", 403)
+        await _record_failure("PREMIUM_COMP_EMAIL_NOT_ALLOWED", "対象外のメールアドレスです", 403)
 
     current_count = int(target.request_count or 0)
     next_count = current_count + 1
@@ -82,23 +82,23 @@ async def request_pro_comp(
     target.updated_at = dt.datetime.now(dt.timezone.utc)
 
     if target.approved_user_id:
-        await _record_failure("PRO_COMP_EMAIL_ALREADY_APPROVED", "このメールアドレスは既に承認済みです", 409)
+        await _record_failure("PREMIUM_COMP_EMAIL_ALREADY_APPROVED", "このメールアドレスは既に承認済みです", 409)
 
     if current_count != 0:
-        await _record_failure("PRO_COMP_REQUEST_ALREADY_USED", "このメールアドレスの承認依頼は既に記録されています", 409)
+        await _record_failure("PREMIUM_COMP_REQUEST_ALREADY_USED", "このメールアドレスの承認依頼は既に記録されています", 409)
 
-    user.feature_tier = "pro"
-    user.billing_tier = "pro_comp"
+    user.feature_tier = "premium"
+    user.billing_tier = "premium_comp"
 
     plan_row = await db.execute(
         select(PlanStatus).where(PlanStatus.user_id == auth.user_id)
     )
     plan = plan_row.scalar_one_or_none()
     if plan:
-        plan.plan = "pro"
+        plan.plan = "premium"
         plan.updated_at = dt.datetime.now(dt.timezone.utc)
     else:
-        db.add(PlanStatus(user_id=auth.user_id, plan="pro"))
+        db.add(PlanStatus(user_id=auth.user_id, plan="premium"))
 
     settings_row = await db.execute(
         select(UserSettings).where(UserSettings.user_id == auth.user_id)
@@ -107,9 +107,9 @@ async def request_pro_comp(
     settings_json = with_default_settings(
         dict(user_settings.settings_json) if user_settings else {}
     )
-    settings_json["feature_tier"] = "pro"
-    settings_json["billing_tier"] = "pro_comp"
-    settings_json["plan"] = "pro"
+    settings_json["feature_tier"] = "premium"
+    settings_json["billing_tier"] = "premium_comp"
+    settings_json["plan"] = "premium"
     settings_json["status_tier"] = "special"
     new_etag = etag_for_json(settings_json)
     if user_settings:
@@ -133,4 +133,4 @@ async def request_pro_comp(
 
     await db.commit()
 
-    return ProCompGrantRequestResponse(approved=True, request_count=next_count, remaining_attempts=None)
+    return PremiumCompGrantRequestResponse(approved=True, request_count=next_count, remaining_attempts=None)

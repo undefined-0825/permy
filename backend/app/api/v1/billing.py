@@ -18,9 +18,15 @@ from app.security import AuthContext, get_auth_context
 router = APIRouter()
 
 _ALLOWED_PRODUCT_IDS = {
-    "android": {"permy_pro_monthly"},
-    "ios": {"com.sukimalab.permy.pro_monthly"},
+    "android": {"permy_pro_monthly", "permy_premium_monthly"},
+    "ios": {"com.sukimalab.permy.pro_monthly", "com.sukimalab.permy.premium_monthly"},
 }
+
+
+def _plan_from_product_id(product_id: str) -> str:
+    if "premium" in product_id:
+        return "premium"
+    return "pro"
 
 
 @router.post("/billing/verify", response_model=BillingVerifyResponse)
@@ -62,16 +68,17 @@ async def billing_verify(
     if not user:
         raise err("AUTH_INVALID", "認証が無効です", status_code=401)
 
-    user.feature_tier = "pro"
-    user.billing_tier = "pro_store"
+    plan = _plan_from_product_id(req.product_id)
+    user.feature_tier = plan
+    user.billing_tier = f"{plan}_store"
 
     plan_row = await db.execute(select(PlanStatus).where(PlanStatus.user_id == auth.user_id))
     plan_status = plan_row.scalar_one_or_none()
     if plan_status:
-        plan_status.plan = "pro"
+        plan_status.plan = plan
     else:
-        db.add(PlanStatus(user_id=auth.user_id, plan="pro"))
+        db.add(PlanStatus(user_id=auth.user_id, plan=plan))
 
     await db.commit()
 
-    return BillingVerifyResponse(plan="pro", verified=True)
+    return BillingVerifyResponse(plan=plan, verified=True)

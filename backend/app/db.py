@@ -35,9 +35,9 @@ def _ensure_backward_compatible_columns(sync_conn) -> None:
         alter_statements.append(
             "ALTER TABLE users ADD COLUMN billing_tier VARCHAR(16) NOT NULL DEFAULT 'free'"
         )
-    if "failed_pro_comp_attempts" not in existing:
+    if "failed_premium_comp_attempts" not in existing:
         alter_statements.append(
-            "ALTER TABLE users ADD COLUMN failed_pro_comp_attempts INTEGER NOT NULL DEFAULT 0"
+            "ALTER TABLE users ADD COLUMN failed_premium_comp_attempts INTEGER NOT NULL DEFAULT 0"
         )
     if "is_locked" not in existing:
         alter_statements.append(
@@ -46,7 +46,6 @@ def _ensure_backward_compatible_columns(sync_conn) -> None:
 
     for stmt in alter_statements:
         sync_conn.execute(text(stmt))
-
 
 async def ensure_schema() -> None:
     """起動時に必要なテーブルを作成する。"""

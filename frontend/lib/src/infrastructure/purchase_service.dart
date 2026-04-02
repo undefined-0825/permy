@@ -7,7 +7,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'billing_proof.dart';
 
 /// 課金状態（アプリ内管理用）
-enum AppPurchaseStatus { free, pro, pending, error }
+enum AppPurchaseStatus { free, pro, premium, pending, error }
 
 /// 課金サービス（MVPシンプル実装）
 /// - backend 検証連携あり（BillingProof 経由）
@@ -40,9 +40,12 @@ class PurchaseService {
   restorePurchasesOverride;
 
   // Android Google Play 定期購入ID（SSOT）
-  static const String _productIdAndroid = 'permy_pro_monthly';
+  static const String _productIdAndroidPro = 'permy_pro_monthly';
+  static const String _productIdAndroidPremium = 'permy_premium_monthly';
   // iOS App Store 定期購入ID（SSOT）
-  static const String _productIdIos = 'com.sukimalab.permy.pro_monthly';
+  static const String _productIdIosPro = 'com.sukimalab.permy.pro_monthly';
+  static const String _productIdIosPremium =
+      'com.sukimalab.permy.premium_monthly';
 
   static const String _storageKeyPurchaseStatus = 'purchase_status';
 
@@ -76,7 +79,19 @@ class PurchaseService {
   AppPurchaseStatus get currentStatus => _currentStatus;
 
   /// Pro版かどうか
-  bool get isPro => _currentStatus == AppPurchaseStatus.pro;
+  bool get isPro =>
+      _currentStatus == AppPurchaseStatus.pro ||
+      _currentStatus == AppPurchaseStatus.premium;
+
+  String get currentPlan {
+    if (_currentStatus == AppPurchaseStatus.premium) {
+      return 'premium';
+    }
+    if (_currentStatus == AppPurchaseStatus.pro) {
+      return 'pro';
+    }
+    return 'free';
+  }
 
   /// backend検証用の課金証跡を通知するストリーム
   Stream<BillingProof> get billingProofStream => _billingProofController.stream;
@@ -87,12 +102,12 @@ class PurchaseService {
   }
 
   /// 商品情報を取得
-  Future<List<ProductDetails>> getProducts() async {
+  Future<List<ProductDetails>> getProducts({String plan = 'pro'}) async {
     final platform = _effectivePlatform();
     if (platform == 'unsupported') {
       throw Exception('現在の課金実装はiOS/Androidのみ対応です');
     }
-    final productId = platform == 'ios' ? _productIdIos : _productIdAndroid;
+    final productId = _productIdFor(platform: platform, plan: plan);
     final query = queryProductDetailsOverride ?? _iapClient.queryProductDetails;
     final response = await query({productId});
 
@@ -104,12 +119,12 @@ class PurchaseService {
   }
 
   /// 購入を開始
-  Future<void> purchase() async {
+  Future<void> purchase({String plan = 'pro'}) async {
     final platform = _effectivePlatform();
     if (platform == 'unsupported') {
       throw Exception('現在の課金実装はiOS/Androidのみ対応です');
     }
-    final products = await getProducts();
+    final products = await getProducts(plan: plan);
     if (products.isEmpty) {
       throw Exception('商品が見つかりません');
     }
@@ -150,8 +165,9 @@ class PurchaseService {
       if (purchase.status == PurchaseStatus.purchased ||
           purchase.status == PurchaseStatus.restored) {
         // 購入成功または復元成功
-        _currentStatus = AppPurchaseStatus.pro;
-        _savePurchaseStatus(AppPurchaseStatus.pro);
+        final status = _statusFromProductId(purchase.productID);
+        _currentStatus = status;
+        _savePurchaseStatus(status);
 
         final productId = purchase.productID;
         final platform = _effectivePlatform() == 'ios' ? 'ios' : 'android';
@@ -201,6 +217,10 @@ class PurchaseService {
   /// ローカルストレージから購入状態を読み込み
   Future<void> _loadPurchaseStatus() async {
     final statusString = await storage.read(key: _storageKeyPurchaseStatus);
+    if (statusString == 'premium') {
+      _currentStatus = AppPurchaseStatus.premium;
+      return;
+    }
     if (statusString == 'pro') {
       _currentStatus = AppPurchaseStatus.pro;
     } else {
@@ -210,8 +230,31 @@ class PurchaseService {
 
   /// ローカルストレージに購入状態を保存
   Future<void> _savePurchaseStatus(AppPurchaseStatus status) async {
-    final statusString = status == AppPurchaseStatus.pro ? 'pro' : 'free';
+    final statusString = switch (status) {
+      AppPurchaseStatus.premium => 'premium',
+      AppPurchaseStatus.pro => 'pro',
+      _ => 'free',
+    };
     await storage.write(key: _storageKeyPurchaseStatus, value: statusString);
+  }
+
+  String _productIdFor({required String platform, required String plan}) {
+    final normalizedPlan = plan == 'premium' ? 'premium' : 'pro';
+    if (platform == 'ios') {
+      return normalizedPlan == 'premium'
+          ? _productIdIosPremium
+          : _productIdIosPro;
+    }
+    return normalizedPlan == 'premium'
+        ? _productIdAndroidPremium
+        : _productIdAndroidPro;
+  }
+
+  AppPurchaseStatus _statusFromProductId(String productId) {
+    if (productId.contains('premium')) {
+      return AppPurchaseStatus.premium;
+    }
+    return AppPurchaseStatus.pro;
   }
 
   String _effectivePlatform() {

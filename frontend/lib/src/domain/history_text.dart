@@ -4,7 +4,7 @@ String trimHistoryForGenerate(String input, {required String plan}) {
   const proLineLimit = 300;
   const proCharLimit = 18000;
 
-  final isPro = plan == 'pro';
+  final isPro = plan == 'pro' || plan == 'premium';
   final maxLines = isPro ? proLineLimit : freeLineLimit;
   final maxChars = isPro ? proCharLimit : freeCharLimit;
 

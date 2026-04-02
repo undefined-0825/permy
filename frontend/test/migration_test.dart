@@ -95,8 +95,8 @@ class MockMigrationApiClient implements AppApiClient {
   }) async {}
 
   @override
-  Future<ProCompRequestResult> requestProComp(String email) async {
-    return ProCompRequestResult(approved: true, requestCount: 1);
+  Future<PremiumCompRequestResult> requestPremiumComp(String email) async {
+    return PremiumCompRequestResult(approved: true, requestCount: 1);
   }
 }
 

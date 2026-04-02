@@ -22,8 +22,10 @@ class AuthContext:
 
     @property
     def plan(self) -> str:
-        """外部互換のためのplan値（free/pro）"""
-        return "pro" if self.feature_tier == "pro" else "free"
+        """外部互換のためのplan値（free/pro/premium）"""
+        if self.feature_tier in {"pro", "premium"}:
+            return self.feature_tier
+        return "free"
 
 
 def _bearer_token(auth_header: str | None) -> str | None:
@@ -82,7 +84,7 @@ async def get_auth_context(
         return AuthContext(
             user_id=user_id,
             feature_tier="pro",
-            billing_tier="pro_comp",
+            billing_tier="pro_store",
         )
 
     # 後方互換：feature_tierがない（旧DB）場合はPlanStatusからフォールバック
@@ -93,10 +95,14 @@ async def get_auth_context(
         pr = await db.execute(select(PlanStatus).where(PlanStatus.user_id == user_id))
         ps = pr.scalar_one_or_none()
         old_plan = ps.plan if ps else "free"
-        feature_tier = "pro" if old_plan == "pro" else "free"
-        billing_tier = "pro_store" if old_plan == "pro" else "free"
+        if old_plan in {"pro", "premium"}:
+            feature_tier = old_plan
+            billing_tier = f"{old_plan}_store"
+        else:
+            feature_tier = "free"
+            billing_tier = "free"
 
-    if feature_tier not in {"free", "pro"}:
-        feature_tier = "pro"
+    if feature_tier not in {"free", "pro", "premium"}:
+        feature_tier = "free"
 
     return AuthContext(user_id=user_id, feature_tier=feature_tier, billing_tier=billing_tier)

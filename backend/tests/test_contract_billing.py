@@ -86,6 +86,56 @@ def test_billing_verify_ios_returns_pro(client):
         settings.app_env = old_app_env
 
 
+def test_billing_verify_android_premium_returns_premium(client):
+    old_app_env = settings.app_env
+    settings.app_env = "dev"
+
+    try:
+        auth_res = client.post("/api/v1/auth/anonymous")
+        assert auth_res.status_code == 200
+        token = auth_res.json()["access_token"]
+
+        verify_res = client.post(
+            "/api/v1/billing/verify",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "platform": "android",
+                "product_id": "permy_premium_monthly",
+                "purchase_token": "dummy-token",
+            },
+        )
+        assert verify_res.status_code == 200
+        assert verify_res.json()["plan"] == "premium"
+        assert verify_res.json()["verified"] is True
+    finally:
+        settings.app_env = old_app_env
+
+
+def test_billing_verify_ios_premium_returns_premium(client):
+    old_app_env = settings.app_env
+    settings.app_env = "dev"
+
+    try:
+        auth_res = client.post("/api/v1/auth/anonymous")
+        assert auth_res.status_code == 200
+        token = auth_res.json()["access_token"]
+
+        verify_res = client.post(
+            "/api/v1/billing/verify",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "platform": "ios",
+                "product_id": "com.sukimalab.permy.premium_monthly",
+                "purchase_token": "dummy-token",
+            },
+        )
+        assert verify_res.status_code == 200
+        assert verify_res.json()["plan"] == "premium"
+        assert verify_res.json()["verified"] is True
+    finally:
+        settings.app_env = old_app_env
+
+
 def test_billing_verify_rejects_invalid_product(client):
     old_app_env = settings.app_env
     settings.app_env = "dev"

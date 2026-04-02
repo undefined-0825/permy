@@ -242,7 +242,7 @@
   - `purchaseToken`（String: 購入トークン/レシート）
 
 ### 8.5.3 フロー
-1. ユーザーが Settings画面で「プロプランを購入」操作
+1. ユーザーが Settings画面で「Pro/Premiumプランを購入」操作
 2. PurchaseService が `in_app_purchase` パッケージで購入フロー実行
 3. 購入成功時、PurchaseService が `billingProofStream` に BillingProof を emit
 4. Settings画面が stream を subscribe し、BillingProof を受信
@@ -259,7 +259,7 @@
 ### 8.5.5 注意事項
 - 現時点は mock mode での動作（実ストアサーバ検証は将来実装）
 - 本番環境では `/billing/verify` が 503 を返すため、ストア検証実装後に有効化
-- 商品ID（SSOT）：Android=`permy_pro_monthly` / iOS=`com.sukimalab.permy.pro_monthly`
+- 商品ID（SSOT）：Android=`permy_pro_monthly`,`permy_premium_monthly` / iOS=`com.sukimalab.permy.pro_monthly`,`com.sukimalab.permy.premium_monthly`
 
 ---
 

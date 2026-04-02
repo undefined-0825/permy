@@ -21,6 +21,9 @@ class _FakePurchaseService extends PurchaseService {
   bool get isPro => false;
 
   @override
+  String get currentPlan => 'free';
+
+  @override
   Future<void> initialize() async {}
 
   @override
@@ -30,7 +33,7 @@ class _FakePurchaseService extends PurchaseService {
   Future<bool> isAvailable() async => true;
 
   @override
-  Future<void> purchase() async {}
+  Future<void> purchase({String plan = 'pro'}) async {}
 
   @override
   Future<void> restorePurchases() async {}
@@ -39,6 +42,9 @@ class _FakePurchaseService extends PurchaseService {
 class _FakeProPurchaseService extends _FakePurchaseService {
   @override
   bool get isPro => true;
+
+  @override
+  String get currentPlan => 'pro';
 }
 
 class _FakeApiClient implements AppApiClient {
@@ -165,8 +171,8 @@ class _FakeApiClient implements AppApiClient {
   }) async {}
 
   @override
-  Future<ProCompRequestResult> requestProComp(String email) async {
-    return ProCompRequestResult(approved: true, requestCount: 1);
+  Future<PremiumCompRequestResult> requestPremiumComp(String email) async {
+    return PremiumCompRequestResult(approved: true, requestCount: 1);
   }
 }
 

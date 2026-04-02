@@ -79,27 +79,29 @@
 - 上記を復元可能な派生データ（長文サマリ、断片、特徴量など）
 
 ### 4.3 機能ティア/課金ティア（MUST）
-「無料か、それ以外か」で機能判定しつつ、「課金Pro」と「永続無料（付与）」を区別するため、概念を分離する。
+「無料か、それ以外か」で機能判定しつつ、「課金Pro/Premium」と「永続無料（付与）」を区別するため、概念を分離する。
 
-- **feature_tier（機能判定）**: `free` | `pro`
+- **feature_tier（機能判定）**: `free` | `pro` | `premium`
   - `free`：無料ユーザー
   - `pro`：Pro相当（課金Pro + 永続無料を含む）
-- **billing_tier（課金区別）**: `free` | `pro_store` | `pro_comp`
+-  - `premium`：Premium相当（課金Premium + 永続無料を含む）
+- **billing_tier（課金区別）**: `free` | `pro_store` | `premium_store` | `premium_comp`
   - `pro_store`：ストア課金Pro
-  - `pro_comp`：管理者が明示付与する永続無料（知人/インフルエンサー向け）
+  - `premium_store`：ストア課金Premium
+  - `premium_comp`：管理者が明示付与する永続無料（知人/インフルエンサー向け）
   - `free`：無料
 
 **ルール（MUST）**
 - 機能解放・Pro専用機能の判定は **feature_tierのみ** で行う（`free` か、それ以外か）。
 - 課金由来の差分（売上/分析/返金対応など）は **billing_tierのみ** で区別する。
-- `feature_tier=pro` のユーザーは、外部互換のため APIレスポンス上は `plan=pro` として扱う（`plan`は2値互換維持）。
+- APIレスポンスの `plan` は3値とし、`feature_tier=pro` は `plan=pro`、`feature_tier=premium` は `plan=premium` として扱う。
 
 ### 4.4 テーブル例（論理モデル）
 - `users`
   - `user_id`（匿名ID）
-  - `feature_tier`（free/pro）
-  - `billing_tier`（free/pro_store/pro_comp）
-  - `failed_pro_comp_attempts`（pro_comp承認依頼の失敗累積）
+  - `feature_tier`（free/pro/premium）
+  - `billing_tier`（free/pro_store/premium_store/premium_comp）
+  - `failed_premium_comp_attempts`（premium_comp承認依頼の失敗累積）
   - `is_locked`（不正アクセス抑止のロック状態）
   - `created_at`, `updated_at`
 - `user_settings`
@@ -155,17 +157,18 @@
   - `Idempotency-Key` 必須（リトライ二重実行防止）
   - 日次回数制限・レート制限をサーバで判定
   - `my_line_name` は生成品質向上のための一時入力として扱い、永続化しない（DB保存・ログ出力禁止）。
-  - レスポンス `meta.plan` は互換のため `free/pro` の2値
+  - レスポンス `meta.plan` は `free/pro/premium` の3値
     - `feature_tier=free` → `plan=free`
     - `feature_tier=pro` → `plan=pro`
+    - `feature_tier=premium` → `plan=premium`
 - `POST /api/v1/migration/start`
   - 移行コード発行（12桁、期限あり、レート制限）
   - Response: `migration_code`, `ticket_id`
 - `POST /api/v1/migration/complete`
   - 移行コード消費（1回限り、期限あり、レート制限）
   - 新端末側から認証なしで呼ぶ。成功時 `access_token` と `user_id` を返す。
-- `POST /api/v1/pro-comp/request`
-  - pro_comp承認依頼（隠し導線用）
+- `POST /api/v1/premium-comp/request`
+  - premium_comp承認依頼（隠し導線用）
   - 入力メールを正規化（trim + lower）し、事前登録メールと一致する場合のみ承認判定
   - 失敗時は `remaining_attempts` を返却（5回失敗で `ACCOUNT_LOCKED`）
 - `POST /api/v1/billing/verify`
@@ -175,13 +178,15 @@
     - `product_id`（商品ID）
     - `purchase_token`（購入トークン/レシート）
   - Response:
-    - `plan`（free/pro）
+    - `plan`（free/pro/premium）
     - `verified`（bool）
   - 動作:
-    - 許可された product_id かチェック（許可リスト: `com.sukimalab.permy.pro_monthly`（iOS）、`permy_pro_monthly`（Android））
+    - 許可された product_id かチェック（許可リスト: `com.sukimalab.permy.pro_monthly` / `com.sukimalab.permy.premium_monthly`（iOS）、`permy_pro_monthly` / `permy_premium_monthly`（Android））
     - purchase_token が存在するかチェック
-    - 検証成功時、`feature_tier=pro`、`billing_tier=pro_store` に更新
-    - PlanStatus を `plan=pro` に更新（未存在なら作成）
+    - 検証成功時、商品IDに応じて `feature_tier` と `billing_tier` を更新
+      - Pro商品: `feature_tier=pro`、`billing_tier=pro_store`
+      - Premium商品: `feature_tier=premium`、`billing_tier=premium_store`
+    - PlanStatus を `plan=pro|premium` に更新（未存在なら作成）
   - 制限:
     - 本番環境（`APP_ENV=prod`）では無効化（503 `BILLING_NOT_CONFIGURED`）
     - 現時点は mock mode のみ（実ストアサーバ検証は将来実装）
@@ -239,25 +244,25 @@
 
 ---
 
-## 8. 永続無料（pro_comp）の付与（管理画面なし）
+## 8. 永続無料（premium_comp）の付与（管理画面なし）
 ### 8.1 要件
 - 永続無料は知人/インフルエンサーに限定し、**管理者が明示的に付与**する。
 - 管理画面は作らない。
-- `pro_comp` は機能面ではProと同等（`feature_tier=pro`）だが、課金は区別する（`billing_tier=pro_comp`）。
+- `premium_comp` は機能面ではPremiumと同等（`feature_tier=premium`）だが、課金は区別する（`billing_tier=premium_comp`）。
 
 ### 8.2 付与方法（運用CLI + 承認依頼API）
 - 管理者は対象メールをCLIで事前登録する。
-  - 例：`python tools/pro_comp/register_comp_email.py target@example.com 田中太郎`
-- ユーザーは `POST /api/v1/pro-comp/request` で承認依頼する。
-- 承認判定は「入力メール（正規化後）」と `pro_comp_grant_requests.email` の一致で行う。
+  - 例：`python tools/premium_comp/register_comp_email.py target@example.com 田中太郎`
+- ユーザーは `POST /api/v1/premium-comp/request` で承認依頼する。
+- 承認判定は「入力メール（正規化後）」と `premium_comp_grant_requests.email` の一致で行う。
 - 承認成功時に以下を更新する。
-  - `users.feature_tier=pro`
-  - `users.billing_tier=pro_comp`
-  - `plan_status.plan=pro`
+  - `users.feature_tier=premium`
+  - `users.billing_tier=premium_comp`
+  - `plan_status.plan=premium`
 
 ### 8.3 不正アクセス対策
-- 承認失敗ごとに `users.failed_pro_comp_attempts` を +1 する。
-- 5回失敗で `users.is_locked=true` とし、以後 `/api/v1/pro-comp/request` は `ACCOUNT_LOCKED` を返す。
+- 承認失敗ごとに `users.failed_premium_comp_attempts` を +1 する。
+- 5回失敗で `users.is_locked=true` とし、以後 `/api/v1/premium-comp/request` は `ACCOUNT_LOCKED` を返す。
 - 失敗時はエラー詳細に `remaining_attempts`（ロックまでの残回数）を含める。
 
 ---

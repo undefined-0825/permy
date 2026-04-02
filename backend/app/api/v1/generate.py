@@ -23,7 +23,11 @@ from app.followup_helper import check_missing_setting
 router = APIRouter()
 
 def _daily_limit(plan: str) -> int:
-    return config_settings.pro_generate_daily_limit if plan == "pro" else config_settings.free_generate_daily_limit
+    if plan == "premium":
+        return config_settings.premium_generate_daily_limit
+    if plan == "pro":
+        return config_settings.pro_generate_daily_limit
+    return config_settings.free_generate_daily_limit
 
 def _to_list(v) -> list[str]:
     if v is None:
@@ -34,7 +38,7 @@ def _to_list(v) -> list[str]:
 
 
 def _normalize_generate_settings_by_plan(settings: dict, plan: str) -> dict:
-    if plan == "pro":
+    if plan in {"pro", "premium"}:
         return settings
 
     normalized = dict(settings)
@@ -68,7 +72,7 @@ async def generate(
     if len(req.history_text) > config_settings.generate_max_chars:
         raise err("VALIDATION_FAILED", "入力が長すぎます", {"max_chars": config_settings.generate_max_chars}, status_code=422)
 
-    if auth.plan != "pro" and req.combo_id not in (0, 1):
+    if auth.plan == "free" and req.combo_id not in (0, 1):
         raise err("PLAN_REQUIRED", "有料版のみ対応しています", {"combo_id": req.combo_id}, status_code=403)
 
     await fixed_window_limit(

@@ -1,13 +1,13 @@
 """
-register_comp_email.py - pro_comp対象メールの事前登録ツール
+register_comp_email.py - premium_comp対象メールの事前登録ツール
 
 Usage:
-    python tools/pro_comp/register_comp_email.py <email> <name>
-    python tools/pro_comp/register_comp_email.py <email> <name> --force-reset
+    python tools/premium_comp/register_comp_email.py <email> <name>
+    python tools/premium_comp/register_comp_email.py <email> <name> --force-reset
 
 Examples:
-    python tools/pro_comp/register_comp_email.py target@example.com 田中太郎
-    python tools/pro_comp/register_comp_email.py target@example.com 田中太郎 --force-reset
+    python tools/premium_comp/register_comp_email.py target@example.com 田中太郎
+    python tools/premium_comp/register_comp_email.py target@example.com 田中太郎 --force-reset
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ from sqlalchemy.orm import sessionmaker
 sys.path.insert(0, ".")
 
 from app.config import settings
-from app.models import ProCompGrantRequest
+from app.models import PremiumCompGrantRequest
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -48,7 +48,7 @@ async def register_email(email: str, name: str, force_reset: bool) -> None:
 
     async with async_session() as db:
         row = await db.execute(
-            select(ProCompGrantRequest).where(ProCompGrantRequest.email == normalized_email)
+            select(PremiumCompGrantRequest).where(PremiumCompGrantRequest.email == normalized_email)
         )
         target = row.scalar_one_or_none()
 
@@ -67,7 +67,7 @@ async def register_email(email: str, name: str, force_reset: bool) -> None:
             return
 
         db.add(
-            ProCompGrantRequest(
+            PremiumCompGrantRequest(
                 email=normalized_email,
                 name=name.strip(),
                 request_count=0,

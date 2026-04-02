@@ -38,7 +38,7 @@ abstract class AppApiClient {
     required String purchaseToken,
   });
 
-  Future<ProCompRequestResult> requestProComp(String email);
+  Future<PremiumCompRequestResult> requestPremiumComp(String email);
 
   Future<void> deleteAccount();
 }
@@ -440,13 +440,13 @@ class ApiClient implements AppApiClient {
   }
 
   @override
-  Future<ProCompRequestResult> requestProComp(String email) async {
+  Future<PremiumCompRequestResult> requestPremiumComp(String email) async {
     await bootstrapAuth();
     return _runWithAuthRetry(() async {
       final token = await tokenStore.read();
       final response = await _sendWithTimeout(
         () => _httpClient.post(
-          Uri.parse('$baseUrl/api/v1/pro-comp/request'),
+          Uri.parse('$baseUrl/api/v1/premium-comp/request'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -454,12 +454,12 @@ class ApiClient implements AppApiClient {
           body: jsonEncode({'email': email}),
         ),
         method: 'POST',
-        path: '/api/v1/pro-comp/request',
+        path: '/api/v1/premium-comp/request',
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final body = _tryJson(response.body) ?? <String, dynamic>{};
-        return ProCompRequestResult.fromJson(body);
+        return PremiumCompRequestResult.fromJson(body);
       }
 
       throw ApiError.fromBody(

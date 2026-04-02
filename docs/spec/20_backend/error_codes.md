@@ -49,11 +49,11 @@ APIのエラーは原則として以下を返す。
 ---
 
 ### 2.3 プラン/権限（Plan / Entitlement）
-※機能判定は内部 `feature_tier` に基づくが、外部契約では `plan=free/pro` を返す。
+※機能判定は内部 `feature_tier` に基づくが、外部契約では `plan=free/pro/premium` を返す。
 
 | error_code | HTTP | 意味 | 典型原因 | クライアント推奨動作 |
 |---|---:|---|---|---|
-| PLAN_REQUIRED | 403 | Pro相当の機能が必要 | FreeユーザーがPro専用機能を要求 | Pro誘導 or 設定を戻す |
+| PLAN_REQUIRED | 403 | 有料相当の機能が必要 | Freeユーザーが有料専用機能を要求 | Pro/Premium誘導 or 設定を戻す |
 
 ---
 
@@ -69,7 +69,7 @@ APIのエラーは原則として以下を返す。
 | error_code | HTTP | 意味 | 典型原因 | クライアント推奨動作 |
 |---|---:|---|---|---|
 | RATE_LIMITED | 429 | レート制限超過 | 短時間の連打、IP制限 | 指定時間待機→再試行（指数バックオフ） |
-| DAILY_LIMIT_EXCEEDED | 429 | 日次回数制限超過 | その日の上限到達 | 翌日まで待機 / Pro誘導（別Spec） |
+| DAILY_LIMIT_EXCEEDED | 429 | 日次回数制限超過 | その日の上限到達 | 翌日まで待機 / Pro・Premium誘導（別Spec） |
 
 ---
 

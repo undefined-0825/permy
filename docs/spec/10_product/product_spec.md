@@ -46,23 +46,26 @@
 
 ## 2. プラン・課金・回数制限（SSOT / MUST）
 ### 2.1 価格・回数制限（MUST）
-- 価格：**月額 2,980円**
+- 価格：**Pro 月額 2,980円 / Premium 月額 4,980円**
 - Free：**1日3回**
 - Pro：**1日100回**
+- Premium：**1日200回**
 
 > 日次回数制限はクライアント表示に依存せず **サーバ側で必ず判定**する（backend_spec参照）。
 
 ### 2.2 プランの扱い（MUST）
-- APIの外部互換の `plan` は `free|pro` の2値（backend_spec参照）。
+- APIの `plan` は `free|pro|premium` の3値（backend_spec参照）。
 - 課金形態の内部区別：
-  - `feature_tier`: `free|pro`
-  - `billing_tier`: `free|pro_store|pro_comp`
-- **機能判定は feature_tier のみ**。`feature_tier=pro` は API上 `plan=pro` として返す（billing区別はフロントに露出しない）。
+  - `feature_tier`: `free|pro|premium`
+  - `billing_tier`: `free|pro_store|premium_store|premium_comp`
+- **機能判定は feature_tier のみ**。`feature_tier=pro` は `plan=pro`、`feature_tier=premium` は `plan=premium` として返す（billing区別はフロントに露出しない）。
 
 ### 2.3 Pro専用機能（MUST）
 - Proのみ：推定メーター（♥/🔥 0..100）表示（backend_implの `meta.pro` を使用）
 - Proのみ：生成方針（コンボ）のうち **2/3/4/5** を実行可能（後述）
 - Proのみ：Generate画面の生成調整5項目でPro専用値を選択可能（後述）
+- PremiumはPro機能をすべて利用可能とする。
+- Premiumのみ：顧客管理機能（セクション17）を利用可能とする。
 - FreeはPro専用機能をUI上に表示してよいが、選択/実行時は「有料版のみ」案内（アップセル）を必ず出す。
 - backendも Free時は5項目を強制的にFree値へ正規化する（クライアント制御だけに依存しない）。
 
@@ -273,10 +276,10 @@ NightSelf:
 - 4: 同伴誘導
 - 5: 落とす（恋愛寄せ）
 
-### 8.2 Free/Proの実行可否（MUST）
+### 8.2 Free/Pro/Premiumの実行可否（MUST）
 - Freeで実行可：0,1
-- Proのみ実行可：2,3,4,5
-- UIは全項目を表示してよいが、FreeでPro専用を実行しようとした場合：
+- Pro/Premiumで実行可：2,3,4,5
+- UIは全項目を表示してよいが、Freeで有料専用を実行しようとした場合：
   - 生成を実行しない
   - 「有料版のみ」案内（アップセル）を表示する
 
@@ -309,7 +312,7 @@ NightSelf:
 ## 10. メタ情報（/generate meta）とPro表示（MUST）
 ### 10.1 成功レスポンス共通meta（MUST）
 - `meta.request_id`
-- `meta.plan`（free/pro）
+- `meta.plan`（free/pro/premium）
 - `meta.daily.limit/used/remaining`
 - `meta.model_hint`（固定化しない“ヒント”）
 - `meta.timestamp`（任意）
@@ -409,8 +412,8 @@ NightSelf:
   - PurchaseService → BillingProof → Settings画面 → API連携フロー完成
   - 購入成功時に feature_tier/billing_tier を自動更新
   - mock mode で動作確認済み（実ストアサーバ検証は将来実装）
-- Android 商品ID（SSOT）：`permy_pro_monthly`
-- iOS 商品ID（SSOT）：`com.sukimalab.permy.pro_monthly`
+- Android 商品ID（SSOT）：`permy_pro_monthly` / `permy_premium_monthly`
+- iOS 商品ID（SSOT）：`com.sukimalab.permy.pro_monthly` / `com.sukimalab.permy.premium_monthly`
 
 
 
@@ -630,13 +633,15 @@ NightSelf:
 - 自由記述は短文のみ
 - 音声入力は将来拡張とし、MVPでは必須にしない
 
-### 17.10 Free/Pro差分（MUST）
+### 17.10 Free/Pro/Premium差分（MUST）
 - Free:
   - 顧客登録数 上限あり（例：30件）
   - 検索可
   - 基本メモ可
   - リマインドは主要種別のみ
 - Pro:
+  - 顧客管理機能は利用不可（Generate/設定のPro機能のみ）
+- Premium:
   - 顧客登録数 上限拡大または無制限
   - 全検索可
   - イベント/来店ログをフル利用可
@@ -651,6 +656,6 @@ NightSelf:
 - ユーザーに「監視」「支配」「囲い込み」を想起させるコピーは禁止する
 
 ### 17.12 未確定事項（最大3点）
-1. 顧客登録数のFree/Pro上限値
+1. 顧客登録数のFree/Premium上限値
 2. 顧客メモを夜職版Permy本体へ入れるか、ホスト版のみ先行導入するか
 3. 来店ログの `spend_level` を5段階固定にするか、店側運用に合わせて将来設定化するか

@@ -10,16 +10,16 @@ import 'package:sample_app/core/widgets/app_section_header.dart';
 import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
 
-class ProCompHiddenScreen extends StatefulWidget {
-  const ProCompHiddenScreen({required this.apiClient, super.key});
+class PremiumCompHiddenScreen extends StatefulWidget {
+  const PremiumCompHiddenScreen({required this.apiClient, super.key});
 
   final AppApiClient apiClient;
 
   @override
-  State<ProCompHiddenScreen> createState() => _ProCompHiddenScreenState();
+  State<PremiumCompHiddenScreen> createState() => _PremiumCompHiddenScreenState();
 }
 
-class _ProCompHiddenScreenState extends State<ProCompHiddenScreen> {
+class _PremiumCompHiddenScreenState extends State<PremiumCompHiddenScreen> {
   final TextEditingController _emailController = TextEditingController();
   bool _submitting = false;
 
@@ -44,7 +44,7 @@ class _ProCompHiddenScreenState extends State<ProCompHiddenScreen> {
     });
 
     try {
-      final result = await widget.apiClient.requestProComp(email);
+      final result = await widget.apiClient.requestPremiumComp(email);
       if (!mounted) return;
       if (result.approved) {
         await Haptics.mediumImpact();
@@ -60,17 +60,17 @@ class _ProCompHiddenScreenState extends State<ProCompHiddenScreen> {
       String message;
       if (e.errorCode == 'ACCOUNT_LOCKED') {
         message = 'このアカウントはロックされているよ';
-      } else if (e.errorCode == 'PRO_COMP_EMAIL_NOT_ALLOWED') {
+      } else if (e.errorCode == 'PREMIUM_COMP_EMAIL_NOT_ALLOWED') {
         final r = e.remainingAttempts;
         message = r != null && r > 0
             ? '対象外のメールアドレスだよ。残り$r回でアカウントはロックされます'
             : '対象外のメールアドレスだよ。アカウントがロックされました';
-      } else if (e.errorCode == 'PRO_COMP_EMAIL_ALREADY_APPROVED') {
+      } else if (e.errorCode == 'PREMIUM_COMP_EMAIL_ALREADY_APPROVED') {
         final r = e.remainingAttempts;
         message = r != null && r > 0
             ? 'このメールアドレスは既に承認済みだよ。残り$r回でアカウントはロックされます'
             : 'このメールアドレスは既に承認済みだよ。アカウントがロックされました';
-      } else if (e.errorCode == 'PRO_COMP_REQUEST_ALREADY_USED') {
+      } else if (e.errorCode == 'PREMIUM_COMP_REQUEST_ALREADY_USED') {
         final r = e.remainingAttempts;
         message = r != null && r > 0
             ? 'このメールは承認依頼回数が上限だよ。残り$r回でアカウントはロックされます'

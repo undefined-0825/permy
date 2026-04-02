@@ -12,9 +12,9 @@ class User(Base):
     __tablename__ = "users"
 
     user_id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    feature_tier: Mapped[str] = mapped_column(String(16), default="free")  # free/pro
-    billing_tier: Mapped[str] = mapped_column(String(16), default="free")  # free/pro_store/pro_comp
-    failed_pro_comp_attempts: Mapped[int] = mapped_column(Integer, default=0)  # pro_comp申請失敗回数
+    feature_tier: Mapped[str] = mapped_column(String(16), default="free")  # free/pro/premium
+    billing_tier: Mapped[str] = mapped_column(String(16), default="free")  # free/pro_store/premium_store/premium_comp
+    failed_premium_comp_attempts: Mapped[int] = mapped_column(Integer, default=0)  # premium_comp申請失敗回数
     is_locked: Mapped[bool] = mapped_column(default=False)  # 不正アクセスロック
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc))
     updated_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc))
@@ -24,7 +24,7 @@ class PlanStatus(Base):
     __tablename__ = "plan_status"
 
     user_id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    plan: Mapped[str] = mapped_column(String(16), default="free")  # free/pro
+    plan: Mapped[str] = mapped_column(String(16), default="free")  # free/pro/premium
     updated_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc))
 
 
@@ -60,8 +60,8 @@ class AppReleaseNote(Base):
     )
 
 
-class ProCompGrantRequest(Base):
-    __tablename__ = "pro_comp_grant_requests"
+class PremiumCompGrantRequest(Base):
+    __tablename__ = "premium_comp_grant_requests"
 
     email: Mapped[str] = mapped_column(String(320), primary_key=True)
     name: Mapped[str] = mapped_column(String(128), default="")

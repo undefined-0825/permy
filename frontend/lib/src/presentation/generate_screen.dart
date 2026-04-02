@@ -23,7 +23,7 @@ import '../infrastructure/line_name_store.dart';
 import '../infrastructure/purchase_service.dart';
 import '../infrastructure/share_receiver.dart';
 import '../infrastructure/telemetry_queue.dart';
-import 'pro_comp_hidden_screen.dart';
+import 'premium_comp_hidden_screen.dart';
 import 'pro_upgrade_screen.dart';
 import 'settings_screen.dart';
 import 'widgets/line_name_dialog.dart';
@@ -180,10 +180,17 @@ class _GenerateScreenState extends State<GenerateScreen>
       final featureTier = snapshot.settings['feature_tier']?.toString();
       final billingTier = snapshot.settings['billing_tier']?.toString();
       final plan = snapshot.settings['plan']?.toString();
-        final inferredPlan =
-          (featureTier == 'pro' || billingTier == 'pro_comp' || plan == 'pro')
-          ? 'pro'
-          : _plan;
+      final inferredPlan =
+          (plan == 'premium' ||
+              featureTier == 'premium' ||
+              billingTier == 'premium_store' ||
+              billingTier == 'premium_comp')
+          ? 'premium'
+          : ((plan == 'pro' ||
+                    featureTier == 'pro' ||
+                    billingTier == 'pro_store')
+                ? 'pro'
+                : _plan);
       setState(() {
         _plan = inferredPlan;
         _trueTypeValue = trueType;
@@ -433,7 +440,9 @@ class _GenerateScreenState extends State<GenerateScreen>
     final rawText = _sharedText?.trim();
     if (rawText == null || rawText.isEmpty) return;
 
-    final planFromStore = widget.purchaseService.isPro ? 'pro' : _plan;
+    final planFromStore = widget.purchaseService.isPro
+        ? widget.purchaseService.currentPlan
+        : _plan;
     final text = trimHistoryForGenerate(rawText, plan: planFromStore);
     if (text.isEmpty) {
       final error = ApiError(
@@ -584,7 +593,15 @@ class _GenerateScreenState extends State<GenerateScreen>
     }
   }
 
-  String _planLabel(String plan) => plan == 'pro' ? 'Pro' : 'Free';
+  String _planLabel(String plan) {
+    if (plan == 'premium') {
+      return 'Premium';
+    }
+    if (plan == 'pro') {
+      return 'Pro';
+    }
+    return 'Free';
+  }
 
   Future<void> _copyCandidate(Candidate candidate) async {
     unawaited(Haptics.selection());
@@ -701,7 +718,7 @@ class _GenerateScreenState extends State<GenerateScreen>
                 .push(
                   MaterialPageRoute(
                     builder: (_) =>
-                        ProCompHiddenScreen(apiClient: widget.apiClient),
+                        PremiumCompHiddenScreen(apiClient: widget.apiClient),
                   ),
                 )
                 .then((approved) {
@@ -829,7 +846,8 @@ class _GenerateScreenState extends State<GenerateScreen>
     });
   }
 
-  bool _isProActive() => widget.purchaseService.isPro || _plan == 'pro';
+  bool _isProActive() =>
+      widget.purchaseService.isPro || _plan == 'pro' || _plan == 'premium';
 
   String _normalizeReplyLengthPref(String? value, {required bool isPro}) {
     const freeValue = 'short';

@@ -69,8 +69,8 @@ cd tools
 # Followup 機能テスト
 .\test_followup.ps1
 
-# Pro_comp 承認フロー契約テスト
-pytest tests/test_contract_pro_comp.py -v
+# Premium_comp 承認フロー契約テスト
+pytest tests/test_contract_premium_comp.py -v
 ```
 
 ### ユニットテスト（pytest）
@@ -104,8 +104,8 @@ backend/
     scripts/             # ユーティリティスクリプト
   tools/
     export_openapi.py    # OpenAPI スキーマ出力
-    pro_comp/
-      register_comp_email.py   # Pro_comp対象メール事前登録
+    premium_comp/
+      register_comp_email.py   # Premium_comp対象メール事前登録
       reset_comp_request_count.py # 承認依頼回数の管理者リセット
   tests/                 # テスト
 ```
@@ -125,13 +125,13 @@ backend/
 
 ### プラン・Tier 構造
 
-- **feature_tier**: `free` / `pro`（機能レベル）
-- **billing_tier**: `free` / `pro_store` / `pro_comp`（課金状態）
-- API レスポンスの `plan` フィールド: `free` / `pro`（feature_tier から計算）
+- **feature_tier**: `free` / `pro` / `premium`（機能レベル）
+- **billing_tier**: `free` / `pro_store` / `premium_store` / `premium_comp`（課金状態）
+- API レスポンスの `plan` フィールド: `free` / `pro` / `premium`（feature_tier から計算）
 
 ### 制限
 
-- **日次制限**: free=3回/日, pro=100回/日
+- **日次制限**: free=3回/日, pro=100回/日, premium=200回/日
 - **レート制限**: 1分あたりの最大リクエスト数
 - **Idempotency**: 重複実行防止（Idempotency-Key ヘッダー）
 

@@ -37,7 +37,7 @@ from app.api.v1.generate import router as generate_router
 from app.api.v1.migration import router as migration_router
 from app.api.v1.telemetry import router as telemetry_router
 from app.api.v1.billing import router as billing_router
-from app.api.v1.pro_comp import router as pro_comp_router
+from app.api.v1.premium_comp import router as premium_comp_router
 
 
 configure_logging()
@@ -71,7 +71,7 @@ app.include_router(generate_router, prefix="/api/v1")
 app.include_router(migration_router, prefix="/api/v1")
 app.include_router(telemetry_router, prefix="/api/v1")
 app.include_router(billing_router, prefix="/api/v1")
-app.include_router(pro_comp_router, prefix="/api/v1")
+app.include_router(premium_comp_router, prefix="/api/v1")
 
 
 @app.on_event("startup")

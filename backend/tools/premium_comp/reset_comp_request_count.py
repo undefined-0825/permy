@@ -1,11 +1,11 @@
 """
-reset_comp_request_count.py - pro_comp申請回数の管理者リセットツール
+reset_comp_request_count.py - premium_comp申請回数の管理者リセットツール
 
 Usage:
-    python tools/pro_comp/reset_comp_request_count.py <email>
+    python tools/premium_comp/reset_comp_request_count.py <email>
 
 Example:
-    python tools/pro_comp/reset_comp_request_count.py target@example.com
+    python tools/premium_comp/reset_comp_request_count.py target@example.com
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from sqlalchemy.orm import sessionmaker
 sys.path.insert(0, ".")
 
 from app.config import settings
-from app.models import ProCompGrantRequest
+from app.models import PremiumCompGrantRequest
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -42,7 +42,7 @@ async def reset_count(email: str) -> None:
 
     async with async_session() as db:
         row = await db.execute(
-            select(ProCompGrantRequest).where(ProCompGrantRequest.email == normalized_email)
+            select(PremiumCompGrantRequest).where(PremiumCompGrantRequest.email == normalized_email)
         )
         target = row.scalar_one_or_none()
 

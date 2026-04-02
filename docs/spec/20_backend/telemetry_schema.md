@@ -12,7 +12,7 @@
 - `hour_bucket_utc`: int 0..23（サーバ算出）
 - `dow_utc`: int 0..6（サーバ算出）
 - `user_id_hash`: string（HMAC-SHA256推奨）
-- `plan`: "free" | "pro"
+- `plan`: "free" | "pro" | "premium"
 - `app_version`: string
 - `os`: "android" | "ios"
 - `device_class`: "phone" | "tablet" | "unknown"
@@ -53,7 +53,7 @@
 
 - `date_utc`: YYYY-MM-DD
 - `hour_bucket_utc`: 0..23
-- `plan`: free/pro
+- `plan`: free/pro/premium
 - `event_name`
 - `count`
 - `success_count` / `fail_count`（generate系）

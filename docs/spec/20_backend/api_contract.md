@@ -50,12 +50,12 @@
 
 ## 1. Data Types（共通）
 
-### 1.1 Plan（外部互換の2値）
-- `plan`: `"free" | "pro"`
+### 1.1 Plan（外部契約）
+- `plan`: `"free" | "pro" | "premium"`
 
 **ルール**
-- 機能判定はバックエンド内部では `feature_tier` を持つが、外部互換のため `plan` は2値で返す。
-- `feature_tier=pro`（課金Pro + 永続無料付与）はすべて `plan="pro"` として返す。
+- 機能判定はバックエンド内部では `feature_tier` を持ち、外部契約でも `plan` は3値で返す。
+- `feature_tier=pro` は `plan="pro"`、`feature_tier=premium` は `plan="premium"` として返す。
 
 ### 1.2 Followup（聞き返し）
 - `Followup` オブジェクト（nullable）
@@ -266,8 +266,8 @@ Body:
 
 **Notes**
 - `history_text` は入力本文。サーバは保存しない（ログにも残さない）。
-- `combo_id`: 0..5（コンボID、Proは2以上利用可能）
-- `tuning`: Proのみ利用可能（nullable）
+- `combo_id`: 0..5（コンボID、有料プランは2以上利用可能）
+- `tuning`: 有料プランのみ利用可能（nullable）
 - 生成スタイルは `/me/settings` 内の診断派生パラメータ（`persona_goal_primary` など）を利用してよい。
 
 ### Response 200
@@ -305,12 +305,12 @@ Body:
 - `followup`: 設定不足があれば返す（nullable）。なければ `null`
 - `daily`: 日次制限情報（limit/used/remaining）
 - `model_hint`: 使用モデルのヒント（nullable）
-- `meta_pro`: Pro専用情報（Freeでは常に `null`）
+- `meta_pro`: Pro/Premium専用情報（Freeでは常に `null`）
 
 ### Errors
 - `400 VALIDATION_ERROR`
 - `401 AUTH_INVALID`
-- `403 PLAN_REQUIRED`（Pro専用機能をFreeが要求した等）
+- `403 PLAN_REQUIRED`（有料専用機能をFreeが要求した等）
 - `409 IDEMPOTENCY_CONFLICT`
 - `429 RATE_LIMITED`
 - `429 DAILY_LIMIT_EXCEEDED`
@@ -387,7 +387,7 @@ Body:
 ```json
 {
   "platform": "ios",
-  "product_id": "com.sukimalab.permy.pro_monthly",
+  "product_id": "com.sukimalab.permy.premium_monthly",
   "purchase_token": "string"
 }
 ```
@@ -395,14 +395,14 @@ Body:
 **Rules**
 - `platform`: `"ios" | "android"`
 - 許可された `product_id` は以下のみ
-  - Android: `permy_pro_monthly`
-  - iOS: `com.sukimalab.permy.pro_monthly`
+  - Android: `permy_pro_monthly`, `permy_premium_monthly`
+  - iOS: `com.sukimalab.permy.pro_monthly`, `com.sukimalab.permy.premium_monthly`
 - 現時点の検証は mock mode。`purchase_token` 非空を最低条件として検証する。
 
 ### Response 200
 ```json
 {
-  "plan": "pro",
+  "plan": "premium",
   "verified": true
 }
 ```

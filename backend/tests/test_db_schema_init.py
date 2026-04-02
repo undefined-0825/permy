@@ -79,5 +79,5 @@ def test_ensure_backward_compatible_columns_adds_missing_user_columns(monkeypatc
 
     assert any("ADD COLUMN feature_tier" in stmt for stmt in executed)
     assert any("ADD COLUMN billing_tier" in stmt for stmt in executed)
-    assert any("ADD COLUMN failed_pro_comp_attempts" in stmt for stmt in executed)
+    assert any("ADD COLUMN failed_premium_comp_attempts" in stmt for stmt in executed)
     assert any("ADD COLUMN is_locked" in stmt for stmt in executed)

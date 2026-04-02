@@ -9,7 +9,7 @@ class ApiError implements Exception {
   final String errorCode;
   final String message;
   final int httpStatus;
-  // pro_comp失敗時のロックまでの残り回数（null = 関係なし）
+  // premium_comp失敗時のロックまでの残り回数（null = 関係なし）
   final int? remainingAttempts;
 
   factory ApiError.fromBody({
@@ -255,8 +255,8 @@ class MigrationConsumeResult {
   }
 }
 
-class ProCompRequestResult {
-  ProCompRequestResult({
+class PremiumCompRequestResult {
+  PremiumCompRequestResult({
     required this.approved,
     required this.requestCount,
     this.remainingAttempts,
@@ -266,8 +266,8 @@ class ProCompRequestResult {
   final int requestCount;
   final int? remainingAttempts;
 
-  factory ProCompRequestResult.fromJson(Map<String, dynamic> json) {
-    return ProCompRequestResult(
+  factory PremiumCompRequestResult.fromJson(Map<String, dynamic> json) {
+    return PremiumCompRequestResult(
       approved: json['approved'] == true,
       requestCount: (json['request_count'] as num?)?.toInt() ?? 0,
       remainingAttempts: (json['remaining_attempts'] as num?)?.toInt(),

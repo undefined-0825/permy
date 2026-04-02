@@ -66,7 +66,7 @@ backend/
       migration.py
       common.py
   tools/
-    pro_comp/
+    premium_comp/
       register_comp_email.py
       reset_comp_request_count.py
   tests/
@@ -114,7 +114,7 @@ backend/
 - error_code
 - latency_ms
 - user_id（ハッシュ化/短縮も可。本文ではない）
-- plan（free/pro）や tier（feature_tier）は可（本文ではない）
+- plan（free/pro/premium）や tier（feature_tier）は可（本文ではない）
 
 ### 4.3 実装
 - `middleware` で request_id を採番（ヘッダがあれば採用）し、contextに格納
@@ -145,33 +145,34 @@ backend/
 ## 7. プラン/ティア（feature_tier / billing_tier）実装（MUST）
 ### 7.1 データ
 `users` に以下を保持：
-- `feature_tier`: `free|pro`
-- `billing_tier`: `free|pro_store|pro_comp`
+- `feature_tier`: `free|pro|premium`
+- `billing_tier`: `free|pro_store|premium_store|premium_comp`
 
 ### 7.2 返却 plan（外部互換）
-- APIレスポンスの `meta.plan` は `free/pro` の2値のみ
+- APIレスポンスの `meta.plan` は `free/pro/premium` の3値
   - `feature_tier=free` → plan=free
   - `feature_tier=pro` → plan=pro
+  - `feature_tier=premium` → plan=premium
 
-### 7.3 永続無料付与（pro_comp）
+### 7.3 永続無料付与（premium_comp）
 - 管理画面は作らない
 - 対象メールは運用CLIで事前登録する
-  - `python tools/pro_comp/register_comp_email.py <email> <name>`
-- クライアントは `POST /api/v1/pro-comp/request` で承認依頼を送信する
+  - `python tools/premium_comp/register_comp_email.py <email> <name>`
+- クライアントは `POST /api/v1/premium-comp/request` で承認依頼を送信する
   - 入力メールは trim + lower で正規化して照合する
-  - `pro_comp_grant_requests.email`（事前登録済み）と一致した場合のみ承認候補になる
+  - `premium_comp_grant_requests.email`（事前登録済み）と一致した場合のみ承認候補になる
 - 承認条件（MUST）
   - 対象メールが事前登録済み
   - `approved_user_id` が未設定
   - `request_count=0`（初回依頼）
   - `users.is_locked=false`
 - 承認時の更新
-  - `users.feature_tier=pro`
-  - `users.billing_tier=pro_comp`
-  - `plan_status.plan=pro`
+  - `users.feature_tier=premium`
+  - `users.billing_tier=premium_comp`
+  - `plan_status.plan=premium`
   - `user_settings.settings_json` に `feature_tier/billing_tier/plan` を反映
 - 不正アクセス対策（MUST）
-  - 承認失敗ごとに `users.failed_pro_comp_attempts` を +1
+  - 承認失敗ごとに `users.failed_premium_comp_attempts` を +1
   - 5回失敗で `users.is_locked=true`
   - 失敗時エラー詳細に `remaining_attempts` を返す
 
@@ -524,15 +525,15 @@ app_ios_store_url: str = ""
 
 #### Tier System
 - ✅ **Feature Tier / Billing Tier 分離**
-  - feature_tier: `free` / `pro`（機能レベル）
-  - billing_tier: `free` / `pro_store` / `pro_comp`（課金状態）
+  - feature_tier: `free` / `pro` / `premium`（機能レベル）
+  - billing_tier: `free` / `pro_store` / `premium_store` / `premium_comp`（課金状態）
   - AuthContext で tier 情報管理
-  - Pro_comp（永続無料）サポート
+  - Premium_comp（永続無料）サポート
 
 #### Management Tools
-- ✅ **Pro_comp 対象メール事前登録ツール** (`backend/tools/pro_comp/register_comp_email.py`)
+- ✅ **Premium_comp 対象メール事前登録ツール** (`backend/tools/premium_comp/register_comp_email.py`)
   - 承認対象メールを登録/更新（`--force-reset` 対応）
-- ✅ **Pro_comp 依頼回数リセットツール** (`backend/tools/pro_comp/reset_comp_request_count.py`)
+- ✅ **Premium_comp 依頼回数リセットツール** (`backend/tools/premium_comp/reset_comp_request_count.py`)
   - 登録済みメールの `request_count` を0に戻す
 
 #### Documentation & Tooling
@@ -554,7 +555,7 @@ app_ios_store_url: str = ""
 - ✅ `tools/manual_api_test.ps1`: コア API テスト（6/6 合格）
 - ✅ `tools/test_telemetry.ps1`: Telemetry API テスト（5 イベント検証）
 - ✅ `tools/test_followup.ps1`: Followup 機能テスト（優先順位確認）
-- ✅ `backend/tests/test_contract_pro_comp.py`: Pro_comp 承認フロー契約テスト
+- ✅ `backend/tests/test_contract_premium_comp.py`: Premium_comp 承認フロー契約テスト
 
 ### 16.3 未実装・残作業（🔜）
 
@@ -595,7 +596,7 @@ app_ios_store_url: str = ""
   - 5req/min制限、429返却確認
 - ✅ **test_idempotency.ps1**: 合格
   - Idempotency-Key重複制御
-- ✅ **test_contract_pro_comp.py**: 合格
+- ✅ **test_contract_premium_comp.py**: 合格
   - 事前登録メール照合・単回承認・失敗回数カウント・5回失敗ロックを確認
 - ⚠️ **test_daily_limit.ps1**: カウントロジック調整必要
   - 日次制限機能は実装済み、テストスクリプトの期待値要調整

@@ -36,6 +36,9 @@ class MockPurchaseService extends PurchaseService {
   bool get isPro => mockIsPro;
 
   @override
+  String get currentPlan => mockIsPro ? 'pro' : 'free';
+
+  @override
   Future<void> initialize() async {}
 
   @override
@@ -54,7 +57,7 @@ class MockPurchaseService extends PurchaseService {
   Future<bool> isAvailable() async => true;
 
   @override
-  Future<void> purchase() async {}
+  Future<void> purchase({String plan = 'pro'}) async {}
 
   @override
   Future<void> restorePurchases() async {}
@@ -201,8 +204,8 @@ class MockApiClient implements AppApiClient {
   }
 
   @override
-  Future<ProCompRequestResult> requestProComp(String email) async {
-    return ProCompRequestResult(approved: true, requestCount: 1);
+  Future<PremiumCompRequestResult> requestPremiumComp(String email) async {
+    return PremiumCompRequestResult(approved: true, requestCount: 1);
   }
 
   @override
