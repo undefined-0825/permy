@@ -7,8 +7,8 @@ import 'package:sample_app/src/infrastructure/purchase_service.dart';
 ProductDetails _product(String id) {
   return ProductDetails(
     id: id,
-    title: 'Plus',
-    description: 'Permy Plus',
+    title: 'Pro',
+    description: 'Permy Pro',
     price: '¥2,980',
     rawPrice: 2980,
     currencyCode: 'JPY',

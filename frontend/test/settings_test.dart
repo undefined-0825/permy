@@ -288,7 +288,7 @@ void main() {
       expect(find.text('Free'), findsOneWidget);
     });
 
-    testWidgets('Plus会員時は課金日と解約リンクを表示する', (WidgetTester tester) async {
+    testWidgets('Pro会員時は課金日と解約リンクを表示する', (WidgetTester tester) async {
       final mockApi = MockApiClient(
         settingsSnapshot: SettingsSnapshot(
           settings: {

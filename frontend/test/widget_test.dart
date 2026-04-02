@@ -335,8 +335,8 @@ void main() {
     dropdowns[1].onChanged?.call('standard');
     await tester.pumpAndSettle();
 
-    expect(find.text('Plusのご案内'), findsOneWidget);
-    expect(find.widgetWithText(AppButton, 'Plusに変更'), findsOneWidget);
+    expect(find.text('Proのご案内'), findsOneWidget);
+    expect(find.widgetWithText(AppButton, 'Proに変更'), findsOneWidget);
 
     await tester.pageBack();
     await tester.pumpAndSettle();
@@ -648,7 +648,7 @@ void main() {
     expect(find.text('補足前の返信案A'), findsNothing);
   });
 
-  testWidgets('FreeでPlus項目選択時に課金誘導ページを表示する', (WidgetTester tester) async {
+  testWidgets('FreeでPro項目選択時に課金誘導ページを表示する', (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: GenerateScreen(
@@ -669,8 +669,8 @@ void main() {
     dropdown.onChanged?.call(2);
     await tester.pumpAndSettle();
 
-    expect(find.text('Plusのご案内'), findsOneWidget);
-    expect(find.widgetWithText(AppButton, 'Plusに変更'), findsOneWidget);
+    expect(find.text('Proのご案内'), findsOneWidget);
+    expect(find.widgetWithText(AppButton, 'Proに変更'), findsOneWidget);
   });
 
   testWidgets('課金誘導画面の右上を10回タップすると隠しページを開く', (WidgetTester tester) async {
@@ -705,7 +705,7 @@ void main() {
     expect(find.text('メールアドレス入力'), findsOneWidget);
   });
 
-  testWidgets('生成方針のPro項目にPlusバッジを表示する', (WidgetTester tester) async {
+  testWidgets('生成方針のPro項目にProバッジを表示する', (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: GenerateScreen(
@@ -723,7 +723,7 @@ void main() {
     await tester.tap(find.byType(DropdownButton<int>));
     await tester.pumpAndSettle();
 
-    expect(find.text('Plus'), findsWidgets);
+    expect(find.text('Pro'), findsWidgets);
   });
 
   testWidgets('生成失敗時にエラーコード付きメッセージボックスを表示する', (WidgetTester tester) async {

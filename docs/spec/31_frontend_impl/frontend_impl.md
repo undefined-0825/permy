@@ -579,8 +579,8 @@ class UpdateNoticeScreen extends StatelessWidget {
   - `AUTH_INVALID` / `AUTH_REQUIRED`：「認証を更新したよ。もう一度ためしてね」
   - `SETTINGS_VERSION_CONFLICT` / `ETAG_MISMATCH`：「設定が更新されていたみたい。読み込み直してね」
   - `RATE_LIMITED`：「少し混み合ってるみたい。少し待って、もう一度」
-  - `DAILY_LIMIT_REACHED` / `DAILY_LIMIT_EXCEEDED`：「今日はここまで。続きは明日か、Plusで使える」
-  - `PLAN_REQUIRED`：「この機能はPlusで使えるよ」
+  - `DAILY_LIMIT_REACHED` / `DAILY_LIMIT_EXCEEDED`：「今日はここまで。続きは明日か、Proで使える」
+  - `PLAN_REQUIRED`：「この機能はProで使えるよ」
   - `OPENAI_DISABLED`：「この環境では生成を止めているよ」
   - `UPSTREAM_UNAVAILABLE` / `UPSTREAM_TIMEOUT`：「今は不安定みたい。少し待って、もう一度」
   - その他：「うまく読めなかった。もう一度共有して」
