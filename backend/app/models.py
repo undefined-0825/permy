@@ -12,7 +12,7 @@ class User(Base):
     __tablename__ = "users"
 
     user_id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    feature_tier: Mapped[str] = mapped_column(String(16), default="free")  # free/plus
+    feature_tier: Mapped[str] = mapped_column(String(16), default="free")  # free/pro
     billing_tier: Mapped[str] = mapped_column(String(16), default="free")  # free/pro_store/pro_comp
     failed_pro_comp_attempts: Mapped[int] = mapped_column(Integer, default=0)  # pro_comp申請失敗回数
     is_locked: Mapped[bool] = mapped_column(default=False)  # 不正アクセスロック

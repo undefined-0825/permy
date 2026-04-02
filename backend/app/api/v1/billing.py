@@ -62,7 +62,7 @@ async def billing_verify(
     if not user:
         raise err("AUTH_INVALID", "認証が無効です", status_code=401)
 
-    user.feature_tier = "plus"
+    user.feature_tier = "pro"
     user.billing_tier = "pro_store"
 
     plan_row = await db.execute(select(PlanStatus).where(PlanStatus.user_id == auth.user_id))

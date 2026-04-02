@@ -315,7 +315,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('会員種別'), findsOneWidget);
-      expect(find.text('Plus'), findsOneWidget);
+      expect(find.text('Pro'), findsOneWidget);
       expect(find.text('前回の更新日'), findsOneWidget);
       expect(find.text('次回の更新日'), findsOneWidget);
       expect(find.text('2026/03/01'), findsOneWidget);

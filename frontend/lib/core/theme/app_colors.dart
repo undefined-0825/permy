@@ -25,7 +25,7 @@ class AppColors {
 
   // 状態色
   static const Color error = Color(0xFFEF4444);
-  static const Color plusBadgeBackground = Color(0xFF7B4AA3);
+  static const Color proBadgeBackground = Color(0xFF7B4AA3);
 
   // 生成演出用
   static const Color generateBackground = Color(0xFF000000);

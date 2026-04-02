@@ -81,9 +81,9 @@
 ### 4.3 機能ティア/課金ティア（MUST）
 「無料か、それ以外か」で機能判定しつつ、「課金Pro」と「永続無料（付与）」を区別するため、概念を分離する。
 
-- **feature_tier（機能判定）**: `free` | `plus`
+- **feature_tier（機能判定）**: `free` | `pro`
   - `free`：無料ユーザー
-  - `plus`：Pro相当（課金Pro + 永続無料を含む）
+  - `pro`：Pro相当（課金Pro + 永続無料を含む）
 - **billing_tier（課金区別）**: `free` | `pro_store` | `pro_comp`
   - `pro_store`：ストア課金Pro
   - `pro_comp`：管理者が明示付与する永続無料（知人/インフルエンサー向け）
@@ -92,12 +92,12 @@
 **ルール（MUST）**
 - 機能解放・Pro専用機能の判定は **feature_tierのみ** で行う（`free` か、それ以外か）。
 - 課金由来の差分（売上/分析/返金対応など）は **billing_tierのみ** で区別する。
-- `feature_tier=plus` のユーザーは、外部互換のため APIレスポンス上は `plan=pro` として扱う（`plan`は2値互換維持）。
+- `feature_tier=pro` のユーザーは、外部互換のため APIレスポンス上は `plan=pro` として扱う（`plan`は2値互換維持）。
 
 ### 4.4 テーブル例（論理モデル）
 - `users`
   - `user_id`（匿名ID）
-  - `feature_tier`（free/plus）
+  - `feature_tier`（free/pro）
   - `billing_tier`（free/pro_store/pro_comp）
   - `failed_pro_comp_attempts`（pro_comp承認依頼の失敗累積）
   - `is_locked`（不正アクセス抑止のロック状態）
@@ -157,7 +157,7 @@
   - `my_line_name` は生成品質向上のための一時入力として扱い、永続化しない（DB保存・ログ出力禁止）。
   - レスポンス `meta.plan` は互換のため `free/pro` の2値
     - `feature_tier=free` → `plan=free`
-    - `feature_tier=plus` → `plan=pro`
+    - `feature_tier=pro` → `plan=pro`
 - `POST /api/v1/migration/start`
   - 移行コード発行（12桁、期限あり、レート制限）
   - Response: `migration_code`, `ticket_id`
@@ -180,7 +180,7 @@
   - 動作:
     - 許可された product_id かチェック（許可リスト: `com.sukimalab.permy.pro_monthly`（iOS）、`permy_pro_monthly`（Android））
     - purchase_token が存在するかチェック
-    - 検証成功時、`feature_tier=plus`、`billing_tier=pro_store` に更新
+    - 検証成功時、`feature_tier=pro`、`billing_tier=pro_store` に更新
     - PlanStatus を `plan=pro` に更新（未存在なら作成）
   - 制限:
     - 本番環境（`APP_ENV=prod`）では無効化（503 `BILLING_NOT_CONFIGURED`）
@@ -243,7 +243,7 @@
 ### 8.1 要件
 - 永続無料は知人/インフルエンサーに限定し、**管理者が明示的に付与**する。
 - 管理画面は作らない。
-- `pro_comp` は機能面ではProと同等（`feature_tier=plus`）だが、課金は区別する（`billing_tier=pro_comp`）。
+- `pro_comp` は機能面ではProと同等（`feature_tier=pro`）だが、課金は区別する（`billing_tier=pro_comp`）。
 
 ### 8.2 付与方法（運用CLI + 承認依頼API）
 - 管理者は対象メールをCLIで事前登録する。
@@ -251,7 +251,7 @@
 - ユーザーは `POST /api/v1/pro-comp/request` で承認依頼する。
 - 承認判定は「入力メール（正規化後）」と `pro_comp_grant_requests.email` の一致で行う。
 - 承認成功時に以下を更新する。
-  - `users.feature_tier=plus`
+  - `users.feature_tier=pro`
   - `users.billing_tier=pro_comp`
   - `plan_status.plan=pro`
 

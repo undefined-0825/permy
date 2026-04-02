@@ -145,13 +145,13 @@ backend/
 ## 7. プラン/ティア（feature_tier / billing_tier）実装（MUST）
 ### 7.1 データ
 `users` に以下を保持：
-- `feature_tier`: `free|plus`
+- `feature_tier`: `free|pro`
 - `billing_tier`: `free|pro_store|pro_comp`
 
 ### 7.2 返却 plan（外部互換）
 - APIレスポンスの `meta.plan` は `free/pro` の2値のみ
   - `feature_tier=free` → plan=free
-  - `feature_tier=plus` → plan=pro
+  - `feature_tier=pro` → plan=pro
 
 ### 7.3 永続無料付与（pro_comp）
 - 管理画面は作らない
@@ -166,7 +166,7 @@ backend/
   - `request_count=0`（初回依頼）
   - `users.is_locked=false`
 - 承認時の更新
-  - `users.feature_tier=plus`
+  - `users.feature_tier=pro`
   - `users.billing_tier=pro_comp`
   - `plan_status.plan=pro`
   - `user_settings.settings_json` に `feature_tier/billing_tier/plan` を反映
@@ -524,7 +524,7 @@ app_ios_store_url: str = ""
 
 #### Tier System
 - ✅ **Feature Tier / Billing Tier 分離**
-  - feature_tier: `free` / `plus`（機能レベル）
+  - feature_tier: `free` / `pro`（機能レベル）
   - billing_tier: `free` / `pro_store` / `pro_comp`（課金状態）
   - AuthContext で tier 情報管理
   - Pro_comp（永続無料）サポート

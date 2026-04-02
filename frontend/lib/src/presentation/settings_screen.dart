@@ -249,7 +249,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (widget.purchaseService.isPro) {
       return true;
     }
-    if (featureTier == 'plus' || plan == 'pro' || billingTier == 'pro_store') {
+    if (featureTier == 'pro' || plan == 'pro' || billingTier == 'pro_store') {
       return true;
     }
     return false;
@@ -265,10 +265,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return '特別会員';
     }
     if (widget.purchaseService.isPro ||
-        featureTier == 'plus' ||
+        featureTier == 'pro' ||
         plan == 'pro' ||
         billingTier == 'pro_store') {
-      return 'Plus';
+      return 'Pro';
     }
     return 'Free';
   }
@@ -415,7 +415,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   if (!widget.purchaseService.isPro) ...[
                     const SizedBox(height: AppSpacing.xl),
-                    const AppSectionHeader(title: 'Plus版（月額2,980円）'),
+                    const AppSectionHeader(title: 'Pro版（月額2,980円）'),
                     const SizedBox(height: AppSpacing.sm),
                     _buildPurchaseSection(),
                   ],
@@ -457,7 +457,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildStatusSection() {
     final status = _currentStatusLabel();
-    final showBillingDates = status == 'Plus' || status == '特別会員';
+    final showBillingDates = status == 'Pro' || status == '特別会員';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -615,7 +615,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'Plus版ではさらに 4種類の方針が選択できます',
+          'Pro版ではさらに 4種類の方針が選択できます',
           style: AppTextStyles.small.copyWith(color: AppColors.bodyText),
         ),
       ],
@@ -890,7 +890,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Plus版の特典:', style: AppTextStyles.body),
+            const Text('Pro版の特典:', style: AppTextStyles.body),
             const SizedBox(height: AppSpacing.sm),
             const Text(
               '• 1日100回まで生成可能（Freeは3回）\n• 推定メーター表示\n• すべての生成方針が選択可能',
@@ -898,7 +898,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: AppSpacing.md),
             AppButton(
-              text: 'Plusにアップグレード（月額2,980円）',
+              text: 'Proにアップグレード（月額2,980円）',
               onPressed: () {
                 _purchasePro();
               },

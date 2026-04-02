@@ -196,7 +196,7 @@
 
 - FreeユーザーがPro専用値を選択した場合、課金導線（ProUpgradeScreen）へ遷移する。
 - backend側でも Free時は5項目を強制的にFree値へ正規化する（防御側）。
-- 各項目のPro専用値には「Plus」バッジを表示する。
+- 各項目のPro専用値には「Pro」バッジを表示する。
 
 ### 7.1 取得/更新
 - 初回表示で `GET /me/settings` → `ETag` を保持

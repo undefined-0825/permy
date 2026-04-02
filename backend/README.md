@@ -125,7 +125,7 @@ backend/
 
 ### プラン・Tier 構造
 
-- **feature_tier**: `free` / `plus`（機能レベル）
+- **feature_tier**: `free` / `pro`（機能レベル）
 - **billing_tier**: `free` / `pro_store` / `pro_comp`（課金状態）
 - API レスポンスの `plan` フィールド: `free` / `pro`（feature_tier から計算）
 

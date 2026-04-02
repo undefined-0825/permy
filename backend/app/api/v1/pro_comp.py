@@ -87,7 +87,7 @@ async def request_pro_comp(
     if current_count != 0:
         await _record_failure("PRO_COMP_REQUEST_ALREADY_USED", "このメールアドレスの承認依頼は既に記録されています", 409)
 
-    user.feature_tier = "plus"
+    user.feature_tier = "pro"
     user.billing_tier = "pro_comp"
 
     plan_row = await db.execute(
@@ -107,7 +107,7 @@ async def request_pro_comp(
     settings_json = with_default_settings(
         dict(user_settings.settings_json) if user_settings else {}
     )
-    settings_json["feature_tier"] = "plus"
+    settings_json["feature_tier"] = "pro"
     settings_json["billing_tier"] = "pro_comp"
     settings_json["plan"] = "pro"
     settings_json["status_tier"] = "special"

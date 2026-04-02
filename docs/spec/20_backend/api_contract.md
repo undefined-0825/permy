@@ -55,7 +55,7 @@
 
 **ルール**
 - 機能判定はバックエンド内部では `feature_tier` を持つが、外部互換のため `plan` は2値で返す。
-- `feature_tier=plus`（課金Pro + 永続無料付与）はすべて `plan="pro"` として返す。
+- `feature_tier=pro`（課金Pro + 永続無料付与）はすべて `plan="pro"` として返す。
 
 ### 1.2 Followup（聞き返し）
 - `Followup` オブジェクト（nullable）

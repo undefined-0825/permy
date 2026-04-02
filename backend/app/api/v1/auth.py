@@ -37,7 +37,7 @@ async def auth_anonymous(
     # feature_tier/billing_tier初期化（SSOT）
     # beta_all_pro=True のテスト期間中は全員Proで作成する
     if settings.beta_all_pro:
-        user.feature_tier = "plus"
+        user.feature_tier = "pro"
         user.billing_tier = "pro_comp"
     else:
         user.feature_tier = "free"

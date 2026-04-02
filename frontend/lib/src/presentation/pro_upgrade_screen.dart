@@ -10,7 +10,7 @@ import 'package:sample_app/core/widgets/app_section_header.dart';
 
 class ProUpgradeScreen extends StatefulWidget {
   const ProUpgradeScreen({
-    required this.onTapChangePlus,
+    required this.onTapChangePro,
     required this.onOpenHiddenPage,
     required this.isProActive,
     super.key,
@@ -18,7 +18,7 @@ class ProUpgradeScreen extends StatefulWidget {
 
   static const String _heroImagePath = 'assets/images/pro_upgrade/hero_01.png';
 
-  final VoidCallback onTapChangePlus;
+  final VoidCallback onTapChangePro;
   final VoidCallback onOpenHiddenPage;
   final bool isProActive;
 
@@ -50,7 +50,7 @@ class _ProUpgradeScreenState extends State<ProUpgradeScreen> {
   Widget build(BuildContext context) {
     return AppScaffold(
       appBar: AppBar(
-        title: const Text('Plusのご案内'),
+        title: const Text('Proのご案内'),
         actions: [
           if (!widget.isProActive)
             GestureDetector(
@@ -79,7 +79,7 @@ class _ProUpgradeScreenState extends State<ProUpgradeScreen> {
           ),
           const SizedBox(height: AppSpacing.md),
           const Text(
-            'Plusにすると、返信作成がもっと楽になるよ',
+            'Proにすると、返信作成がもっと楽になるよ',
             style: AppTextStyles.primaryTitle,
             textAlign: TextAlign.center,
           ),
@@ -102,7 +102,7 @@ class _ProUpgradeScreenState extends State<ProUpgradeScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
-          AppButton(text: 'Plusに変更', onPressed: widget.onTapChangePlus),
+          AppButton(text: 'Proに変更', onPressed: widget.onTapChangePro),
           const SizedBox(height: AppSpacing.sm),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),

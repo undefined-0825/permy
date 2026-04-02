@@ -55,9 +55,9 @@
 ### 2.2 プランの扱い（MUST）
 - APIの外部互換の `plan` は `free|pro` の2値（backend_spec参照）。
 - 課金形態の内部区別：
-  - `feature_tier`: `free|plus`
+  - `feature_tier`: `free|pro`
   - `billing_tier`: `free|pro_store|pro_comp`
-- **機能判定は feature_tier のみ**。`feature_tier=plus` は API上 `plan=pro` として返す（billing区別はフロントに露出しない）。
+- **機能判定は feature_tier のみ**。`feature_tier=pro` は API上 `plan=pro` として返す（billing区別はフロントに露出しない）。
 
 ### 2.3 Pro専用機能（MUST）
 - Proのみ：推定メーター（♥/🔥 0..100）表示（backend_implの `meta.pro` を使用）
@@ -451,7 +451,7 @@ NightSelf:
 - `area_tag: string | null`
   - 居住地・活動地の簡易タグ（例：梅田 / ミナミ / 西宮）
 - `age_range: string | null`
-  - `unknown|20s_early|20s_late|30s|40s|50s_plus`
+  - `unknown|20s_early|20s_late|30s|40s|50s_or_more`
 - `job_tag: string | null`
   - 職業や属性の簡易タグ（例：経営 / 営業 / 飲食）
 - `relationship_stage: string`

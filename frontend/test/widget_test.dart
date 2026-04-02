@@ -369,8 +369,8 @@ void main() {
     comboDropdown.onChanged?.call(3);
     await tester.pumpAndSettle();
 
-    expect(find.text('Plusのご案内'), findsOneWidget);
-    expect(find.widgetWithText(AppButton, 'Plusに変更'), findsOneWidget);
+    expect(find.text('Proのご案内'), findsOneWidget);
+    expect(find.widgetWithText(AppButton, 'Proに変更'), findsOneWidget);
 
     await tester.pageBack();
     await tester.pumpAndSettle();

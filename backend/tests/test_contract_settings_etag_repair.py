@@ -36,7 +36,7 @@ async def _tamper_settings_plan(user_id: str) -> None:
         st = row.scalar_one_or_none()
         assert st is not None
         settings = dict(st.settings_json or {})
-        settings['feature_tier'] = 'plus'
+        settings['feature_tier'] = 'pro'
         settings['billing_tier'] = 'pro_comp'
         settings['plan'] = 'pro'
         st.settings_json = settings
@@ -86,7 +86,7 @@ def test_get_settings_syncs_plan_fields_with_auth_context(client):
 
     asyncio.run(_tamper_settings_plan(user_id))
     feature_tier, billing_tier = asyncio.run(_get_user_tiers(user_id))
-    expected_plan = 'pro' if feature_tier == 'plus' else 'free'
+    expected_plan = 'pro' if feature_tier == 'pro' else 'free'
 
     repaired = client.get('/api/v1/me/settings', headers=headers)
     assert repaired.status_code == 200

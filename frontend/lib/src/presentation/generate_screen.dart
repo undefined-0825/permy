@@ -180,8 +180,8 @@ class _GenerateScreenState extends State<GenerateScreen>
       final featureTier = snapshot.settings['feature_tier']?.toString();
       final billingTier = snapshot.settings['billing_tier']?.toString();
       final plan = snapshot.settings['plan']?.toString();
-      final inferredPlan =
-          (featureTier == 'plus' || billingTier == 'pro_comp' || plan == 'pro')
+        final inferredPlan =
+          (featureTier == 'pro' || billingTier == 'pro_comp' || plan == 'pro')
           ? 'pro'
           : _plan;
       setState(() {
@@ -584,7 +584,7 @@ class _GenerateScreenState extends State<GenerateScreen>
     }
   }
 
-  String _planLabel(String plan) => plan == 'pro' ? 'Plus' : 'Free';
+  String _planLabel(String plan) => plan == 'pro' ? 'Pro' : 'Free';
 
   Future<void> _copyCandidate(Candidate candidate) async {
     unawaited(Haptics.selection());
@@ -646,9 +646,9 @@ class _GenerateScreenState extends State<GenerateScreen>
         return '少し混み合ってるみたい。少し待って、もう一度';
       case 'DAILY_LIMIT_REACHED':
       case 'DAILY_LIMIT_EXCEEDED':
-        return '今日はここまで。続きは明日か、Plusで使える';
+        return '今日はここまで。続きは明日か、Proで使える';
       case 'PLAN_REQUIRED':
-        return 'この機能はPlusで使えるよ';
+        return 'この機能はProで使えるよ';
       case 'OPENAI_DISABLED':
         return 'この環境では生成を止めているよ';
       case 'UPSTREAM_UNAVAILABLE':
@@ -686,7 +686,7 @@ class _GenerateScreenState extends State<GenerateScreen>
       MaterialPageRoute(
         builder: (upgradeContext) => ProUpgradeScreen(
           isProActive: _isProActive(),
-          onTapChangePlus: () {
+          onTapChangePro: () {
             Navigator.of(upgradeContext).push(
               MaterialPageRoute(
                 builder: (settingsContext) => SettingsScreen(
@@ -1370,11 +1370,11 @@ class _GenerateAdjustmentsCard extends StatelessWidget {
                             vertical: AppSpacing.xs,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.plusBadgeBackground,
+                            color: AppColors.proBadgeBackground,
                             borderRadius: BorderRadius.circular(AppRadius.sm),
                           ),
                           child: Text(
-                            'Plus',
+                            'Pro',
                             style: AppTextStyles.small.copyWith(
                               color: AppColors.white,
                               fontWeight: FontWeight.w600,
@@ -1542,11 +1542,11 @@ class _ProAwareDropdown extends StatelessWidget {
                         vertical: AppSpacing.xs,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.plusBadgeBackground,
+                        color: AppColors.proBadgeBackground,
                         borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
                       child: Text(
-                        'Plus',
+                        'Pro',
                         style: AppTextStyles.small.copyWith(
                           color: AppColors.white,
                           fontWeight: FontWeight.w600,
