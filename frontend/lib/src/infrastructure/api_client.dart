@@ -40,6 +40,12 @@ abstract class AppApiClient {
 
   Future<PremiumCompRequestResult> requestPremiumComp(String email);
 
+  Future<List<CustomerSummary>> getCustomers({String? query});
+
+  Future<CustomerDetail> getCustomerDetail(String customerId);
+
+  Future<CustomerSummary> createCustomer(CreateCustomerInput input);
+
   Future<void> deleteAccount();
 }
 
@@ -460,6 +466,99 @@ class ApiClient implements AppApiClient {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final body = _tryJson(response.body) ?? <String, dynamic>{};
         return PremiumCompRequestResult.fromJson(body);
+      }
+
+      throw ApiError.fromBody(
+        httpStatus: response.statusCode,
+        body: _tryJson(response.body),
+      );
+    });
+  }
+
+  @override
+  Future<List<CustomerSummary>> getCustomers({String? query}) async {
+    await bootstrapAuth();
+    return _runWithAuthRetry(() async {
+      final token = await tokenStore.read();
+      final uri = Uri.parse('$baseUrl/api/v1/customers').replace(
+        queryParameters: query != null && query.trim().isNotEmpty
+            ? {'q': query.trim()}
+            : null,
+      );
+      final response = await _sendWithTimeout(
+        () => _httpClient.get(
+          uri,
+          headers: {'Authorization': 'Bearer $token'},
+        ),
+        method: 'GET',
+        path: '/api/v1/customers',
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is! List) {
+          return <CustomerSummary>[];
+        }
+        return decoded
+            .whereType<Map<String, dynamic>>()
+            .map(CustomerSummary.fromJson)
+            .toList();
+      }
+
+      throw ApiError.fromBody(
+        httpStatus: response.statusCode,
+        body: _tryJson(response.body),
+      );
+    });
+  }
+
+  @override
+  Future<CustomerDetail> getCustomerDetail(String customerId) async {
+    await bootstrapAuth();
+    return _runWithAuthRetry(() async {
+      final token = await tokenStore.read();
+      final response = await _sendWithTimeout(
+        () => _httpClient.get(
+          Uri.parse('$baseUrl/api/v1/customers/$customerId'),
+          headers: {'Authorization': 'Bearer $token'},
+        ),
+        method: 'GET',
+        path: '/api/v1/customers/{id}',
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final body = _tryJson(response.body) ?? <String, dynamic>{};
+        return CustomerDetail.fromJson(body);
+      }
+
+      throw ApiError.fromBody(
+        httpStatus: response.statusCode,
+        body: _tryJson(response.body),
+      );
+    });
+  }
+
+  @override
+  Future<CustomerSummary> createCustomer(CreateCustomerInput input) async {
+    await bootstrapAuth();
+    return _runWithAuthRetry(() async {
+      final token = await tokenStore.read();
+      final response = await _sendWithTimeout(
+        () => _httpClient.post(
+          Uri.parse('$baseUrl/api/v1/customers'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode(input.toJson()),
+        ),
+        method: 'POST',
+        path: '/api/v1/customers',
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final body = _tryJson(response.body) ?? <String, dynamic>{};
+        return CustomerSummary.fromJson(body);
       }
 
       throw ApiError.fromBody(

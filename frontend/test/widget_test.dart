@@ -174,6 +174,42 @@ class _FakeApiClient implements AppApiClient {
   Future<PremiumCompRequestResult> requestPremiumComp(String email) async {
     return PremiumCompRequestResult(approved: true, requestCount: 1);
   }
+
+  @override
+  Future<List<CustomerSummary>> getCustomers({String? query}) async {
+    return <CustomerSummary>[];
+  }
+
+  @override
+  Future<CustomerDetail> getCustomerDetail(String customerId) async {
+    return CustomerDetail(
+      customer: CustomerSummary(
+        customerId: customerId,
+        displayName: '顧客',
+        relationshipStage: 'new',
+        memoSummary: null,
+        lastVisitAt: null,
+        lastContactAt: null,
+        isArchived: false,
+      ),
+      tags: <CustomerTag>[],
+      visitLogs: <CustomerVisitLog>[],
+      events: <CustomerEvent>[],
+    );
+  }
+
+  @override
+  Future<CustomerSummary> createCustomer(CreateCustomerInput input) async {
+    return CustomerSummary(
+      customerId: 'customer-1',
+      displayName: input.displayName,
+      relationshipStage: input.relationshipStage,
+      memoSummary: input.memoSummary,
+      lastVisitAt: null,
+      lastContactAt: null,
+      isArchived: false,
+    );
+  }
 }
 
 class _FakeTelemetryQueue extends TelemetryQueue {

@@ -22,6 +22,7 @@ import 'package:sample_app/src/presentation/persona_diagnosis_result_screen.dart
 import 'package:sample_app/src/presentation/privacy_policy_screen.dart';
 import 'package:sample_app/src/presentation/settings_screen.dart';
 import 'package:sample_app/src/presentation/terms_of_service_screen.dart';
+import 'package:sample_app/src/presentation/customer_list_screen.dart';
 
 // Mock Purchase Service
 class MockPurchaseService extends PurchaseService {
@@ -206,6 +207,42 @@ class MockApiClient implements AppApiClient {
   @override
   Future<PremiumCompRequestResult> requestPremiumComp(String email) async {
     return PremiumCompRequestResult(approved: true, requestCount: 1);
+  }
+
+  @override
+  Future<List<CustomerSummary>> getCustomers({String? query}) async {
+    return <CustomerSummary>[];
+  }
+
+  @override
+  Future<CustomerDetail> getCustomerDetail(String customerId) async {
+    return CustomerDetail(
+      customer: CustomerSummary(
+        customerId: customerId,
+        displayName: '顧客',
+        relationshipStage: 'new',
+        memoSummary: null,
+        lastVisitAt: null,
+        lastContactAt: null,
+        isArchived: false,
+      ),
+      tags: <CustomerTag>[],
+      visitLogs: <CustomerVisitLog>[],
+      events: <CustomerEvent>[],
+    );
+  }
+
+  @override
+  Future<CustomerSummary> createCustomer(CreateCustomerInput input) async {
+    return CustomerSummary(
+      customerId: 'customer-1',
+      displayName: input.displayName,
+      relationshipStage: input.relationshipStage,
+      memoSummary: input.memoSummary,
+      lastVisitAt: null,
+      lastContactAt: null,
+      isArchived: false,
+    );
   }
 
   @override
@@ -551,6 +588,66 @@ void main() {
 
       expect(find.byType(HelpScreen), findsOneWidget);
       expect(find.text('2. 基本の使い方'), findsOneWidget);
+    });
+
+    testWidgets('Premium会員時は顧客メモ導線を表示し遷移できる', (WidgetTester tester) async {
+      final premiumApi = MockApiClient(
+        settingsSnapshot: SettingsSnapshot(
+          settings: {
+            'feature_tier': 'premium',
+            'billing_tier': 'premium_store',
+            'plan': 'premium',
+            'settings_schema_version': 1,
+            'forbidden_type_ids': [],
+          },
+          etag: 'test-etag-123',
+        ),
+      );
+      final premiumPurchase = MockPurchaseService(mockIsPro: true);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: premiumApi,
+            purchaseService: premiumPurchase,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await expandAdvancedSettings(tester);
+      expect(find.widgetWithText(AppListItem, '顧客メモ'), findsOneWidget);
+
+      await tapAppListItem(tester, '顧客メモ');
+      expect(find.byType(CustomerListScreen), findsOneWidget);
+    });
+
+    testWidgets('Free会員時は顧客メモ導線を表示しない', (WidgetTester tester) async {
+      final freeApi = MockApiClient(
+        settingsSnapshot: SettingsSnapshot(
+          settings: {
+            'feature_tier': 'free',
+            'billing_tier': 'free',
+            'plan': 'free',
+            'settings_schema_version': 1,
+            'forbidden_type_ids': [],
+          },
+          etag: 'test-etag-123',
+        ),
+      );
+      final freePurchase = MockPurchaseService(mockIsPro: false);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: freeApi,
+            purchaseService: freePurchase,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await expandAdvancedSettings(tester);
+      expect(find.widgetWithText(AppListItem, '顧客メモ'), findsNothing);
     });
 
     testWidgets('オープンソースライセンスリンクでライセンスページへ遷移できる', (WidgetTester tester) async {

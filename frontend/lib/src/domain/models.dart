@@ -274,3 +274,178 @@ class PremiumCompRequestResult {
     );
   }
 }
+
+class CustomerSummary {
+  CustomerSummary({
+    required this.customerId,
+    required this.displayName,
+    required this.relationshipStage,
+    this.memoSummary,
+    this.lastVisitAt,
+    this.lastContactAt,
+    required this.isArchived,
+  });
+
+  final String customerId;
+  final String displayName;
+  final String relationshipStage;
+  final String? memoSummary;
+  final String? lastVisitAt;
+  final String? lastContactAt;
+  final bool isArchived;
+
+  factory CustomerSummary.fromJson(Map<String, dynamic> json) {
+    return CustomerSummary(
+      customerId: json['customer_id']?.toString() ?? '',
+      displayName: json['display_name']?.toString() ?? '',
+      relationshipStage: json['relationship_stage']?.toString() ?? 'new',
+      memoSummary: json['memo_summary']?.toString(),
+      lastVisitAt: json['last_visit_at']?.toString(),
+      lastContactAt: json['last_contact_at']?.toString(),
+      isArchived: json['is_archived'] == true,
+    );
+  }
+}
+
+class CreateCustomerInput {
+  CreateCustomerInput({
+    required this.displayName,
+    this.nickname,
+    this.callName,
+    this.areaTag,
+    this.jobTag,
+    this.memoSummary,
+    this.relationshipStage = 'new',
+  });
+
+  final String displayName;
+  final String? nickname;
+  final String? callName;
+  final String? areaTag;
+  final String? jobTag;
+  final String? memoSummary;
+  final String relationshipStage;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'display_name': displayName,
+      'nickname': nickname,
+      'call_name': callName,
+      'area_tag': areaTag,
+      'job_tag': jobTag,
+      'memo_summary': memoSummary,
+      'relationship_stage': relationshipStage,
+    };
+  }
+}
+
+class CustomerTag {
+  CustomerTag({required this.tagId, required this.category, required this.value});
+
+  final String tagId;
+  final String category;
+  final String value;
+
+  factory CustomerTag.fromJson(Map<String, dynamic> json) {
+    return CustomerTag(
+      tagId: json['tag_id']?.toString() ?? '',
+      category: json['category']?.toString() ?? '',
+      value: json['value']?.toString() ?? '',
+    );
+  }
+}
+
+class CustomerVisitLog {
+  CustomerVisitLog({
+    required this.visitLogId,
+    required this.visitedOn,
+    required this.visitType,
+    this.memoShort,
+    this.spendLevel,
+    this.moodTag,
+  });
+
+  final String visitLogId;
+  final String visitedOn;
+  final String visitType;
+  final String? memoShort;
+  final String? spendLevel;
+  final String? moodTag;
+
+  factory CustomerVisitLog.fromJson(Map<String, dynamic> json) {
+    return CustomerVisitLog(
+      visitLogId: json['visit_log_id']?.toString() ?? '',
+      visitedOn: json['visited_on']?.toString() ?? '',
+      visitType: json['visit_type']?.toString() ?? '',
+      memoShort: json['memo_short']?.toString(),
+      spendLevel: json['spend_level']?.toString(),
+      moodTag: json['mood_tag']?.toString(),
+    );
+  }
+}
+
+class CustomerEvent {
+  CustomerEvent({
+    required this.eventId,
+    required this.eventType,
+    required this.eventDate,
+    required this.title,
+    this.note,
+  });
+
+  final String eventId;
+  final String eventType;
+  final String eventDate;
+  final String title;
+  final String? note;
+
+  factory CustomerEvent.fromJson(Map<String, dynamic> json) {
+    return CustomerEvent(
+      eventId: json['event_id']?.toString() ?? '',
+      eventType: json['event_type']?.toString() ?? '',
+      eventDate: json['event_date']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      note: json['note']?.toString(),
+    );
+  }
+}
+
+class CustomerDetail {
+  CustomerDetail({
+    required this.customer,
+    required this.tags,
+    required this.visitLogs,
+    required this.events,
+  });
+
+  final CustomerSummary customer;
+  final List<CustomerTag> tags;
+  final List<CustomerVisitLog> visitLogs;
+  final List<CustomerEvent> events;
+
+  factory CustomerDetail.fromJson(Map<String, dynamic> json) {
+    final tagsRaw = json['tags'];
+    final visitLogsRaw = json['visit_logs'];
+    final eventsRaw = json['events'];
+    return CustomerDetail(
+      customer: CustomerSummary.fromJson(
+        (json['customer'] as Map<String, dynamic>?) ?? <String, dynamic>{},
+      ),
+      tags: tagsRaw is List
+          ? tagsRaw.whereType<Map<String, dynamic>>().map(CustomerTag.fromJson).toList()
+          : <CustomerTag>[],
+      visitLogs: visitLogsRaw is List
+          ? visitLogsRaw
+                .whereType<Map<String, dynamic>>()
+                .map(CustomerVisitLog.fromJson)
+                .toList()
+          : <CustomerVisitLog>[],
+      events: eventsRaw is List
+          ? eventsRaw
+                .whereType<Map<String, dynamic>>()
+                .map(CustomerEvent.fromJson)
+                .toList()
+          : <CustomerEvent>[],
+    );
+  }
+}

@@ -20,6 +20,7 @@ import '../infrastructure/api_client.dart';
 import '../infrastructure/billing_proof.dart';
 import '../infrastructure/purchase_service.dart';
 import 'about_privacy_screen.dart';
+import 'customer_list_screen.dart';
 import 'diagnosis_screen.dart';
 import 'help_screen.dart';
 import 'migration_screen.dart';
@@ -258,6 +259,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return true;
     }
     return false;
+  }
+
+  bool _isPremiumMember(Map<String, dynamic> settings) {
+    final statusTier = settings[_statusTierKey]?.toString();
+    final billingTier = settings[_billingTierKey]?.toString();
+    final featureTier = settings[_featureTierKey]?.toString();
+    final plan = settings[_planKey]?.toString();
+
+    if (statusTier == 'special' || billingTier == 'premium_comp') {
+      return true;
+    }
+    if (widget.purchaseService.currentPlan == 'premium') {
+      return true;
+    }
+    return featureTier == 'premium' ||
+        plan == 'premium' ||
+        billingTier == 'premium_store';
   }
 
   String _currentStatusLabel() {
@@ -1022,6 +1040,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _openSubscriptionManagement();
               },
             ),
+            if (_isPremiumMember(_settings))
+              _InfoLinkTile(
+                label: '顧客メモ',
+                onTap: () {
+                  unawaited(Haptics.lightImpact());
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          CustomerListScreen(apiClient: widget.apiClient),
+                    ),
+                  );
+                },
+              ),
             _InfoLinkTile(
               label: 'アカウントを削除する',
               onTap: () {
