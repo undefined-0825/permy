@@ -253,7 +253,77 @@ void main() {
 
     expect(find.text('顧客一覧'), findsOneWidget);
     expect(find.text('山田さん'), findsOneWidget);
-    expect(find.textContaining('常連'), findsOneWidget);
+    expect(find.textContaining('常連'), findsWidgets);
+  });
+
+  testWidgets('検索入力はdebounce後にAPIを呼び出す', (tester) async {
+    final apiClient = MockCustomerApiClient(
+      initialCustomers: [
+        CustomerSummary(
+          customerId: 'c1',
+          displayName: '山田さん',
+          relationshipStage: 'regular',
+          memoSummary: '終電前に帰る',
+          lastVisitAt: null,
+          lastContactAt: null,
+          isArchived: false,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(home: CustomerListScreen(apiClient: apiClient)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(apiClient.listCallCount, 1);
+
+    await tester.enterText(find.byType(TextField).first, '山田');
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(apiClient.listCallCount, 1);
+
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pumpAndSettle();
+    expect(apiClient.listCallCount, 2);
+  });
+
+  testWidgets('関係性チップで一覧を絞り込める', (tester) async {
+    final apiClient = MockCustomerApiClient(
+      initialCustomers: [
+        CustomerSummary(
+          customerId: 'c1',
+          displayName: '山田さん',
+          relationshipStage: 'regular',
+          memoSummary: '終電前に帰る',
+          lastVisitAt: null,
+          lastContactAt: null,
+          isArchived: false,
+        ),
+        CustomerSummary(
+          customerId: 'c2',
+          displayName: '新規客',
+          relationshipStage: 'new',
+          memoSummary: '初来店',
+          lastVisitAt: null,
+          lastContactAt: null,
+          isArchived: false,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(home: CustomerListScreen(apiClient: apiClient)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('山田さん'), findsOneWidget);
+    expect(find.text('新規客'), findsOneWidget);
+
+    await tester.tap(find.text('常連'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('山田さん'), findsOneWidget);
+    expect(find.text('新規客'), findsNothing);
   });
 
   testWidgets('顧客追加で一覧に反映される', (tester) async {

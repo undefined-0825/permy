@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:sample_app/core/theme/app_colors.dart';
@@ -23,7 +25,11 @@ class CustomerListScreen extends StatefulWidget {
 }
 
 class _CustomerListScreenState extends State<CustomerListScreen> {
+  static const Duration _searchDebounceDuration = Duration(milliseconds: 350);
+
   final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
+  String _relationshipFilter = 'all';
 
   List<CustomerSummary> _customers = <CustomerSummary>[];
   bool _loading = true;
@@ -38,8 +44,27 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String _) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(_searchDebounceDuration, _loadCustomers);
+  }
+
+  List<CustomerSummary> _applyRelationshipFilter(List<CustomerSummary> source) {
+    if (_relationshipFilter == 'all') {
+      return source;
+    }
+    return source
+        .where((customer) => customer.relationshipStage == _relationshipFilter)
+        .toList();
+  }
+
+  List<CustomerSummary> _visibleCustomers() {
+    return _applyRelationshipFilter(_customers);
   }
 
   Future<void> _loadCustomers() async {
@@ -82,6 +107,39 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       default:
         return '新規';
     }
+  }
+
+  Widget _buildRelationshipFilterChips() {
+    final options = <MapEntry<String, String>>[
+      const MapEntry<String, String>('all', '全て'),
+      const MapEntry<String, String>('new', '新規'),
+      const MapEntry<String, String>('regular', '常連'),
+      const MapEntry<String, String>('important', '重要'),
+      const MapEntry<String, String>('caution', '慎重'),
+      const MapEntry<String, String>('inactive', '休眠'),
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: options.map((option) {
+          final selected = _relationshipFilter == option.key;
+          return Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.xs),
+            child: ChoiceChip(
+              label: Text(option.value),
+              selected: selected,
+              onSelected: (_) {
+                setState(() {
+                  _relationshipFilter = option.key;
+                });
+              },
+              selectedColor: AppColors.buttonBackground.withValues(alpha: 0.18),
+            ),
+          );
+        }).toList(),
+      ),
+    );
   }
 
   Future<void> _openCreateCustomerForm() async {
@@ -149,6 +207,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     border: OutlineInputBorder(),
                     isDense: true,
                   ),
+                  onChanged: _onSearchChanged,
                   onSubmitted: (_) => _loadCustomers(),
                 ),
               ),
@@ -159,6 +218,8 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               ),
             ],
           ),
+          const SizedBox(height: AppSpacing.sm),
+          _buildRelationshipFilterChips(),
           const SizedBox(height: AppSpacing.sm),
           Expanded(child: _buildListBody()),
           const SizedBox(height: AppSpacing.sm),
@@ -201,11 +262,21 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       );
     }
 
+    final visible = _visibleCustomers();
+    if (visible.isEmpty) {
+      return Center(
+        child: Text(
+          '条件に一致する顧客がいません',
+          style: AppTextStyles.body.copyWith(color: AppColors.bodyText),
+        ),
+      );
+    }
+
     return ListView.separated(
-      itemCount: _customers.length,
+      itemCount: visible.length,
       separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.xs),
       itemBuilder: (context, index) {
-        final customer = _customers[index];
+        final customer = visible[index];
         final subtitle = [
           _relationshipLabel(customer.relationshipStage),
           if ((customer.memoSummary ?? '').isNotEmpty) customer.memoSummary!,
