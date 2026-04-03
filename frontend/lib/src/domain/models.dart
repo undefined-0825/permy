@@ -280,6 +280,10 @@ class CustomerSummary {
     required this.customerId,
     required this.displayName,
     required this.relationshipStage,
+    this.nickname,
+    this.callName,
+    this.areaTag,
+    this.jobTag,
     this.memoSummary,
     this.lastVisitAt,
     this.lastContactAt,
@@ -289,6 +293,10 @@ class CustomerSummary {
   final String customerId;
   final String displayName;
   final String relationshipStage;
+  final String? nickname;
+  final String? callName;
+  final String? areaTag;
+  final String? jobTag;
   final String? memoSummary;
   final String? lastVisitAt;
   final String? lastContactAt;
@@ -299,6 +307,10 @@ class CustomerSummary {
       customerId: json['customer_id']?.toString() ?? '',
       displayName: json['display_name']?.toString() ?? '',
       relationshipStage: json['relationship_stage']?.toString() ?? 'new',
+      nickname: json['nickname']?.toString(),
+      callName: json['call_name']?.toString(),
+      areaTag: json['area_tag']?.toString(),
+      jobTag: json['job_tag']?.toString(),
       memoSummary: json['memo_summary']?.toString(),
       lastVisitAt: json['last_visit_at']?.toString(),
       lastContactAt: json['last_contact_at']?.toString(),
@@ -335,6 +347,41 @@ class CreateCustomerInput {
       'job_tag': jobTag,
       'memo_summary': memoSummary,
       'relationship_stage': relationshipStage,
+    };
+  }
+}
+
+class UpdateCustomerInput {
+  UpdateCustomerInput({
+    required this.displayName,
+    this.nickname,
+    this.callName,
+    this.areaTag,
+    this.jobTag,
+    this.memoSummary,
+    this.relationshipStage = 'new',
+    this.isArchived = false,
+  });
+
+  final String displayName;
+  final String? nickname;
+  final String? callName;
+  final String? areaTag;
+  final String? jobTag;
+  final String? memoSummary;
+  final String relationshipStage;
+  final bool isArchived;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'display_name': displayName,
+      'nickname': nickname,
+      'call_name': callName,
+      'area_tag': areaTag,
+      'job_tag': jobTag,
+      'memo_summary': memoSummary,
+      'relationship_stage': relationshipStage,
+      'is_archived': isArchived,
     };
   }
 }

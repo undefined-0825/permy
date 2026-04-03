@@ -212,6 +212,26 @@ class _FakeApiClient implements AppApiClient {
   }
 
   @override
+  Future<CustomerSummary> updateCustomer(
+    String customerId,
+    UpdateCustomerInput input,
+  ) async {
+    return CustomerSummary(
+      customerId: customerId,
+      displayName: input.displayName,
+      relationshipStage: input.relationshipStage,
+      nickname: input.nickname,
+      callName: input.callName,
+      areaTag: input.areaTag,
+      jobTag: input.jobTag,
+      memoSummary: input.memoSummary,
+      lastVisitAt: null,
+      lastContactAt: null,
+      isArchived: input.isArchived,
+    );
+  }
+
+  @override
   Future<List<CustomerTag>> replaceCustomerTags(
     String customerId,
     ReplaceCustomerTagsInput input,

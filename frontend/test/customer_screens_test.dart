@@ -29,6 +29,7 @@ class MockCustomerApiClient implements AppApiClient {
   int createVisitLogCallCount = 0;
   int createEventCallCount = 0;
   int updateEventReminderCallCount = 0;
+  int updateCustomerCallCount = 0;
 
   @override
   Future<void> bootstrapAuth() async {}
@@ -136,6 +137,32 @@ class MockCustomerApiClient implements AppApiClient {
     );
     _customers.insert(0, created);
     return created;
+  }
+
+  @override
+  Future<CustomerSummary> updateCustomer(
+    String customerId,
+    UpdateCustomerInput input,
+  ) async {
+    updateCustomerCallCount += 1;
+    final index = _customers.indexWhere((c) => c.customerId == customerId);
+    final updated = CustomerSummary(
+      customerId: customerId,
+      displayName: input.displayName,
+      relationshipStage: input.relationshipStage,
+      nickname: input.nickname,
+      callName: input.callName,
+      areaTag: input.areaTag,
+      jobTag: input.jobTag,
+      memoSummary: input.memoSummary,
+      lastVisitAt: index >= 0 ? _customers[index].lastVisitAt : null,
+      lastContactAt: index >= 0 ? _customers[index].lastContactAt : null,
+      isArchived: input.isArchived,
+    );
+    if (index >= 0) {
+      _customers[index] = updated;
+    }
+    return updated;
   }
 
   @override
@@ -461,6 +488,48 @@ void main() {
     expect(find.text('基本情報'), findsOneWidget);
     expect(find.textContaining('関係性: 常連'), findsOneWidget);
     expect(find.text('タグ'), findsOneWidget);
+  });
+
+  testWidgets('顧客詳細から編集画面で基本情報を更新できる', (tester) async {
+    final apiClient = MockCustomerApiClient(
+      initialCustomers: [
+        CustomerSummary(
+          customerId: 'c1',
+          displayName: '山田さん',
+          relationshipStage: 'regular',
+          nickname: 'やまだ',
+          callName: 'やまださん',
+          areaTag: '梅田',
+          jobTag: '営業',
+          memoSummary: '終電前に帰る',
+          lastVisitAt: null,
+          lastContactAt: null,
+          isArchived: false,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(home: CustomerListScreen(apiClient: apiClient)),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('山田さん'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(OutlinedButton, '顧客情報を編集'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.widgetWithText(TextFormField, '表示名 *'), '山田太郎さん');
+    await tester.enterText(find.widgetWithText(TextFormField, '要約メモ'), '誕生日週に再来店見込み');
+    final saveButton = find.text('保存する');
+    await tester.ensureVisible(saveButton);
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+
+    expect(apiClient.updateCustomerCallCount, 1);
+    expect(find.text('山田太郎さん'), findsOneWidget);
+    expect(find.textContaining('誕生日週に再来店見込み'), findsOneWidget);
   });
 
   testWidgets('詳細画面でタグ更新・来店ログ追加・イベント追加を実行できる', (tester) async {

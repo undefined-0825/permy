@@ -12,6 +12,7 @@ import 'package:sample_app/core/widgets/app_section_header.dart';
 import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
 import '../infrastructure/customer_generate_selection_store.dart';
+import 'customer_edit_screen.dart';
 
 class CustomerDetailScreen extends StatefulWidget {
   const CustomerDetailScreen({
@@ -137,6 +138,55 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       await showAppErrorDialog(
         context: context,
         title: 'タグ更新に失敗したよ',
+        message: '入力内容を確認して、もう一度ためしてね。',
+        errorCode: e.errorCode,
+        detail: e.message,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _openEditCustomer() async {
+    final detail = _detail;
+    if (detail == null) {
+      return;
+    }
+
+    final input = await Navigator.of(context).push<UpdateCustomerInput>(
+      MaterialPageRoute(
+        builder: (context) => CustomerEditScreen(
+          initialCustomer: detail.customer,
+        ),
+      ),
+    );
+    if (input == null) {
+      return;
+    }
+
+    try {
+      setState(() {
+        _saving = true;
+      });
+      await widget.apiClient.updateCustomer(detail.customer.customerId, input);
+      await _loadDetail();
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('顧客情報を更新しました')),
+      );
+    } on ApiError catch (e) {
+      if (!mounted) {
+        return;
+      }
+      await showAppErrorDialog(
+        context: context,
+        title: '顧客更新に失敗したよ',
         message: '入力内容を確認して、もう一度ためしてね。',
         errorCode: e.errorCode,
         detail: e.message,
@@ -415,6 +465,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         AppButton(
           text: 'この顧客で返信を作る',
           onPressed: () => _startGenerateForCustomer(detail.customer),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        OutlinedButton(
+          onPressed: _saving ? null : _openEditCustomer,
+          child: const Text('顧客情報を編集'),
         ),
         const SizedBox(height: AppSpacing.lg),
         const AppSectionHeader(title: 'タグ'),

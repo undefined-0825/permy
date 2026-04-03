@@ -46,6 +46,11 @@ abstract class AppApiClient {
 
   Future<CustomerSummary> createCustomer(CreateCustomerInput input);
 
+  Future<CustomerSummary> updateCustomer(
+    String customerId,
+    UpdateCustomerInput input,
+  );
+
   Future<List<CustomerTag>> replaceCustomerTags(
     String customerId,
     ReplaceCustomerTagsInput input,
@@ -577,6 +582,39 @@ class ApiClient implements AppApiClient {
         ),
         method: 'POST',
         path: '/api/v1/customers',
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final body = _tryJson(response.body) ?? <String, dynamic>{};
+        return CustomerSummary.fromJson(body);
+      }
+
+      throw ApiError.fromBody(
+        httpStatus: response.statusCode,
+        body: _tryJson(response.body),
+      );
+    });
+  }
+
+  @override
+  Future<CustomerSummary> updateCustomer(
+    String customerId,
+    UpdateCustomerInput input,
+  ) async {
+    await bootstrapAuth();
+    return _runWithAuthRetry(() async {
+      final token = await tokenStore.read();
+      final response = await _sendWithTimeout(
+        () => _httpClient.put(
+          Uri.parse('$baseUrl/api/v1/customers/$customerId'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode(input.toJson()),
+        ),
+        method: 'PUT',
+        path: '/api/v1/customers/{id}',
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
