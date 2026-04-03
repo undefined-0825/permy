@@ -19,6 +19,7 @@ import '../domain/telemetry_event.dart';
 import '../domain/history_text.dart';
 import '../domain/line_history_parser.dart';
 import '../infrastructure/api_client.dart';
+import '../infrastructure/customer_generate_selection_store.dart';
 import '../infrastructure/line_name_store.dart';
 import '../infrastructure/purchase_service.dart';
 import '../infrastructure/share_receiver.dart';
@@ -103,12 +104,51 @@ class _GenerateScreenState extends State<GenerateScreen>
   bool _savingAdjustments = false;
   int _dropdownResetVersion = 0;
   final _lineNameStore = LineNameStore();
+  String? _selectedCustomerName;
+  late final VoidCallback _customerSelectionListener;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _customerSelectionListener = _consumeSelectedCustomer;
+    CustomerGenerateSelectionStore.instance.selectionNotifier.addListener(
+      _customerSelectionListener,
+    );
+    _consumeSelectedCustomer();
     _bootstrap();
+  }
+
+  void _consumeSelectedCustomer() {
+    final selected = CustomerGenerateSelectionStore.instance.current;
+    if (selected == null) {
+      return;
+    }
+
+    final mappedRelationship = _mapCustomerStageToRelationship(
+      selected.relationshipStage,
+    );
+    setState(() {
+      _selectedCustomerName = selected.displayName;
+      _relationshipType = mappedRelationship;
+    });
+    unawaited(_updateRelationshipType(mappedRelationship));
+    CustomerGenerateSelectionStore.instance.clear();
+  }
+
+  String _mapCustomerStageToRelationship(String stage) {
+    switch (stage) {
+      case 'important':
+        return 'big_client';
+      case 'inactive':
+        return 'caution';
+      case 'regular':
+      case 'caution':
+      case 'new':
+        return stage;
+      default:
+        return 'new';
+    }
   }
 
   Future<void> _bootstrap() async {
@@ -293,6 +333,35 @@ class _GenerateScreenState extends State<GenerateScreen>
                           sharedText: _sharedText!,
                         ),
                         const SizedBox(height: AppSpacing.lg),
+                        if (_selectedCustomerName != null) ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            decoration: BoxDecoration(
+                              color: AppColors.white.withValues(alpha: 0.8),
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'この顧客で返信作成中: $_selectedCustomerName',
+                                    style: AppTextStyles.body,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () {
+                                    setState(() {
+                                      _selectedCustomerName = null;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                        ],
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(
@@ -737,6 +806,9 @@ class _GenerateScreenState extends State<GenerateScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    CustomerGenerateSelectionStore.instance.selectionNotifier.removeListener(
+      _customerSelectionListener,
+    );
     _shareSubscription?.cancel();
     _generationLineTimer?.cancel();
     _shareSplashFadeTimer?.cancel();

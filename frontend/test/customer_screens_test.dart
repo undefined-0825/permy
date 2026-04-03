@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sample_app/src/domain/models.dart';
 import 'package:sample_app/src/domain/persona_diagnosis.dart';
 import 'package:sample_app/src/infrastructure/api_client.dart';
+import 'package:sample_app/src/infrastructure/customer_generate_selection_store.dart';
 import 'package:sample_app/src/presentation/customer_detail_screen.dart';
 import 'package:sample_app/src/presentation/customer_list_screen.dart';
 
@@ -378,5 +379,41 @@ void main() {
     expect(apiClient.replaceTagsCallCount, 1);
     expect(apiClient.createVisitLogCallCount, 1);
     expect(apiClient.createEventCallCount, 1);
+  });
+
+  testWidgets('詳細画面からこの顧客で返信を作る導線で選択を保持する', (tester) async {
+    final apiClient = MockCustomerApiClient(
+      initialCustomers: [
+        CustomerSummary(
+          customerId: 'c1',
+          displayName: '山田さん',
+          relationshipStage: 'regular',
+          memoSummary: '終電前に帰る',
+          lastVisitAt: null,
+          lastContactAt: null,
+          isArchived: false,
+        ),
+      ],
+    );
+
+    CustomerGenerateSelectionStore.instance.clear();
+
+    await tester.pumpWidget(
+      MaterialApp(home: CustomerListScreen(apiClient: apiClient)),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('山田さん'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('この顧客で返信を作る'));
+    await tester.pumpAndSettle();
+
+    final selected = CustomerGenerateSelectionStore.instance.current;
+    expect(selected, isNotNull);
+    expect(selected!.customerId, 'c1');
+    expect(selected.displayName, '山田さん');
+
+    CustomerGenerateSelectionStore.instance.clear();
   });
 }

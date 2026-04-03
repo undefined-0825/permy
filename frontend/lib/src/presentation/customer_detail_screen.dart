@@ -4,12 +4,14 @@ import 'package:sample_app/core/theme/app_colors.dart';
 import 'package:sample_app/core/theme/app_radius.dart';
 import 'package:sample_app/core/theme/app_spacing.dart';
 import 'package:sample_app/core/theme/app_text_styles.dart';
+import 'package:sample_app/core/widgets/app_button.dart';
 import 'package:sample_app/core/widgets/app_error_message_box.dart';
 import 'package:sample_app/core/widgets/app_scaffold.dart';
 import 'package:sample_app/core/widgets/app_section_header.dart';
 
 import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
+import '../infrastructure/customer_generate_selection_store.dart';
 
 class CustomerDetailScreen extends StatefulWidget {
   const CustomerDetailScreen({
@@ -263,6 +265,17 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     }
   }
 
+  void _startGenerateForCustomer(CustomerSummary customer) {
+    CustomerGenerateSelectionStore.instance.setSelection(
+      CustomerGenerateSelection(
+        customerId: customer.customerId,
+        displayName: customer.displayName,
+        relationshipStage: customer.relationshipStage,
+      ),
+    );
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
@@ -317,6 +330,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               ],
             ],
           ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        AppButton(
+          text: 'この顧客で返信を作る',
+          onPressed: () => _startGenerateForCustomer(detail.customer),
         ),
         const SizedBox(height: AppSpacing.lg),
         const AppSectionHeader(title: 'タグ'),
