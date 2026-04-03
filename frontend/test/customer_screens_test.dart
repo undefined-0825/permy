@@ -12,18 +12,23 @@ import 'package:sample_app/src/presentation/customer_list_screen.dart';
 class MockCustomerApiClient implements AppApiClient {
   MockCustomerApiClient({
     List<CustomerSummary> initialCustomers = const <CustomerSummary>[],
+    List<CustomerReminder> initialReminders = const <CustomerReminder>[],
     this.shouldFailList = false,
-  }) : _customers = List<CustomerSummary>.from(initialCustomers);
+  }) : _customers = List<CustomerSummary>.from(initialCustomers),
+       _reminders = List<CustomerReminder>.from(initialReminders);
 
   final bool shouldFailList;
   final List<CustomerSummary> _customers;
+  final List<CustomerReminder> _reminders;
 
   int listCallCount = 0;
+  int remindersCallCount = 0;
   int createCallCount = 0;
   int detailCallCount = 0;
   int replaceTagsCallCount = 0;
   int createVisitLogCallCount = 0;
   int createEventCallCount = 0;
+  int updateEventReminderCallCount = 0;
 
   @override
   Future<void> bootstrapAuth() async {}
@@ -211,6 +216,30 @@ class MockCustomerApiClient implements AppApiClient {
       note: input.note,
     );
   }
+
+  @override
+  Future<CustomerEvent> updateCustomerEventReminder(
+    String customerId,
+    String eventId,
+    UpdateCustomerEventReminderInput input,
+  ) async {
+    updateEventReminderCallCount += 1;
+    return CustomerEvent(
+      eventId: eventId,
+      eventType: 'birthday',
+      eventDate: '2026-04-20',
+      title: '次回提案日',
+      note: null,
+      remindDaysBefore: input.remindDaysBefore,
+      isActive: true,
+    );
+  }
+
+  @override
+  Future<List<CustomerReminder>> getCustomerReminders({int daysAhead = 14}) async {
+    remindersCallCount += 1;
+    return List<CustomerReminder>.from(_reminders);
+  }
 }
 
 void main() {
@@ -324,6 +353,60 @@ void main() {
 
     expect(find.text('山田さん'), findsOneWidget);
     expect(find.text('新規客'), findsNothing);
+  });
+
+  testWidgets('通知リマインドからこの顧客で返信を作る導線を実行できる', (tester) async {
+    final apiClient = MockCustomerApiClient(
+      initialCustomers: [
+        CustomerSummary(
+          customerId: 'c1',
+          displayName: '山田さん',
+          relationshipStage: 'regular',
+          memoSummary: '終電前に帰る',
+          lastVisitAt: null,
+          lastContactAt: null,
+          isArchived: false,
+        ),
+      ],
+      initialReminders: [
+        CustomerReminder(
+          reminderId: 'r1',
+          reminderType: 'event',
+          title: '誕生日（山田さん）',
+          dueDate: '2026-04-15',
+          daysDelta: 0,
+          customer: CustomerSummary(
+            customerId: 'c1',
+            displayName: '山田さん',
+            relationshipStage: 'regular',
+            memoSummary: null,
+            lastVisitAt: null,
+            lastContactAt: null,
+            isArchived: false,
+          ),
+        ),
+      ],
+    );
+
+    CustomerGenerateSelectionStore.instance.clear();
+
+    await tester.pumpWidget(
+      MaterialApp(home: CustomerListScreen(apiClient: apiClient)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('通知リマインド'), findsOneWidget);
+    expect(apiClient.remindersCallCount, 1);
+
+    await tester.tap(find.byTooltip('この顧客で返信を作る').first);
+    await tester.pumpAndSettle();
+
+    final selected = CustomerGenerateSelectionStore.instance.current;
+    expect(selected, isNotNull);
+    expect(selected!.customerId, 'c1');
+    expect(selected.displayName, '山田さん');
+
+    CustomerGenerateSelectionStore.instance.clear();
   });
 
   testWidgets('顧客追加で一覧に反映される', (tester) async {
@@ -446,9 +529,16 @@ void main() {
     addEventButton.onPressed!.call();
     await tester.pumpAndSettle();
 
+    await tester.tap(find.widgetWithText(OutlinedButton, '通知日数を更新').first);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextField, '何日前に通知するか（0-365）'), '5');
+    await tester.tap(find.text('更新する'));
+    await tester.pumpAndSettle();
+
     expect(apiClient.replaceTagsCallCount, 1);
     expect(apiClient.createVisitLogCallCount, 1);
     expect(apiClient.createEventCallCount, 1);
+    expect(apiClient.updateEventReminderCallCount, 1);
   });
 
   testWidgets('詳細画面からこの顧客で返信を作る導線で選択を保持する', (tester) async {

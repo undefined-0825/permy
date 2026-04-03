@@ -257,6 +257,28 @@ class _FakeApiClient implements AppApiClient {
       note: input.note,
     );
   }
+
+  @override
+  Future<CustomerEvent> updateCustomerEventReminder(
+    String customerId,
+    String eventId,
+    UpdateCustomerEventReminderInput input,
+  ) async {
+    return CustomerEvent(
+      eventId: eventId,
+      eventType: 'birthday',
+      eventDate: '2026-04-20',
+      title: '更新イベント',
+      note: null,
+      remindDaysBefore: input.remindDaysBefore,
+      isActive: true,
+    );
+  }
+
+  @override
+  Future<List<CustomerReminder>> getCustomerReminders({int daysAhead = 14}) async {
+    return <CustomerReminder>[];
+  }
 }
 
 class _FakeTelemetryQueue extends TelemetryQueue {

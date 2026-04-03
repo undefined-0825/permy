@@ -13,7 +13,10 @@ from app.schemas import (
     CustomerCreateRequest,
     CustomerDetailResponse,
     CustomerEventCreateRequest,
+    CustomerEventReminderUpdateRequest,
     CustomerEventResponse,
+    CustomerReminderCustomer,
+    CustomerReminderResponse,
     CustomerResponse,
     CustomerTagReplaceRequest,
     CustomerTagResponse,
@@ -99,6 +102,27 @@ async def _find_customer_or_404(db: AsyncSession, user_id: str, customer_id: str
     return customer
 
 
+async def _find_customer_event_or_404(
+    db: AsyncSession,
+    user_id: str,
+    customer_id: str,
+    event_id: str,
+) -> CustomerEvent:
+    row = await db.execute(
+        select(CustomerEvent).where(
+            and_(
+                CustomerEvent.event_id == event_id,
+                CustomerEvent.user_id == user_id,
+                CustomerEvent.customer_id == customer_id,
+            )
+        )
+    )
+    event = row.scalar_one_or_none()
+    if not event:
+        raise err("NOT_FOUND", "イベントが見つかりません", status_code=404)
+    return event
+
+
 def _parse_datetime_or_422(value: str | None, field_name: str) -> dt.datetime | None:
     if value is None:
         return None
@@ -116,6 +140,27 @@ def _parse_date_or_422(value: str, field_name: str) -> dt.date:
         return dt.date.fromisoformat(value)
     except ValueError as ex:
         raise err("VALIDATION_FAILED", f"{field_name} はYYYY-MM-DD形式で指定してください", status_code=422) from ex
+
+
+def _parse_optional_date_or_422(value: str | None, field_name: str) -> dt.date | None:
+    if value is None:
+        return None
+    raw = value.strip()
+    if not raw:
+        return None
+    return _parse_date_or_422(raw, field_name)
+
+
+def _to_utc_date(value: dt.datetime | None) -> dt.date | None:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.date()
+    return value.astimezone(dt.timezone.utc).date()
+
+
+def _build_due_title_for_gap(base_label: str, days: int, customer_name: str) -> str:
+    return f"{base_label}{days}日: {customer_name} さん"
 
 
 @router.get("/customers", response_model=list[CustomerResponse])
@@ -185,6 +230,116 @@ async def list_customers(
     stmt = stmt.order_by(desc(Customer.updated_at)).limit(200)
     rows = (await db.execute(stmt)).scalars().all()
     return [_to_customer_response(row) for row in rows]
+
+
+@router.get("/customers/reminders", response_model=list[CustomerReminderResponse])
+async def list_customer_reminders(
+    days_ahead: int = Query(default=14, ge=0, le=90),
+    today: str | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+    auth: AuthContext = Depends(get_auth_context),
+):
+    _require_premium(auth)
+
+    base_date = _parse_optional_date_or_422(today, "today") or dt.datetime.now(dt.timezone.utc).date()
+    horizon = base_date + dt.timedelta(days=days_ahead)
+    lookback = base_date - dt.timedelta(days=30)
+
+    customers = (
+        await db.execute(
+            select(Customer)
+            .where(and_(Customer.user_id == auth.user_id, Customer.is_archived.is_(False)))
+            .order_by(desc(Customer.updated_at))
+            .limit(300)
+        )
+    ).scalars().all()
+
+    customer_by_id = {row.customer_id: row for row in customers}
+    if not customer_by_id:
+        return []
+
+    events = (
+        await db.execute(
+            select(CustomerEvent)
+            .where(
+                and_(
+                    CustomerEvent.user_id == auth.user_id,
+                    CustomerEvent.is_active.is_(True),
+                    CustomerEvent.customer_id.in_(list(customer_by_id.keys())),
+                )
+            )
+            .order_by(CustomerEvent.event_date.asc(), CustomerEvent.created_at.desc())
+            .limit(500)
+        )
+    ).scalars().all()
+
+    reminders: list[CustomerReminderResponse] = []
+
+    for event in events:
+        customer = customer_by_id.get(event.customer_id)
+        if customer is None:
+            continue
+        due_date = event.event_date - dt.timedelta(days=max(event.remind_days_before, 0))
+        if due_date < lookback or due_date > horizon:
+            continue
+        reminders.append(
+            CustomerReminderResponse(
+                reminder_id=f"event:{event.event_id}:{due_date.isoformat()}",
+                reminder_type="event",
+                title=f"{event.title}（{customer.display_name} さん）",
+                due_date=due_date.isoformat(),
+                days_delta=(due_date - base_date).days,
+                customer=CustomerReminderCustomer(
+                    customer_id=customer.customer_id,
+                    display_name=customer.display_name,
+                    relationship_stage=customer.relationship_stage,
+                ),
+            )
+        )
+
+    for customer in customers:
+        last_contact_date = _to_utc_date(customer.last_contact_at)
+        if last_contact_date is not None:
+            for days in (3, 7):
+                due_date = last_contact_date + dt.timedelta(days=days)
+                if lookback <= due_date <= horizon:
+                    reminders.append(
+                        CustomerReminderResponse(
+                            reminder_id=f"contact_gap:{customer.customer_id}:{days}",
+                            reminder_type="contact_gap",
+                            title=_build_due_title_for_gap("連絡なし", days, customer.display_name),
+                            due_date=due_date.isoformat(),
+                            days_delta=(due_date - base_date).days,
+                            customer=CustomerReminderCustomer(
+                                customer_id=customer.customer_id,
+                                display_name=customer.display_name,
+                                relationship_stage=customer.relationship_stage,
+                            ),
+                        )
+                    )
+
+        last_visit_date = _to_utc_date(customer.last_visit_at)
+        if last_visit_date is not None:
+            for days in (14, 30):
+                due_date = last_visit_date + dt.timedelta(days=days)
+                if lookback <= due_date <= horizon:
+                    reminders.append(
+                        CustomerReminderResponse(
+                            reminder_id=f"visit_gap:{customer.customer_id}:{days}",
+                            reminder_type="visit_gap",
+                            title=_build_due_title_for_gap("来店なし", days, customer.display_name),
+                            due_date=due_date.isoformat(),
+                            days_delta=(due_date - base_date).days,
+                            customer=CustomerReminderCustomer(
+                                customer_id=customer.customer_id,
+                                display_name=customer.display_name,
+                                relationship_stage=customer.relationship_stage,
+                            ),
+                        )
+                    )
+
+    reminders.sort(key=lambda item: (item.due_date, item.days_delta, item.customer.display_name))
+    return reminders[:120]
 
 
 @router.post("/customers", response_model=CustomerResponse)
@@ -401,3 +556,24 @@ async def create_customer_event(
     await db.commit()
     await db.refresh(row)
     return _to_event_response(row)
+
+
+@router.put("/customers/{customer_id}/events/{event_id}/reminder", response_model=CustomerEventResponse)
+async def update_customer_event_reminder(
+    customer_id: str,
+    event_id: str,
+    req: CustomerEventReminderUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+    auth: AuthContext = Depends(get_auth_context),
+):
+    _require_premium(auth)
+    customer = await _find_customer_or_404(db, auth.user_id, customer_id)
+    event = await _find_customer_event_or_404(db, auth.user_id, customer_id, event_id)
+
+    now = dt.datetime.now(dt.timezone.utc)
+    event.remind_days_before = req.remind_days_before
+    customer.updated_at = now
+
+    await db.commit()
+    await db.refresh(event)
+    return _to_event_response(event)

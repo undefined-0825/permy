@@ -70,11 +70,13 @@ class MockApiClient implements AppApiClient {
     this.settingsSnapshot,
     this.shouldFailUpdate = false,
     this.verifyBillingErrorCode,
-  });
+    List<CustomerReminder> reminders = const <CustomerReminder>[],
+  }) : _reminders = List<CustomerReminder>.from(reminders);
 
   final SettingsSnapshot? settingsSnapshot;
   final bool shouldFailUpdate;
   final String? verifyBillingErrorCode;
+  final List<CustomerReminder> _reminders;
   Map<String, dynamic>? lastUpdatedSettings;
   List<Map<String, String>> verifyBillingCalls = [];
 
@@ -290,6 +292,28 @@ class MockApiClient implements AppApiClient {
       title: input.title,
       note: input.note,
     );
+  }
+
+  @override
+  Future<CustomerEvent> updateCustomerEventReminder(
+    String customerId,
+    String eventId,
+    UpdateCustomerEventReminderInput input,
+  ) async {
+    return CustomerEvent(
+      eventId: eventId,
+      eventType: 'birthday',
+      eventDate: '2026-04-20',
+      title: '更新イベント',
+      note: null,
+      remindDaysBefore: input.remindDaysBefore,
+      isActive: true,
+    );
+  }
+
+  @override
+  Future<List<CustomerReminder>> getCustomerReminders({int daysAhead = 14}) async {
+    return List<CustomerReminder>.from(_reminders);
   }
 
   @override
@@ -649,6 +673,56 @@ void main() {
           },
           etag: 'test-etag-123',
         ),
+        reminders: [
+          CustomerReminder(
+            reminderId: 'r1',
+            reminderType: 'event',
+            title: '誕生日（山田さん）',
+            dueDate: '2026-04-15',
+            daysDelta: 0,
+            customer: CustomerSummary(
+              customerId: 'c1',
+              displayName: '山田さん',
+              relationshipStage: 'regular',
+              memoSummary: null,
+              lastVisitAt: null,
+              lastContactAt: null,
+              isArchived: false,
+            ),
+          ),
+          CustomerReminder(
+            reminderId: 'r2',
+            reminderType: 'visit_gap',
+            title: '来店なし14日: 田中さん',
+            dueDate: '2026-04-16',
+            daysDelta: 1,
+            customer: CustomerSummary(
+              customerId: 'c2',
+              displayName: '田中さん',
+              relationshipStage: 'new',
+              memoSummary: null,
+              lastVisitAt: null,
+              lastContactAt: null,
+              isArchived: false,
+            ),
+          ),
+          CustomerReminder(
+            reminderId: 'r3',
+            reminderType: 'contact_gap',
+            title: '連絡なし7日: 佐藤さん',
+            dueDate: '2026-04-17',
+            daysDelta: -1,
+            customer: CustomerSummary(
+              customerId: 'c3',
+              displayName: '佐藤さん',
+              relationshipStage: 'important',
+              memoSummary: null,
+              lastVisitAt: null,
+              lastContactAt: null,
+              isArchived: false,
+            ),
+          ),
+        ],
       );
       final premiumPurchase = MockPurchaseService(mockIsPro: true);
 
@@ -664,6 +738,7 @@ void main() {
 
       await expandAdvancedSettings(tester);
       expect(find.widgetWithText(AppListItem, '顧客メモ'), findsOneWidget);
+      expect(find.text('2件'), findsOneWidget);
 
       await tapAppListItem(tester, '顧客メモ');
       expect(find.byType(CustomerListScreen), findsOneWidget);

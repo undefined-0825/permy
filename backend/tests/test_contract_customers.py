@@ -114,6 +114,15 @@ def test_customers_premium_crud_and_search(client):
             },
         )
         assert event_res.status_code == 200
+        event_id = event_res.json()["event_id"]
+
+        update_event_reminder_res = client.put(
+            f"/api/v1/customers/{customer_id}/events/{event_id}/reminder",
+            headers=headers,
+            json={"remind_days_before": 3},
+        )
+        assert update_event_reminder_res.status_code == 200
+        assert update_event_reminder_res.json()["remind_days_before"] == 3
 
         detail_res = client.get(f"/api/v1/customers/{customer_id}", headers=headers)
         assert detail_res.status_code == 200
@@ -122,6 +131,7 @@ def test_customers_premium_crud_and_search(client):
         assert len(detail["tags"]) == 2
         assert len(detail["visit_logs"]) == 1
         assert len(detail["events"]) == 1
+        assert detail["events"][0]["remind_days_before"] == 3
 
         update_res = client.put(
             f"/api/v1/customers/{customer_id}",
@@ -139,5 +149,35 @@ def test_customers_premium_crud_and_search(client):
         listed = list_res.json()
         assert len(listed) >= 1
         assert listed[0]["customer_id"] == customer_id
+
+        reminders_res = client.get(
+            "/api/v1/customers/reminders?today=2026-04-14&days_ahead=20",
+            headers=headers,
+        )
+        assert reminders_res.status_code == 200
+        reminders = reminders_res.json()
+        assert len(reminders) >= 1
+        assert any(item["reminder_type"] == "event" for item in reminders)
+
+        create_res_contact_visit = client.post(
+            "/api/v1/customers",
+            headers=headers,
+            json={
+                "display_name": "田中さん",
+                "relationship_stage": "new",
+                "last_contact_at": "2026-04-08T00:00:00+00:00",
+                "last_visit_at": "2026-03-20T00:00:00+00:00",
+            },
+        )
+        assert create_res_contact_visit.status_code == 200
+
+        reminders_gap_res = client.get(
+            "/api/v1/customers/reminders?today=2026-04-15&days_ahead=20",
+            headers=headers,
+        )
+        assert reminders_gap_res.status_code == 200
+        reminders_gap = reminders_gap_res.json()
+        assert any(item["reminder_type"] == "contact_gap" for item in reminders_gap)
+        assert any(item["reminder_type"] == "visit_gap" for item in reminders_gap)
     finally:
         settings.app_env = old_app_env

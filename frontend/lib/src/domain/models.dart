@@ -391,6 +391,8 @@ class CustomerEvent {
     required this.eventDate,
     required this.title,
     this.note,
+    this.remindDaysBefore = 0,
+    this.isActive = true,
   });
 
   final String eventId;
@@ -398,6 +400,8 @@ class CustomerEvent {
   final String eventDate;
   final String title;
   final String? note;
+  final int remindDaysBefore;
+  final bool isActive;
 
   factory CustomerEvent.fromJson(Map<String, dynamic> json) {
     return CustomerEvent(
@@ -406,6 +410,8 @@ class CustomerEvent {
       eventDate: json['event_date']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
       note: json['note']?.toString(),
+      remindDaysBefore: (json['remind_days_before'] as num?)?.toInt() ?? 0,
+      isActive: json['is_active'] != false,
     );
   }
 }
@@ -446,6 +452,38 @@ class CustomerDetail {
                 .map(CustomerEvent.fromJson)
                 .toList()
           : <CustomerEvent>[],
+    );
+  }
+}
+
+class CustomerReminder {
+  CustomerReminder({
+    required this.reminderId,
+    required this.reminderType,
+    required this.title,
+    required this.dueDate,
+    required this.daysDelta,
+    required this.customer,
+  });
+
+  final String reminderId;
+  final String reminderType;
+  final String title;
+  final String dueDate;
+  final int daysDelta;
+  final CustomerSummary customer;
+
+  factory CustomerReminder.fromJson(Map<String, dynamic> json) {
+    final customerRaw = json['customer'];
+    return CustomerReminder(
+      reminderId: json['reminder_id']?.toString() ?? '',
+      reminderType: json['reminder_type']?.toString() ?? 'event',
+      title: json['title']?.toString() ?? '',
+      dueDate: json['due_date']?.toString() ?? '',
+      daysDelta: (json['days_delta'] as num?)?.toInt() ?? 0,
+      customer: CustomerSummary.fromJson(
+        customerRaw is Map<String, dynamic> ? customerRaw : <String, dynamic>{},
+      ),
     );
   }
 }
@@ -533,6 +571,18 @@ class CreateCustomerEventInput {
       'note': note,
       'remind_days_before': remindDaysBefore,
       'is_active': isActive,
+    };
+  }
+}
+
+class UpdateCustomerEventReminderInput {
+  UpdateCustomerEventReminderInput({required this.remindDaysBefore});
+
+  final int remindDaysBefore;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'remind_days_before': remindDaysBefore,
     };
   }
 }

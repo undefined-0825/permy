@@ -61,6 +61,14 @@ abstract class AppApiClient {
     CreateCustomerEventInput input,
   );
 
+  Future<CustomerEvent> updateCustomerEventReminder(
+    String customerId,
+    String eventId,
+    UpdateCustomerEventReminderInput input,
+  );
+
+  Future<List<CustomerReminder>> getCustomerReminders({int daysAhead = 14});
+
   Future<void> deleteAccount();
 }
 
@@ -679,6 +687,75 @@ class ApiClient implements AppApiClient {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final body = _tryJson(response.body) ?? <String, dynamic>{};
         return CustomerEvent.fromJson(body);
+      }
+
+      throw ApiError.fromBody(
+        httpStatus: response.statusCode,
+        body: _tryJson(response.body),
+      );
+    });
+  }
+
+  @override
+  Future<CustomerEvent> updateCustomerEventReminder(
+    String customerId,
+    String eventId,
+    UpdateCustomerEventReminderInput input,
+  ) async {
+    await bootstrapAuth();
+    return _runWithAuthRetry(() async {
+      final token = await tokenStore.read();
+      final response = await _sendWithTimeout(
+        () => _httpClient.put(
+          Uri.parse('$baseUrl/api/v1/customers/$customerId/events/$eventId/reminder'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode(input.toJson()),
+        ),
+        method: 'PUT',
+        path: '/api/v1/customers/{id}/events/{event_id}/reminder',
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final body = _tryJson(response.body) ?? <String, dynamic>{};
+        return CustomerEvent.fromJson(body);
+      }
+
+      throw ApiError.fromBody(
+        httpStatus: response.statusCode,
+        body: _tryJson(response.body),
+      );
+    });
+  }
+
+  @override
+  Future<List<CustomerReminder>> getCustomerReminders({int daysAhead = 14}) async {
+    await bootstrapAuth();
+    return _runWithAuthRetry(() async {
+      final token = await tokenStore.read();
+      final uri = Uri.parse('$baseUrl/api/v1/customers/reminders').replace(
+        queryParameters: {'days_ahead': '$daysAhead'},
+      );
+      final response = await _sendWithTimeout(
+        () => _httpClient.get(
+          uri,
+          headers: {'Authorization': 'Bearer $token'},
+        ),
+        method: 'GET',
+        path: '/api/v1/customers/reminders',
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is! List) {
+          return <CustomerReminder>[];
+        }
+        return decoded
+            .whereType<Map<String, dynamic>>()
+            .map(CustomerReminder.fromJson)
+            .toList();
       }
 
       throw ApiError.fromBody(

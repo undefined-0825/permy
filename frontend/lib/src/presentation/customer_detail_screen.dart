@@ -265,6 +265,86 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     }
   }
 
+  Future<void> _editEventReminder(CustomerEvent event) async {
+    final detail = _detail;
+    if (detail == null) {
+      return;
+    }
+
+    final controller = TextEditingController(
+      text: event.remindDaysBefore.toString(),
+    );
+    final value = await showDialog<int>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('通知日数を更新'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: '何日前に通知するか（0-365）',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () {
+              final parsed = int.tryParse(controller.text.trim());
+              if (parsed == null || parsed < 0 || parsed > 365) {
+                return;
+              }
+              Navigator.of(dialogContext).pop(parsed);
+            },
+            child: const Text('更新する'),
+          ),
+        ],
+      ),
+    );
+
+    if (value == null) {
+      return;
+    }
+
+    try {
+      setState(() {
+        _saving = true;
+      });
+      await widget.apiClient.updateCustomerEventReminder(
+        detail.customer.customerId,
+        event.eventId,
+        UpdateCustomerEventReminderInput(remindDaysBefore: value),
+      );
+      await _loadDetail();
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('イベント通知日数を更新しました')),
+      );
+    } on ApiError catch (e) {
+      if (!mounted) {
+        return;
+      }
+      await showAppErrorDialog(
+        context: context,
+        title: '通知日数の更新に失敗したよ',
+        message: '入力値を確認して、もう一度ためしてね。',
+        errorCode: e.errorCode,
+        detail: e.message,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+        });
+      }
+    }
+  }
+
   void _startGenerateForCustomer(CustomerSummary customer) {
     CustomerGenerateSelectionStore.instance.setSelection(
       CustomerGenerateSelection(
@@ -456,9 +536,31 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           ...detail.events.take(3).map(
             (event) => Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-              child: Text(
-                '${event.eventDate} / ${event.title}',
-                style: AppTextStyles.body,
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: AppColors.white.withValues(alpha: 0.75),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${event.eventDate} / ${event.title}',
+                      style: AppTextStyles.body,
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      '通知: ${event.remindDaysBefore}日前',
+                      style: AppTextStyles.small,
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    OutlinedButton(
+                      onPressed: _saving ? null : () => _editEventReminder(event),
+                      child: const Text('通知日数を更新'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -206,6 +206,7 @@ CustomerSpendLevel = Literal["unknown", "low", "middle", "high", "very_high"]
 CustomerDrinkAmountTag = Literal["light", "normal", "heavy"]
 CustomerMoodTag = Literal["good", "normal", "bad", "unstable"]
 CustomerEventType = Literal["birthday", "first_visit_anniversary", "last_visit_reminder", "special_day", "custom"]
+CustomerReminderType = Literal["event", "contact_gap", "visit_gap"]
 
 
 class CustomerBase(BaseModel):
@@ -297,6 +298,10 @@ class CustomerEventCreateRequest(BaseModel):
     is_active: bool = True
 
 
+class CustomerEventReminderUpdateRequest(BaseModel):
+    remind_days_before: int = Field(..., ge=0, le=365)
+
+
 class CustomerEventResponse(BaseModel):
     event_id: str
     customer_id: str
@@ -307,6 +312,21 @@ class CustomerEventResponse(BaseModel):
     remind_days_before: int
     is_active: bool
     created_at: str
+
+
+class CustomerReminderCustomer(BaseModel):
+    customer_id: str
+    display_name: str
+    relationship_stage: CustomerRelationshipStage
+
+
+class CustomerReminderResponse(BaseModel):
+    reminder_id: str
+    reminder_type: CustomerReminderType
+    title: str
+    due_date: str
+    days_delta: int
+    customer: CustomerReminderCustomer
 
 
 class CustomerDetailResponse(BaseModel):

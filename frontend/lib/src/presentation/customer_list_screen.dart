@@ -12,6 +12,7 @@ import 'package:sample_app/core/widgets/app_section_header.dart';
 
 import '../domain/models.dart';
 import '../infrastructure/api_client.dart';
+import '../infrastructure/customer_generate_selection_store.dart';
 import 'customer_detail_screen.dart';
 import 'customer_form_screen.dart';
 
@@ -32,6 +33,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   String _relationshipFilter = 'all';
 
   List<CustomerSummary> _customers = <CustomerSummary>[];
+  List<CustomerReminder> _reminders = <CustomerReminder>[];
   bool _loading = true;
   bool _saving = false;
   ApiError? _error;
@@ -76,11 +78,18 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       final list = await widget.apiClient.getCustomers(
         query: _searchController.text,
       );
+      var reminders = <CustomerReminder>[];
+      try {
+        reminders = await widget.apiClient.getCustomerReminders(daysAhead: 21);
+      } on ApiError {
+        reminders = <CustomerReminder>[];
+      }
       if (!mounted) {
         return;
       }
       setState(() {
         _customers = list;
+        _reminders = reminders;
         _loading = false;
       });
     } on ApiError catch (e) {
@@ -92,6 +101,72 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
         _loading = false;
       });
     }
+  }
+
+  void _startGenerateForCustomer(CustomerSummary customer) {
+    CustomerGenerateSelectionStore.instance.setSelection(
+      CustomerGenerateSelection(
+        customerId: customer.customerId,
+        displayName: customer.displayName,
+        relationshipStage: customer.relationshipStage,
+      ),
+    );
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  String _daysDeltaLabel(int value) {
+    if (value == 0) {
+      return '今日';
+    }
+    if (value < 0) {
+      return '${-value}日超過';
+    }
+    return 'あと${value}日';
+  }
+
+  Widget _buildReminderSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const AppSectionHeader(title: '通知リマインド'),
+        const SizedBox(height: AppSpacing.xs),
+        if (_reminders.isEmpty)
+          Text(
+            '期限が近い通知はありません',
+            style: AppTextStyles.small.copyWith(color: AppColors.metaText),
+          )
+        else
+          ..._reminders.take(4).map((reminder) {
+            final subtitle = [
+              _daysDeltaLabel(reminder.daysDelta),
+              reminder.dueDate,
+              _relationshipLabel(reminder.customer.relationshipStage),
+            ].join(' / ');
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: AppListItem(
+                title: reminder.title,
+                subtitle: subtitle,
+                trailing: IconButton(
+                  tooltip: 'この顧客で返信を作る',
+                  icon: const Icon(Icons.send, color: AppColors.buttonBackground),
+                  onPressed: () => _startGenerateForCustomer(reminder.customer),
+                ),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => CustomerDetailScreen(
+                        apiClient: widget.apiClient,
+                        customerId: reminder.customer.customerId,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            );
+          }),
+      ],
+    );
   }
 
   String _relationshipLabel(String value) {
@@ -194,6 +269,8 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const SizedBox(height: AppSpacing.md),
+          _buildReminderSection(),
           const SizedBox(height: AppSpacing.md),
           const AppSectionHeader(title: '顧客一覧'),
           const SizedBox(height: AppSpacing.sm),

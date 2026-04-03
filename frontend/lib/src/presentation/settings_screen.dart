@@ -59,6 +59,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _saving = false;
   bool _persisting = false;
   bool _pendingPersist = false;
+  int _customerReminderCount = 0;
   Timer? _autoPersistDebounce;
   ApiError? _error;
   final TextEditingController _ngPhraseController = TextEditingController();
@@ -98,10 +99,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
       });
 
       final snapshot = await widget.apiClient.getSettings();
+      final normalized = _normalizeSettings(snapshot.settings);
+      var reminderCount = 0;
+      if (_isPremiumMember(normalized)) {
+        try {
+          final reminders = await widget.apiClient.getCustomerReminders(
+            daysAhead: 7,
+          );
+          reminderCount = reminders.where((item) => item.daysDelta <= 0).length;
+          if (reminderCount == 0) {
+            reminderCount = reminders.length;
+          }
+        } on ApiError {
+          reminderCount = 0;
+        }
+      }
       if (!mounted) return;
       setState(() {
-        _settings = _normalizeSettings(snapshot.settings);
+        _settings = normalized;
         _currentETag = snapshot.etag;
+        _customerReminderCount = reminderCount;
         _loading = false;
       });
 
@@ -1043,6 +1060,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             if (_isPremiumMember(_settings))
               _InfoLinkTile(
                 label: '顧客メモ',
+                badgeCount: _customerReminderCount,
                 onTap: () {
                   unawaited(Haptics.lightImpact());
                   Navigator.of(context).push(
@@ -1246,16 +1264,46 @@ class _SettingRow extends StatelessWidget {
 }
 
 class _InfoLinkTile extends StatelessWidget {
-  const _InfoLinkTile({required this.label, required this.onTap});
+  const _InfoLinkTile({
+    required this.label,
+    required this.onTap,
+    this.badgeCount,
+  });
 
   final String label;
   final VoidCallback onTap;
+  final int? badgeCount;
 
   @override
   Widget build(BuildContext context) {
+    final showBadge = (badgeCount ?? 0) > 0;
     return AppListItem(
       title: label,
-      trailing: const Icon(Icons.chevron_right, color: AppColors.metaText),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showBadge)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.xs,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.buttonBackground,
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+              ),
+              child: Text(
+                '${badgeCount!}件',
+                style: AppTextStyles.small.copyWith(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          const SizedBox(width: AppSpacing.xs),
+          const Icon(Icons.chevron_right, color: AppColors.metaText),
+        ],
+      ),
       showSeparator: true,
       onTap: onTap,
     );
