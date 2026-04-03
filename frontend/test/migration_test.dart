@@ -21,6 +21,7 @@ class MockMigrationApiClient implements AppApiClient {
     required String historyText,
     int comboId = 0,
     String? myLineName,
+    Map<String, dynamic>? customerContext,
   }) async {
     throw UnimplementedError();
   }
@@ -220,7 +221,9 @@ class MockMigrationApiClient implements AppApiClient {
   }
 
   @override
-  Future<List<CustomerReminder>> getCustomerReminders({int daysAhead = 14}) async {
+  Future<List<CustomerReminder>> getCustomerReminders({
+    int daysAhead = 14,
+  }) async {
     return <CustomerReminder>[];
   }
 }

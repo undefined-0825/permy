@@ -177,7 +177,16 @@ python -c "from app.db import init_db; import asyncio; asyncio.run(init_db())"
 - `DATABASE_URL`（PostgreSQL接続文字列、自動生成）
 - `REDIS_URL`（Redis接続文字列、自動生成）
 - レート制限設定（`RL_*`）
-- 日次制限（`FREE_GENERATE_DAILY_LIMIT=3`, `PRO_GENERATE_DAILY_LIMIT=100`）
+- 日次制限（最終固定値）
+  - Free: 1日3回
+  - Pro: 1日100回
+  - Premium: 1日200回
+  - 上記は運用確定値としてサーバコード内の固定定数で判定する（環境変数で上書きしない）
+
+### 5.5.1 生成消費カウント運用（MUST）
+- 通常のGenerate実行: 1回消費
+- 「顧客あり/なし比較生成」: 同一履歴で2回生成するため2回消費
+- 消費判定はすべてサーバ日次カウントを正とし、クライアント表示は参考情報とする
 
 ### 5.6 ログ運用（本文ゼロ）
 - Render Logs に本文が出力されていないことを確認

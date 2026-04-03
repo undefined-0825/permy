@@ -40,6 +40,7 @@ class MockCustomerApiClient implements AppApiClient {
     required String historyText,
     int comboId = 0,
     String? myLineName,
+    Map<String, dynamic>? customerContext,
   }) async {
     throw UnimplementedError();
   }
@@ -50,10 +51,15 @@ class MockCustomerApiClient implements AppApiClient {
   }
 
   @override
-  Future<void> updateSettings(Map<String, dynamic> settings, String etag) async {}
+  Future<void> updateSettings(
+    Map<String, dynamic> settings,
+    String etag,
+  ) async {}
 
   @override
-  Future<DiagnosisResult> completeDiagnosis(List<DiagnosisAnswer> answers) async {
+  Future<DiagnosisResult> completeDiagnosis(
+    List<DiagnosisAnswer> answers,
+  ) async {
     return DiagnosisResult(
       trueSelfType: 'Stability',
       nightSelfType: 'VisitPush',
@@ -67,7 +73,10 @@ class MockCustomerApiClient implements AppApiClient {
 
   @override
   Future<MigrationIssueResult> issueMigrationCode() async {
-    return MigrationIssueResult(migrationCode: '123456789012', expiresAt: '2026-03-06T12:00:00Z');
+    return MigrationIssueResult(
+      migrationCode: '123456789012',
+      expiresAt: '2026-03-06T12:00:00Z',
+    );
   }
 
   @override
@@ -264,7 +273,9 @@ class MockCustomerApiClient implements AppApiClient {
   }
 
   @override
-  Future<List<CustomerReminder>> getCustomerReminders({int daysAhead = 14}) async {
+  Future<List<CustomerReminder>> getCustomerReminders({
+    int daysAhead = 14,
+  }) async {
     remindersCallCount += 1;
     return List<CustomerReminder>.from(_reminders);
   }
@@ -478,7 +489,10 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(find.widgetWithText(TextFormField, '表示名 *'), '田中さん');
-    await tester.enterText(find.widgetWithText(TextFormField, '要約メモ'), '誕生日が近い');
+    await tester.enterText(
+      find.widgetWithText(TextFormField, '要約メモ'),
+      '誕生日が近い',
+    );
 
     final submitFinder = find.text('登録する');
     await tester.ensureVisible(submitFinder);
@@ -550,8 +564,14 @@ void main() {
     await tester.tap(find.widgetWithText(OutlinedButton, '顧客情報を編集'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.widgetWithText(TextFormField, '表示名 *'), '山田太郎さん');
-    await tester.enterText(find.widgetWithText(TextFormField, '要約メモ'), '誕生日週に再来店見込み');
+    await tester.enterText(
+      find.widgetWithText(TextFormField, '表示名 *'),
+      '山田太郎さん',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, '要約メモ'),
+      '誕生日週に再来店見込み',
+    );
     final saveButton = find.text('保存する');
     await tester.ensureVisible(saveButton);
     await tester.tap(saveButton);
@@ -611,10 +631,7 @@ void main() {
 
     final eventDateFinder = find.widgetWithText(TextField, 'イベント日（YYYY-MM-DD）');
     await tester.ensureVisible(eventDateFinder);
-    await tester.enterText(
-      eventDateFinder,
-      '2026-04-20',
-    );
+    await tester.enterText(eventDateFinder, '2026-04-20');
     final eventTitleFinder = find.widgetWithText(TextField, 'タイトル');
     await tester.ensureVisible(eventTitleFinder);
     await tester.enterText(eventTitleFinder, '次回提案日');
@@ -630,7 +647,10 @@ void main() {
 
     await tester.tap(find.widgetWithText(OutlinedButton, '通知日数を更新').first);
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextField, '何日前に通知するか（0-365）'), '5');
+    await tester.enterText(
+      find.widgetWithText(TextField, '何日前に通知するか（0-365）'),
+      '5',
+    );
     await tester.tap(find.text('更新する'));
     await tester.pumpAndSettle();
 

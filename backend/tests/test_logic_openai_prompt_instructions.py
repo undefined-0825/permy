@@ -14,6 +14,7 @@ openai_stub.AsyncOpenAI = _DummyAsyncOpenAI
 sys.modules.setdefault("openai", openai_stub)
 
 from app.ai_client_openai import (
+    _customer_context_lines,
     _identity_analysis_guidance,
     _is_a_too_short,
     _min_a_chars,
@@ -67,3 +68,47 @@ def test_noise_control_guidance_preserves_meaning_and_ng_priority():
     text = _noise_control_guidance()
     assert "意味は変えない" in text
     assert "NGポリシー・安全制約・ユーザー設定を最優先" in text
+
+
+def test_customer_context_lines_include_core_fields():
+    lines = _customer_context_lines(
+        {
+            "display_name": "山田さん",
+            "call_name": "やまださん",
+            "relationship_stage": "regular",
+            "memo_summary": "終電前に帰る",
+            "tags": [
+                {"category": "topic", "value": "誕生日"},
+                {"category": "drink", "value": "ハイボール"},
+            ],
+            "recent_visit_log_summaries": ["2026-04-01 store middle"],
+            "upcoming_event_summaries": ["2026-04-15 birthday 誕生日"],
+        }
+    )
+
+    assert len(lines) <= 6
+    assert lines[0].startswith("関係性:")
+    assert any("顧客名: 山田さん" in line for line in lines)
+    assert any("要約メモ: 終電前に帰る" in line for line in lines)
+    assert any("タグ:" in line for line in lines)
+
+
+def test_customer_context_lines_trim_noise_and_limit_low_priority():
+    lines = _customer_context_lines(
+        {
+            "display_name": "山田さん",
+            "relationship_stage": "regular",
+            "memo_summary": "とても長いメモ" * 20,
+            "tags": [
+                {"category": "topic", "value": "誕生日"},
+                {"category": "unknown", "value": "雑多"},
+                {"category": "unknown2", "value": "さらに雑多"},
+            ],
+            "recent_visit_log_summaries": ["x" * 100],
+            "upcoming_event_summaries": ["y" * 100],
+        }
+    )
+
+    assert len(lines) <= 6
+    assert any("要約メモ:" in line and line.endswith("…") for line in lines)
+    assert not any("unknown2" in line for line in lines)

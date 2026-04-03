@@ -150,7 +150,10 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                 subtitle: subtitle,
                 trailing: IconButton(
                   tooltip: 'この顧客で返信を作る',
-                  icon: const Icon(Icons.send, color: AppColors.buttonBackground),
+                  icon: const Icon(
+                    Icons.send,
+                    color: AppColors.buttonBackground,
+                  ),
                   onPressed: () => _startGenerateForCustomer(reminder.customer),
                 ),
                 onTap: () {

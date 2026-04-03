@@ -63,9 +63,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Timer? _autoPersistDebounce;
   ApiError? _error;
   final TextEditingController _ngPhraseController = TextEditingController();
-    final TextEditingController _contactReminderDaysController =
+  final TextEditingController _contactReminderDaysController =
       TextEditingController();
-    final TextEditingController _visitReminderDaysController =
+  final TextEditingController _visitReminderDaysController =
       TextEditingController();
   StreamSubscription<BillingProof>? _billingProofSubscription;
 
@@ -233,11 +233,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ?.map((e) => e.toString())
             .toList() ??
         <String>[];
-    normalized['contact_reminder_threshold_days'] =
-        _normalizeReminderThreshold(
-          normalized['contact_reminder_threshold_days'],
-          const [3, 7],
-        );
+    normalized['contact_reminder_threshold_days'] = _normalizeReminderThreshold(
+      normalized['contact_reminder_threshold_days'],
+      const [3, 7],
+    );
     normalized['visit_reminder_threshold_days'] = _normalizeReminderThreshold(
       normalized['visit_reminder_threshold_days'],
       const [14, 30],
@@ -259,11 +258,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
 
-    final normalized = values
-        .where((value) => value >= 1 && value <= 365)
-        .toSet()
-        .toList()
-      ..sort();
+    final normalized =
+        values.where((value) => value >= 1 && value <= 365).toSet().toList()
+          ..sort();
     if (normalized.isEmpty) {
       return List<int>.from(fallback);
     }
@@ -271,11 +268,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _syncReminderThresholdControllers() {
-    final contact = (_settings['contact_reminder_threshold_days'] as List<dynamic>?)
+    final contact =
+        (_settings['contact_reminder_threshold_days'] as List<dynamic>?)
             ?.map((e) => e.toString())
             .toList() ??
         <String>['3', '7'];
-    final visit = (_settings['visit_reminder_threshold_days'] as List<dynamic>?)
+    final visit =
+        (_settings['visit_reminder_threshold_days'] as List<dynamic>?)
             ?.map((e) => e.toString())
             .toList() ??
         <String>['14', '30'];
@@ -325,15 +324,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       contact,
       autoPersist: false,
     );
-    _updateSetting(
-      'visit_reminder_threshold_days',
-      visit,
-      autoPersist: false,
-    );
+    _updateSetting('visit_reminder_threshold_days', visit, autoPersist: false);
     _scheduleAutoPersist();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('顧客リマインド閾値を更新しました')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('顧客リマインド閾値を更新しました')));
   }
 
   void _ensureBillingDatesIfNeeded() {
@@ -1085,7 +1080,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const Text('Pro版の特典:', style: AppTextStyles.body),
             const SizedBox(height: AppSpacing.sm),
             const Text(
-              '• 1日100回まで生成可能（Freeは3回）\n• 推定メーター表示\n• すべての生成方針が選択可能',
+              '• Free: 1日3回 / Pro: 1日100回 / Premium: 1日200回\n• 推定メーター表示\n• すべての生成方針が選択可能',
               style: AppTextStyles.body,
             ),
             const SizedBox(height: AppSpacing.md),

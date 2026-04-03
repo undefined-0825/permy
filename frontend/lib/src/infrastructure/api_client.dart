@@ -16,6 +16,7 @@ abstract class AppApiClient {
     required String historyText,
     int comboId,
     String? myLineName,
+    Map<String, dynamic>? customerContext,
   });
 
   Future<SettingsSnapshot> getSettings();
@@ -106,6 +107,7 @@ class ApiClient implements AppApiClient {
     required String historyText,
     int comboId = 0,
     String? myLineName,
+    Map<String, dynamic>? customerContext,
   }) async {
     await bootstrapAuth();
     return _runWithAuthRetry(() async {
@@ -117,6 +119,9 @@ class ApiClient implements AppApiClient {
       };
       if (myLineName != null) {
         requestBody['my_line_name'] = myLineName;
+      }
+      if (customerContext != null) {
+        requestBody['customer_context'] = customerContext;
       }
       final response = await _sendWithTimeout(
         () => _httpClient.post(
@@ -514,10 +519,7 @@ class ApiClient implements AppApiClient {
             : null,
       );
       final response = await _sendWithTimeout(
-        () => _httpClient.get(
-          uri,
-          headers: {'Authorization': 'Bearer $token'},
-        ),
+        () => _httpClient.get(uri, headers: {'Authorization': 'Bearer $token'}),
         method: 'GET',
         path: '/api/v1/customers',
       );
@@ -745,7 +747,9 @@ class ApiClient implements AppApiClient {
       final token = await tokenStore.read();
       final response = await _sendWithTimeout(
         () => _httpClient.put(
-          Uri.parse('$baseUrl/api/v1/customers/$customerId/events/$eventId/reminder'),
+          Uri.parse(
+            '$baseUrl/api/v1/customers/$customerId/events/$eventId/reminder',
+          ),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -769,18 +773,17 @@ class ApiClient implements AppApiClient {
   }
 
   @override
-  Future<List<CustomerReminder>> getCustomerReminders({int daysAhead = 14}) async {
+  Future<List<CustomerReminder>> getCustomerReminders({
+    int daysAhead = 14,
+  }) async {
     await bootstrapAuth();
     return _runWithAuthRetry(() async {
       final token = await tokenStore.read();
-      final uri = Uri.parse('$baseUrl/api/v1/customers/reminders').replace(
-        queryParameters: {'days_ahead': '$daysAhead'},
-      );
+      final uri = Uri.parse(
+        '$baseUrl/api/v1/customers/reminders',
+      ).replace(queryParameters: {'days_ahead': '$daysAhead'});
       final response = await _sendWithTimeout(
-        () => _httpClient.get(
-          uri,
-          headers: {'Authorization': 'Bearer $token'},
-        ),
+        () => _httpClient.get(uri, headers: {'Authorization': 'Bearer $token'}),
         method: 'GET',
         path: '/api/v1/customers/reminders',
       );

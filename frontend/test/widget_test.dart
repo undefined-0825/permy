@@ -9,6 +9,7 @@ import 'package:sample_app/src/domain/models.dart';
 import 'package:sample_app/src/domain/persona_diagnosis.dart';
 import 'package:sample_app/src/domain/telemetry_event.dart';
 import 'package:sample_app/src/infrastructure/api_client.dart';
+import 'package:sample_app/src/infrastructure/customer_generate_selection_store.dart';
 import 'package:sample_app/src/infrastructure/purchase_service.dart';
 import 'package:sample_app/src/infrastructure/share_receiver.dart';
 import 'package:sample_app/src/infrastructure/telemetry_queue.dart';
@@ -60,6 +61,7 @@ class _FakeApiClient implements AppApiClient {
   final List<GenerateResult> _generateResults;
   final Map<String, dynamic>? settings;
   int generateCallCount = 0;
+  Map<String, dynamic>? lastCustomerContext;
   Map<String, dynamic> lastUpdatedSettings = <String, dynamic>{};
 
   @override
@@ -125,8 +127,10 @@ class _FakeApiClient implements AppApiClient {
     required String historyText,
     int comboId = 0,
     String? myLineName,
+    Map<String, dynamic>? customerContext,
   }) async {
     generateCallCount += 1;
+    lastCustomerContext = customerContext;
 
     if (generateError != null) {
       throw generateError!;
@@ -187,14 +191,36 @@ class _FakeApiClient implements AppApiClient {
         customerId: customerId,
         displayName: '顧客',
         relationshipStage: 'new',
-        memoSummary: null,
-        lastVisitAt: null,
-        lastContactAt: null,
+        callName: 'こきゃくさん',
+        visitFrequencyTag: 'weekly',
+        drinkStyleTag: 'highball',
+        memoSummary: '誕生日は4月中旬',
+        lastVisitAt: '2026-04-01',
+        lastContactAt: '2026-04-02',
         isArchived: false,
       ),
-      tags: <CustomerTag>[],
-      visitLogs: <CustomerVisitLog>[],
-      events: <CustomerEvent>[],
+      tags: <CustomerTag>[
+        CustomerTag(tagId: 't1', category: 'topic', value: '誕生日'),
+      ],
+      visitLogs: <CustomerVisitLog>[
+        CustomerVisitLog(
+          visitLogId: 'v1',
+          visitedOn: '2026-04-01',
+          visitType: 'store',
+          memoShort: '同伴あり',
+          spendLevel: 'middle',
+          moodTag: 'good',
+        ),
+      ],
+      events: <CustomerEvent>[
+        CustomerEvent(
+          eventId: 'e1',
+          eventType: 'birthday',
+          eventDate: '2026-04-15',
+          title: '誕生日',
+          note: '前日に連絡',
+        ),
+      ],
     );
   }
 
@@ -296,7 +322,9 @@ class _FakeApiClient implements AppApiClient {
   }
 
   @override
-  Future<List<CustomerReminder>> getCustomerReminders({int daysAhead = 14}) async {
+  Future<List<CustomerReminder>> getCustomerReminders({
+    int daysAhead = 14,
+  }) async {
     return <CustomerReminder>[];
   }
 }
@@ -554,6 +582,84 @@ void main() {
     expect(find.text('C案'), findsOneWidget);
     expect(find.text('返信案C'), findsOneWidget);
     expect(find.text('タップでコピー'), findsWidgets);
+  });
+
+  testWidgets('顧客選択がある場合はcustomerContextを付与して生成する', (
+    WidgetTester tester,
+  ) async {
+    final apiClient = _FakeApiClient();
+    CustomerGenerateSelectionStore.instance.setSelection(
+      CustomerGenerateSelection(
+        customerId: 'customer-42',
+        displayName: '顧客',
+        relationshipStage: 'regular',
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: apiClient,
+          shareReceiver: _FakeShareInput(
+            SharePayload(text: '共有本文', fileName: 'line.txt'),
+          ),
+          telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final generateButton = find.widgetWithText(AppButton, 'ぼくが返信案を考えるよ');
+    await tester.ensureVisible(generateButton);
+    await tester.tap(generateButton);
+    await tester.pump(const Duration(milliseconds: 1800));
+    await tester.pumpAndSettle();
+
+    expect(apiClient.lastCustomerContext, isNotNull);
+    expect(apiClient.lastCustomerContext!['customer_id'], 'customer-42');
+    expect(apiClient.lastCustomerContext!['display_name'], '顧客');
+    expect(apiClient.lastCustomerContext!['memo_summary'], '誕生日は4月中旬');
+
+    CustomerGenerateSelectionStore.instance.clear();
+  });
+
+  testWidgets('顧客あり/なし比較生成で2回APIを呼び出して結果ダイアログを表示する', (
+    WidgetTester tester,
+  ) async {
+    final apiClient = _FakeApiClient();
+    CustomerGenerateSelectionStore.instance.setSelection(
+      CustomerGenerateSelection(
+        customerId: 'customer-42',
+        displayName: '顧客',
+        relationshipStage: 'regular',
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: apiClient,
+          shareReceiver: _FakeShareInput(
+            SharePayload(text: '共有本文', fileName: 'line.txt'),
+          ),
+          telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('顧客あり/なしを比較生成（2回消費）'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('比較する'));
+    await tester.pumpAndSettle();
+
+    expect(apiClient.generateCallCount, 2);
+    expect(find.text('比較結果'), findsOneWidget);
+
+    CustomerGenerateSelectionStore.instance.clear();
   });
 
   testWidgets('返信案タップ設定が共有なら共有シートを開く', (WidgetTester tester) async {

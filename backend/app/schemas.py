@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
-from typing import Literal
+from typing import Any, Literal
 
 
 class ErrorEnvelope(BaseModel):
@@ -53,6 +53,7 @@ class GenerateRequest(BaseModel):
     combo_id: int = Field(..., ge=0, le=5)
     tuning: dict | None = None  # Proのみ（クライアントが付与）
     my_line_name: str | None = None  # ユーザー自身のLINE名（フロントが付与）
+    customer_context: dict[str, Any] | None = None  # 顧客由来コンテキスト（任意）
 
 
 class Candidate(BaseModel):

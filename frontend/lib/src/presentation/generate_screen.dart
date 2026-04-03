@@ -104,22 +104,26 @@ class _GenerateScreenState extends State<GenerateScreen>
   bool _savingAdjustments = false;
   int _dropdownResetVersion = 0;
   final _lineNameStore = LineNameStore();
+  String? _selectedCustomerId;
   String? _selectedCustomerName;
+  Map<String, dynamic>? _selectedCustomerContext;
   late final VoidCallback _customerSelectionListener;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _customerSelectionListener = _consumeSelectedCustomer;
+    _customerSelectionListener = () {
+      unawaited(_consumeSelectedCustomer());
+    };
     CustomerGenerateSelectionStore.instance.selectionNotifier.addListener(
       _customerSelectionListener,
     );
-    _consumeSelectedCustomer();
+    unawaited(_consumeSelectedCustomer());
     _bootstrap();
   }
 
-  void _consumeSelectedCustomer() {
+  Future<void> _consumeSelectedCustomer() async {
     final selected = CustomerGenerateSelectionStore.instance.current;
     if (selected == null) {
       return;
@@ -129,11 +133,15 @@ class _GenerateScreenState extends State<GenerateScreen>
       selected.relationshipStage,
     );
     setState(() {
+      _selectedCustomerId = selected.customerId;
       _selectedCustomerName = selected.displayName;
+      _selectedCustomerContext = null;
       _relationshipType = mappedRelationship;
     });
     unawaited(_updateRelationshipType(mappedRelationship));
     CustomerGenerateSelectionStore.instance.clear();
+
+    await _loadSelectedCustomerContext(selected.customerId);
   }
 
   String _mapCustomerStageToRelationship(String stage) {
@@ -149,6 +157,97 @@ class _GenerateScreenState extends State<GenerateScreen>
       default:
         return 'new';
     }
+  }
+
+  Future<void> _loadSelectedCustomerContext(String customerId) async {
+    try {
+      final detail = await widget.apiClient.getCustomerDetail(customerId);
+      if (!mounted || _selectedCustomerId != customerId) {
+        return;
+      }
+      setState(() {
+        _selectedCustomerContext = _buildCustomerContext(detail);
+      });
+    } catch (_) {
+      if (!mounted || _selectedCustomerId != customerId) {
+        return;
+      }
+      setState(() {
+        _selectedCustomerContext = null;
+      });
+    }
+  }
+
+  Map<String, dynamic> _buildCustomerContext(CustomerDetail detail) {
+    String compact(String? text, {int maxChars = 40}) {
+      final value = (text ?? '').trim();
+      if (value.isEmpty) {
+        return '';
+      }
+      if (value.length <= maxChars) {
+        return value;
+      }
+      return '${value.substring(0, maxChars)}…';
+    }
+
+    final preferredCategories = <String>{
+      'topic',
+      'birthday',
+      'drink',
+      'style',
+      'mood',
+    };
+    final tags = detail.tags
+        .map(
+          (tag) => <String, String>{
+            'category': tag.category,
+            'value': compact(tag.value, maxChars: 18),
+          },
+        )
+        .where((tag) => (tag['value'] ?? '').isNotEmpty)
+        .toList()
+      ..sort((a, b) {
+        final aPreferred = preferredCategories.contains(a['category']);
+        final bPreferred = preferredCategories.contains(b['category']);
+        if (aPreferred == bPreferred) {
+          return 0;
+        }
+        return aPreferred ? -1 : 1;
+      });
+
+    final visitSummaries = detail.visitLogs.take(3).map((log) {
+      final chunks = <String>[log.visitedOn, log.visitType];
+      if (log.moodTag != null && log.moodTag!.trim().isNotEmpty) {
+        chunks.add(compact(log.moodTag, maxChars: 16));
+      }
+      if (log.memoShort != null && log.memoShort!.trim().isNotEmpty) {
+        chunks.add(compact(log.memoShort, maxChars: 24));
+      }
+      return compact(chunks.join(' '), maxChars: 44);
+    }).where((item) => item.isNotEmpty).take(1).toList();
+
+    final eventSummaries = detail.events.take(3).map((event) {
+      final chunks = <String>[event.eventDate, event.eventType, event.title];
+      if (event.note != null && event.note!.trim().isNotEmpty) {
+        chunks.add(compact(event.note, maxChars: 24));
+      }
+      return compact(chunks.join(' '), maxChars: 44);
+    }).where((item) => item.isNotEmpty).take(1).toList();
+
+    return <String, dynamic>{
+      'customer_id': detail.customer.customerId,
+      'display_name': detail.customer.displayName,
+      'call_name': detail.customer.callName,
+      'relationship_stage': detail.customer.relationshipStage,
+      'visit_frequency_tag': detail.customer.visitFrequencyTag,
+      'drink_style_tag': detail.customer.drinkStyleTag,
+      'last_visit_at': detail.customer.lastVisitAt,
+      'last_contact_at': detail.customer.lastContactAt,
+      'memo_summary': compact(detail.customer.memoSummary, maxChars: 56),
+      'tags': tags.take(4).toList(),
+      'recent_visit_log_summaries': visitSummaries,
+      'upcoming_event_summaries': eventSummaries,
+    };
   }
 
   Future<void> _bootstrap() async {
@@ -353,7 +452,9 @@ class _GenerateScreenState extends State<GenerateScreen>
                                   icon: const Icon(Icons.close),
                                   onPressed: () {
                                     setState(() {
+                                      _selectedCustomerId = null;
                                       _selectedCustomerName = null;
+                                      _selectedCustomerContext = null;
                                     });
                                   },
                                 ),
@@ -377,6 +478,16 @@ class _GenerateScreenState extends State<GenerateScreen>
                             onPressed: canGenerate ? _onGeneratePressed : null,
                           ),
                         ),
+                        if (_selectedCustomerContext != null) ...[
+                          const SizedBox(height: AppSpacing.sm),
+                          OutlinedButton.icon(
+                            onPressed: canGenerate
+                                ? _runCustomerContextComparison
+                                : null,
+                            icon: const Icon(Icons.compare_arrows),
+                            label: const Text('顧客あり/なしを比較生成（2回消費）'),
+                          ),
+                        ],
                         if (_candidates.isNotEmpty) ...[
                           const SizedBox(height: AppSpacing.xl),
                           _ResultArea(
@@ -485,6 +596,160 @@ class _GenerateScreenState extends State<GenerateScreen>
 
   Future<void> _onGeneratePressed() async {
     await _generateCandidates(triggerHaptics: true);
+  }
+
+  int _scoreCandidates(
+    List<Candidate> candidates, {
+    String? customerName,
+    String? callName,
+  }) {
+    if (candidates.isEmpty) {
+      return 0;
+    }
+
+    final allText = candidates.map((c) => c.text).join('\n');
+    var score = 0;
+
+    for (final candidate in candidates) {
+      final len = candidate.text.trim().length;
+      if (len >= 45) {
+        score += 8;
+      }
+      if (len >= 70) {
+        score += 4;
+      }
+      if (candidate.text.contains('○○') || candidate.text.contains('{name}')) {
+        score -= 12;
+      }
+    }
+
+    final uniqueTexts = candidates.map((c) => c.text.trim()).toSet().length;
+    score += uniqueTexts * 5;
+
+    final n1 = (customerName ?? '').trim();
+    final n2 = (callName ?? '').trim();
+    if (n1.isNotEmpty && allText.contains(n1)) {
+      score += 8;
+    }
+    if (n2.isNotEmpty && allText.contains(n2)) {
+      score += 8;
+    }
+    return score;
+  }
+
+  Future<void> _runCustomerContextComparison() async {
+    final rawText = _sharedText?.trim();
+    if (rawText == null || rawText.isEmpty) {
+      return;
+    }
+    if (_selectedCustomerContext == null) {
+      return;
+    }
+
+    final shouldRun = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('比較生成を実行する？'),
+        content: const Text(
+          '同じ履歴で「顧客あり」と「顧客なし」を比較します。\n生成回数を2回消費します。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('比較する'),
+          ),
+        ],
+      ),
+    );
+    if (shouldRun != true || !mounted) {
+      return;
+    }
+
+    final planFromStore = widget.purchaseService.isPro
+        ? widget.purchaseService.currentPlan
+        : _plan;
+    final text = trimHistoryForGenerate(rawText, plan: planFromStore);
+    if (text.isEmpty) {
+      return;
+    }
+
+    final parsedLine = LineHistoryParser.parse(rawText);
+    if (parsedLine is LineGroupResult) {
+      return;
+    }
+    String? myLineName;
+    if (parsedLine is LineDuoResult) {
+      myLineName = await _resolveMyLineName(parsedLine.names);
+    }
+
+    setState(() {
+      _loading = true;
+    });
+
+    try {
+      final withContext = await widget.apiClient.generate(
+        historyText: text,
+        comboId: _comboId,
+        myLineName: myLineName,
+        customerContext: _selectedCustomerContext,
+      );
+      final withoutContext = await widget.apiClient.generate(
+        historyText: text,
+        comboId: _comboId,
+        myLineName: myLineName,
+        customerContext: null,
+      );
+
+      final withScore = _scoreCandidates(
+        withContext.candidates,
+        customerName: _selectedCustomerName,
+        callName: _selectedCustomerContext?['call_name']?.toString(),
+      );
+      final withoutScore = _scoreCandidates(withoutContext.candidates);
+      final useContext = withScore >= withoutScore;
+      final picked = useContext ? withContext : withoutContext;
+
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _candidates = picked.candidates;
+        _daily = picked.daily;
+        _plan = picked.plan;
+        _metaPro = picked.metaPro;
+      });
+
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('比較結果'),
+          content: Text(
+            '顧客あり: $withScore 点\n顧客なし: $withoutScore 点\n\n採用: ${useContext ? '顧客あり' : '顧客なし'}',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('閉じる'),
+            ),
+          ],
+        ),
+      );
+    } on ApiError catch (error) {
+      if (!mounted) {
+        return;
+      }
+      _showErrorMessageBox(error);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
   }
 
   /// 保存済みLINE名を確認し、必要なら「きみはどっち？」ダイアログを表示する
@@ -606,6 +871,7 @@ class _GenerateScreenState extends State<GenerateScreen>
         historyText: text,
         comboId: _comboId,
         myLineName: myLineName,
+        customerContext: _selectedCustomerContext,
       );
       await minSequenceFuture;
       final latencyMs = DateTime.now().difference(startTime).inMilliseconds;

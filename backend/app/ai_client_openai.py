@@ -136,6 +136,72 @@ def _is_a_too_short(a: str, pref: str | None) -> bool:
     return len((a or "").strip()) < _min_a_chars(pref)
 
 
+def _compact_text(value, max_chars: int = 40) -> str:
+    text = str(value or "").strip()
+    if len(text) <= max_chars:
+        return text
+    return text[:max_chars] + "…"
+
+
+def _customer_context_lines(customer_context: dict | None) -> list[str]:
+    if not customer_context:
+        return []
+
+    high: list[str] = []
+    medium: list[str] = []
+    low: list[str] = []
+
+    def _append(bucket: list[str], label: str, value, max_chars: int = 40) -> None:
+        if value is None:
+            return
+        text = _compact_text(value, max_chars=max_chars)
+        if text:
+            bucket.append(f"{label}: {text}")
+
+    _append(high, "関係性", customer_context.get("relationship_stage"), max_chars=24)
+    _append(high, "呼び名", customer_context.get("call_name"), max_chars=24)
+    _append(high, "顧客名", customer_context.get("display_name"), max_chars=24)
+    _append(high, "要約メモ", customer_context.get("memo_summary"), max_chars=56)
+
+    _append(medium, "最終来店", customer_context.get("last_visit_at"), max_chars=20)
+    _append(medium, "最終連絡", customer_context.get("last_contact_at"), max_chars=20)
+    _append(medium, "来店頻度", customer_context.get("visit_frequency_tag"), max_chars=20)
+    _append(medium, "飲み方", customer_context.get("drink_style_tag"), max_chars=24)
+
+    tags = customer_context.get("tags")
+    if isinstance(tags, list):
+        tag_values: list[str] = []
+        preferred_categories = {"topic", "birthday", "drink", "style", "mood"}
+        for item in tags:
+            if not isinstance(item, dict):
+                continue
+            category = str(item.get("category") or "").strip()
+            value = _compact_text(item.get("value"), max_chars=18)
+            if not value:
+                continue
+            if category and category not in preferred_categories and len(tag_values) >= 1:
+                # 低優先度カテゴリは1件まで
+                continue
+            tag_values.append(f"{category}:{value}" if category else value)
+        if tag_values:
+            low.append("タグ: " + " / ".join(tag_values[:4]))
+
+    visits = customer_context.get("recent_visit_log_summaries")
+    if isinstance(visits, list):
+        visit_values = [_compact_text(item, max_chars=44) for item in visits if str(item).strip()]
+        if visit_values:
+            low.append("最近の来店: " + " / ".join(visit_values[:1]))
+
+    events = customer_context.get("upcoming_event_summaries")
+    if isinstance(events, list):
+        event_values = [_compact_text(item, max_chars=44) for item in events if str(item).strip()]
+        if event_values:
+            low.append("今後イベント: " + " / ".join(event_values[:1]))
+
+    weighted_lines = high + medium + low
+    return weighted_lines[:6]
+
+
 class OpenAiChatClient(AiClient):
     def __init__(self) -> None:
         if not settings.openai_api_key:
@@ -182,6 +248,10 @@ class OpenAiChatClient(AiClient):
         if ctx.partner_name_usage_pref:
             profile.append(f"相手の呼び方: {ctx.partner_name_usage_pref}")
         profile.append(f"コンボID: {ctx.combo_id}")
+        customer_context_lines = _customer_context_lines(ctx.customer_context)
+        if customer_context_lines:
+            profile.append("顧客コンテキスト:")
+            profile.extend(customer_context_lines)
 
         system_instructions = (
             settings.openai_instructions
@@ -211,6 +281,11 @@ class OpenAiChatClient(AiClient):
             + "\n【相手の呼び方】\n"
             + _partner_name_usage_guidance(ctx.partner_name_usage_pref)
             + "\n"
+            + "\n【顧客コンテキスト適用ルール】\n"
+            + "- 顧客コンテキストは重要度順（関係性/呼び名/要約メモを最優先）で反映する。\n"
+            + "- 低優先度の情報（タグ/来店ログ/イベント）は、文面が不自然になるなら使わない。\n"
+            + "- 履歴と矛盾する情報は顧客コンテキストでは上書きしない。履歴を優先する。\n"
+            + "- 情報の詰め込みを避け、1通の返信で使う顧客情報は最大2点まで。\n"
             + "\n【制約】\n"
             + "- 出力は必ず3案（A/B/C）。それぞれ狙いを変えて“別案”にする。\n"
             + f"- Aは最低{_min_a_chars(ctx.reply_length_pref)}文字以上で、ユーザーの口調再現を最優先する。\n"

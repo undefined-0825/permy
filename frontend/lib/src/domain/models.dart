@@ -284,6 +284,8 @@ class CustomerSummary {
     this.callName,
     this.areaTag,
     this.jobTag,
+    this.visitFrequencyTag,
+    this.drinkStyleTag,
     this.memoSummary,
     this.lastVisitAt,
     this.lastContactAt,
@@ -297,6 +299,8 @@ class CustomerSummary {
   final String? callName;
   final String? areaTag;
   final String? jobTag;
+  final String? visitFrequencyTag;
+  final String? drinkStyleTag;
   final String? memoSummary;
   final String? lastVisitAt;
   final String? lastContactAt;
@@ -311,6 +315,8 @@ class CustomerSummary {
       callName: json['call_name']?.toString(),
       areaTag: json['area_tag']?.toString(),
       jobTag: json['job_tag']?.toString(),
+      visitFrequencyTag: json['visit_frequency_tag']?.toString(),
+      drinkStyleTag: json['drink_style_tag']?.toString(),
       memoSummary: json['memo_summary']?.toString(),
       lastVisitAt: json['last_visit_at']?.toString(),
       lastContactAt: json['last_contact_at']?.toString(),
@@ -387,7 +393,11 @@ class UpdateCustomerInput {
 }
 
 class CustomerTag {
-  CustomerTag({required this.tagId, required this.category, required this.value});
+  CustomerTag({
+    required this.tagId,
+    required this.category,
+    required this.value,
+  });
 
   final String tagId;
   final String category;
@@ -485,7 +495,10 @@ class CustomerDetail {
         (json['customer'] as Map<String, dynamic>?) ?? <String, dynamic>{},
       ),
       tags: tagsRaw is List
-          ? tagsRaw.whereType<Map<String, dynamic>>().map(CustomerTag.fromJson).toList()
+          ? tagsRaw
+                .whereType<Map<String, dynamic>>()
+                .map(CustomerTag.fromJson)
+                .toList()
           : <CustomerTag>[],
       visitLogs: visitLogsRaw is List
           ? visitLogsRaw
@@ -541,9 +554,7 @@ class ReplaceCustomerTagsInput {
   final List<CustomerTagInput> tags;
 
   Map<String, dynamic> toJson() {
-    return {
-      'tags': tags.map((e) => e.toJson()).toList(),
-    };
+    return {'tags': tags.map((e) => e.toJson()).toList()};
   }
 }
 
@@ -554,10 +565,7 @@ class CustomerTagInput {
   final String value;
 
   Map<String, dynamic> toJson() {
-    return {
-      'category': category,
-      'value': value,
-    };
+    return {'category': category, 'value': value};
   }
 }
 
@@ -628,8 +636,6 @@ class UpdateCustomerEventReminderInput {
   final int remindDaysBefore;
 
   Map<String, dynamic> toJson() {
-    return {
-      'remind_days_before': remindDaysBefore,
-    };
+    return {'remind_days_before': remindDaysBefore};
   }
 }

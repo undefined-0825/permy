@@ -97,3 +97,25 @@ def test_generate_my_line_name_is_optional(client):
     )
     assert res.status_code == 200
     assert len(res.json()["candidates"]) == 3
+
+
+def test_generate_accepts_customer_context(client):
+    """customer_context を含むリクエストが正常に処理される"""
+    headers = _auth_headers(client)
+
+    res = client.post(
+        "/api/v1/generate",
+        json={
+            "history_text": "User: hello\nShop: hi",
+            "combo_id": 0,
+            "customer_context": {
+                "display_name": "山田さん",
+                "relationship_stage": "regular",
+                "memo_summary": "終電前に帰る",
+                "tags": [{"category": "topic", "value": "誕生日"}],
+            },
+        },
+        headers={**headers, "Idempotency-Key": "test-generate-customer-context-001"},
+    )
+    assert res.status_code == 200
+    assert len(res.json()["candidates"]) == 3

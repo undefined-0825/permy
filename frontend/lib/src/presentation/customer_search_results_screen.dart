@@ -29,7 +29,8 @@ class CustomerSearchResultsScreen extends StatefulWidget {
       _CustomerSearchResultsScreenState();
 }
 
-class _CustomerSearchResultsScreenState extends State<CustomerSearchResultsScreen> {
+class _CustomerSearchResultsScreenState
+    extends State<CustomerSearchResultsScreen> {
   static const Duration _searchDebounceDuration = Duration(milliseconds: 350);
 
   late final TextEditingController _searchController;

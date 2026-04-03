@@ -19,15 +19,9 @@ from app.services.idempotency import acquire
 from app.settings_defaults import with_default_settings
 from app.utils_time import jst_today_ymd
 from app.followup_helper import check_missing_setting
+from app.plan_limits import generate_daily_limit
 
 router = APIRouter()
-
-def _daily_limit(plan: str) -> int:
-    if plan == "premium":
-        return config_settings.premium_generate_daily_limit
-    if plan == "pro":
-        return config_settings.pro_generate_daily_limit
-    return config_settings.free_generate_daily_limit
 
 def _to_list(v) -> list[str]:
     if v is None:
@@ -87,7 +81,7 @@ async def generate(
             raise err("RATE_LIMITED", "同じリクエストが処理中です", {"idempotency": "replay"}, status_code=429)
 
     usage = await get_or_create_usage(db, auth.user_id, auth.plan)
-    limit = _daily_limit(auth.plan)
+    limit = generate_daily_limit(auth.plan)
     used = int(usage.generate_count)
     if used >= limit:
         raise err("DAILY_LIMIT_REACHED", "本日の上限に達しました", {"limit": limit, "used": used}, status_code=429)
@@ -142,6 +136,7 @@ async def generate(
             ng_free_phrases=_to_list(settings_for_generate.get("ng_free_phrases")),
             tuning=req.tuning,
             my_line_name=req.my_line_name,
+            customer_context=req.customer_context,
         )
         candidates = await ai_client.generate_abc(req.history_text, ctx)
         daily = DailyInfo(date=jst_today_ymd(), limit=limit, used=used, remaining=max(0, limit - used))

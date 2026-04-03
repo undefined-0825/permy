@@ -57,7 +57,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         _loading = true;
         _error = null;
       });
-      final detail = await widget.apiClient.getCustomerDetail(widget.customerId);
+      final detail = await widget.apiClient.getCustomerDetail(
+        widget.customerId,
+      );
       if (!mounted) {
         return;
       }
@@ -94,9 +96,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     }
     final raw = _tagsController.text.trim();
     if (raw.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('タグを1つ以上入力してね')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('タグを1つ以上入力してね')));
       return;
     }
     final values = raw
@@ -105,9 +107,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         .where((e) => e.isNotEmpty)
         .toList();
     if (values.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('タグを1つ以上入力してね')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('タグを1つ以上入力してね')));
       return;
     }
 
@@ -119,7 +121,10 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         detail.customer.customerId,
         ReplaceCustomerTagsInput(
           tags: values
-              .map((value) => CustomerTagInput(category: _tagCategory, value: value))
+              .map(
+                (value) =>
+                    CustomerTagInput(category: _tagCategory, value: value),
+              )
               .toList(),
         ),
       );
@@ -128,9 +133,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('タグを更新しました')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('タグを更新しました')));
     } on ApiError catch (e) {
       if (!mounted) {
         return;
@@ -159,9 +164,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
 
     final input = await Navigator.of(context).push<UpdateCustomerInput>(
       MaterialPageRoute(
-        builder: (context) => CustomerEditScreen(
-          initialCustomer: detail.customer,
-        ),
+        builder: (context) =>
+            CustomerEditScreen(initialCustomer: detail.customer),
       ),
     );
     if (input == null) {
@@ -177,9 +181,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('顧客情報を更新しました')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('顧客情報を更新しました')));
     } on ApiError catch (e) {
       if (!mounted) {
         return;
@@ -207,9 +211,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     }
     final visitedOn = _visitDateController.text.trim();
     if (visitedOn.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('来店日を入力してね（YYYY-MM-DD）')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('来店日を入力してね（YYYY-MM-DD）')));
       return;
     }
 
@@ -233,9 +237,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('来店ログを追加しました')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('来店ログを追加しました')));
     } on ApiError catch (e) {
       if (!mounted) {
         return;
@@ -264,9 +268,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     final eventDate = _eventDateController.text.trim();
     final title = _eventTitleController.text.trim();
     if (eventDate.isEmpty || title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('イベント日とタイトルを入力してね')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('イベント日とタイトルを入力してね')));
       return;
     }
 
@@ -292,9 +296,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('イベントを追加しました')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('イベントを追加しました')));
     } on ApiError catch (e) {
       if (!mounted) {
         return;
@@ -372,9 +376,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('イベント通知日数を更新しました')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('イベント通知日数を更新しました')));
     } on ApiError catch (e) {
       if (!mounted) {
         return;
@@ -451,9 +455,15 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(detail.customer.displayName, style: AppTextStyles.primaryTitle),
+              Text(
+                detail.customer.displayName,
+                style: AppTextStyles.primaryTitle,
+              ),
               const SizedBox(height: AppSpacing.xs),
-              Text('関係性: ${_relationshipLabel(detail.customer.relationshipStage)}', style: AppTextStyles.body),
+              Text(
+                '関係性: ${_relationshipLabel(detail.customer.relationshipStage)}',
+                style: AppTextStyles.body,
+              ),
               if ((detail.customer.memoSummary ?? '').isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.sm),
                 Text(detail.customer.memoSummary!, style: AppTextStyles.body),
@@ -500,7 +510,10 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             DropdownMenuItem(value: 'topic', child: Text('topic')),
             DropdownMenuItem(value: 'personality', child: Text('personality')),
             DropdownMenuItem(value: 'event', child: Text('event')),
-            DropdownMenuItem(value: 'relationship', child: Text('relationship')),
+            DropdownMenuItem(
+              value: 'relationship',
+              child: Text('relationship'),
+            ),
             DropdownMenuItem(value: 'ng', child: Text('ng')),
           ],
           onChanged: _saving
@@ -530,15 +543,17 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         if (detail.visitLogs.isEmpty)
           const Text('来店ログは未登録です', style: AppTextStyles.small)
         else
-          ...detail.visitLogs.take(3).map(
-            (log) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-              child: Text(
-                '${log.visitedOn} / ${log.visitType}${(log.memoShort ?? '').isNotEmpty ? ' / ${log.memoShort}' : ''}',
-                style: AppTextStyles.body,
+          ...detail.visitLogs
+              .take(3)
+              .map(
+                (log) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                  child: Text(
+                    '${log.visitedOn} / ${log.visitType}${(log.memoShort ?? '').isNotEmpty ? ' / ${log.memoShort}' : ''}',
+                    style: AppTextStyles.body,
+                  ),
+                ),
               ),
-            ),
-          ),
         const SizedBox(height: AppSpacing.sm),
         TextField(
           controller: _visitDateController,
@@ -588,37 +603,41 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         if (detail.events.isEmpty)
           const Text('イベントは未登録です', style: AppTextStyles.small)
         else
-          ...detail.events.take(3).map(
-            (event) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-              child: Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.75),
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${event.eventDate} / ${event.title}',
-                      style: AppTextStyles.body,
+          ...detail.events
+              .take(3)
+              .map(
+                (event) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                  child: Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.75),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
                     ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      '通知: ${event.remindDaysBefore}日前',
-                      style: AppTextStyles.small,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${event.eventDate} / ${event.title}',
+                          style: AppTextStyles.body,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          '通知: ${event.remindDaysBefore}日前',
+                          style: AppTextStyles.small,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        OutlinedButton(
+                          onPressed: _saving
+                              ? null
+                              : () => _editEventReminder(event),
+                          child: const Text('通知日数を更新'),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: AppSpacing.xs),
-                    OutlinedButton(
-                      onPressed: _saving ? null : () => _editEventReminder(event),
-                      child: const Text('通知日数を更新'),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
         const SizedBox(height: AppSpacing.sm),
         DropdownButtonFormField<String>(
           value: _eventType,

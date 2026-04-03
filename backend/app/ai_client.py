@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import re
+from typing import Any
 
 from app.config import settings
 
@@ -26,6 +27,7 @@ class GenerateContext:
     ng_free_phrases: list[str]
     tuning: dict | None
     my_line_name: str | None = None
+    customer_context: dict[str, Any] | None = None
 
 
 class AiClient:
