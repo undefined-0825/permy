@@ -20,6 +20,9 @@ class MockCustomerApiClient implements AppApiClient {
   int listCallCount = 0;
   int createCallCount = 0;
   int detailCallCount = 0;
+  int replaceTagsCallCount = 0;
+  int createVisitLogCallCount = 0;
+  int createEventCallCount = 0;
 
   @override
   Future<void> bootstrapAuth() async {}
@@ -157,6 +160,56 @@ class MockCustomerApiClient implements AppApiClient {
       ],
     );
   }
+
+  @override
+  Future<List<CustomerTag>> replaceCustomerTags(
+    String customerId,
+    ReplaceCustomerTagsInput input,
+  ) async {
+    replaceTagsCallCount += 1;
+    return input.tags
+        .asMap()
+        .entries
+        .map(
+          (e) => CustomerTag(
+            tagId: 'tag-${e.key}',
+            category: e.value.category,
+            value: e.value.value,
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<CustomerVisitLog> createCustomerVisitLog(
+    String customerId,
+    CreateVisitLogInput input,
+  ) async {
+    createVisitLogCallCount += 1;
+    return CustomerVisitLog(
+      visitLogId: 'visit-new',
+      visitedOn: input.visitedOn,
+      visitType: input.visitType,
+      memoShort: input.memoShort,
+      spendLevel: input.spendLevel,
+      moodTag: input.moodTag,
+    );
+  }
+
+  @override
+  Future<CustomerEvent> createCustomerEvent(
+    String customerId,
+    CreateCustomerEventInput input,
+  ) async {
+    createEventCallCount += 1;
+    return CustomerEvent(
+      eventId: 'event-new',
+      eventType: input.eventType,
+      eventDate: input.eventDate,
+      title: input.title,
+      note: input.note,
+    );
+  }
 }
 
 void main() {
@@ -254,5 +307,76 @@ void main() {
     expect(find.text('基本情報'), findsOneWidget);
     expect(find.textContaining('関係性: 常連'), findsOneWidget);
     expect(find.text('タグ'), findsOneWidget);
+  });
+
+  testWidgets('詳細画面でタグ更新・来店ログ追加・イベント追加を実行できる', (tester) async {
+    final apiClient = MockCustomerApiClient(
+      initialCustomers: [
+        CustomerSummary(
+          customerId: 'c1',
+          displayName: '山田さん',
+          relationshipStage: 'regular',
+          memoSummary: '終電前に帰る',
+          lastVisitAt: null,
+          lastContactAt: null,
+          isArchived: false,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(home: CustomerListScreen(apiClient: apiClient)),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('山田さん'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'タグをカンマ区切りで入力（例: 誕生日,転職）'),
+      '転職,誕生日',
+    );
+    final updateTagsButton = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'タグを更新'),
+    );
+    updateTagsButton.onPressed!.call();
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, '来店日（YYYY-MM-DD）'),
+      '2026-04-02',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'メモ（任意）').first,
+      '同伴あり',
+    );
+    final addVisitLogButton = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, '来店ログを追加'),
+    );
+    addVisitLogButton.onPressed!.call();
+    await tester.pumpAndSettle();
+
+    final eventDateFinder = find.widgetWithText(TextField, 'イベント日（YYYY-MM-DD）');
+    await tester.ensureVisible(eventDateFinder);
+    await tester.enterText(
+      eventDateFinder,
+      '2026-04-20',
+    );
+    final eventTitleFinder = find.widgetWithText(TextField, 'タイトル');
+    await tester.ensureVisible(eventTitleFinder);
+    await tester.enterText(eventTitleFinder, '次回提案日');
+    await tester.enterText(
+      find.widgetWithText(TextField, 'メモ（任意）').last,
+      '前日に連絡',
+    );
+    final addEventButton = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'イベントを追加'),
+    );
+    addEventButton.onPressed!.call();
+    await tester.pumpAndSettle();
+
+    expect(apiClient.replaceTagsCallCount, 1);
+    expect(apiClient.createVisitLogCallCount, 1);
+    expect(apiClient.createEventCallCount, 1);
   });
 }

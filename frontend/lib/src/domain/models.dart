@@ -449,3 +449,90 @@ class CustomerDetail {
     );
   }
 }
+
+class ReplaceCustomerTagsInput {
+  ReplaceCustomerTagsInput({required this.tags});
+
+  final List<CustomerTagInput> tags;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'tags': tags.map((e) => e.toJson()).toList(),
+    };
+  }
+}
+
+class CustomerTagInput {
+  CustomerTagInput({required this.category, required this.value});
+
+  final String category;
+  final String value;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'category': category,
+      'value': value,
+    };
+  }
+}
+
+class CreateVisitLogInput {
+  CreateVisitLogInput({
+    required this.visitedOn,
+    required this.visitType,
+    this.stayMinutes,
+    this.spendLevel,
+    this.drinkAmountTag,
+    this.moodTag,
+    this.memoShort,
+  });
+
+  final String visitedOn;
+  final String visitType;
+  final int? stayMinutes;
+  final String? spendLevel;
+  final String? drinkAmountTag;
+  final String? moodTag;
+  final String? memoShort;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'visited_on': visitedOn,
+      'visit_type': visitType,
+      'stay_minutes': stayMinutes,
+      'spend_level': spendLevel,
+      'drink_amount_tag': drinkAmountTag,
+      'mood_tag': moodTag,
+      'memo_short': memoShort,
+    };
+  }
+}
+
+class CreateCustomerEventInput {
+  CreateCustomerEventInput({
+    required this.eventType,
+    required this.eventDate,
+    required this.title,
+    this.note,
+    this.remindDaysBefore = 0,
+    this.isActive = true,
+  });
+
+  final String eventType;
+  final String eventDate;
+  final String title;
+  final String? note;
+  final int remindDaysBefore;
+  final bool isActive;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'event_type': eventType,
+      'event_date': eventDate,
+      'title': title,
+      'note': note,
+      'remind_days_before': remindDaysBefore,
+      'is_active': isActive,
+    };
+  }
+}

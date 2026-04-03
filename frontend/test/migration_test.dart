@@ -134,6 +134,53 @@ class MockMigrationApiClient implements AppApiClient {
       isArchived: false,
     );
   }
+
+  @override
+  Future<List<CustomerTag>> replaceCustomerTags(
+    String customerId,
+    ReplaceCustomerTagsInput input,
+  ) async {
+    return input.tags
+        .asMap()
+        .entries
+        .map(
+          (e) => CustomerTag(
+            tagId: 'tag-${e.key}',
+            category: e.value.category,
+            value: e.value.value,
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<CustomerVisitLog> createCustomerVisitLog(
+    String customerId,
+    CreateVisitLogInput input,
+  ) async {
+    return CustomerVisitLog(
+      visitLogId: 'visit-1',
+      visitedOn: input.visitedOn,
+      visitType: input.visitType,
+      memoShort: input.memoShort,
+      spendLevel: input.spendLevel,
+      moodTag: input.moodTag,
+    );
+  }
+
+  @override
+  Future<CustomerEvent> createCustomerEvent(
+    String customerId,
+    CreateCustomerEventInput input,
+  ) async {
+    return CustomerEvent(
+      eventId: 'event-1',
+      eventType: input.eventType,
+      eventDate: input.eventDate,
+      title: input.title,
+      note: input.note,
+    );
+  }
 }
 
 void main() {

@@ -46,6 +46,21 @@ abstract class AppApiClient {
 
   Future<CustomerSummary> createCustomer(CreateCustomerInput input);
 
+  Future<List<CustomerTag>> replaceCustomerTags(
+    String customerId,
+    ReplaceCustomerTagsInput input,
+  );
+
+  Future<CustomerVisitLog> createCustomerVisitLog(
+    String customerId,
+    CreateVisitLogInput input,
+  );
+
+  Future<CustomerEvent> createCustomerEvent(
+    String customerId,
+    CreateCustomerEventInput input,
+  );
+
   Future<void> deleteAccount();
 }
 
@@ -559,6 +574,111 @@ class ApiClient implements AppApiClient {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final body = _tryJson(response.body) ?? <String, dynamic>{};
         return CustomerSummary.fromJson(body);
+      }
+
+      throw ApiError.fromBody(
+        httpStatus: response.statusCode,
+        body: _tryJson(response.body),
+      );
+    });
+  }
+
+  @override
+  Future<List<CustomerTag>> replaceCustomerTags(
+    String customerId,
+    ReplaceCustomerTagsInput input,
+  ) async {
+    await bootstrapAuth();
+    return _runWithAuthRetry(() async {
+      final token = await tokenStore.read();
+      final response = await _sendWithTimeout(
+        () => _httpClient.put(
+          Uri.parse('$baseUrl/api/v1/customers/$customerId/tags'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode(input.toJson()),
+        ),
+        method: 'PUT',
+        path: '/api/v1/customers/{id}/tags',
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is! List) {
+          return <CustomerTag>[];
+        }
+        return decoded
+            .whereType<Map<String, dynamic>>()
+            .map(CustomerTag.fromJson)
+            .toList();
+      }
+
+      throw ApiError.fromBody(
+        httpStatus: response.statusCode,
+        body: _tryJson(response.body),
+      );
+    });
+  }
+
+  @override
+  Future<CustomerVisitLog> createCustomerVisitLog(
+    String customerId,
+    CreateVisitLogInput input,
+  ) async {
+    await bootstrapAuth();
+    return _runWithAuthRetry(() async {
+      final token = await tokenStore.read();
+      final response = await _sendWithTimeout(
+        () => _httpClient.post(
+          Uri.parse('$baseUrl/api/v1/customers/$customerId/visit-logs'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode(input.toJson()),
+        ),
+        method: 'POST',
+        path: '/api/v1/customers/{id}/visit-logs',
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final body = _tryJson(response.body) ?? <String, dynamic>{};
+        return CustomerVisitLog.fromJson(body);
+      }
+
+      throw ApiError.fromBody(
+        httpStatus: response.statusCode,
+        body: _tryJson(response.body),
+      );
+    });
+  }
+
+  @override
+  Future<CustomerEvent> createCustomerEvent(
+    String customerId,
+    CreateCustomerEventInput input,
+  ) async {
+    await bootstrapAuth();
+    return _runWithAuthRetry(() async {
+      final token = await tokenStore.read();
+      final response = await _sendWithTimeout(
+        () => _httpClient.post(
+          Uri.parse('$baseUrl/api/v1/customers/$customerId/events'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode(input.toJson()),
+        ),
+        method: 'POST',
+        path: '/api/v1/customers/{id}/events',
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final body = _tryJson(response.body) ?? <String, dynamic>{};
+        return CustomerEvent.fromJson(body);
       }
 
       throw ApiError.fromBody(

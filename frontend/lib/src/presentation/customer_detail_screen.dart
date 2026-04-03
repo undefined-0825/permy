@@ -29,6 +29,18 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   CustomerDetail? _detail;
   ApiError? _error;
   bool _loading = true;
+  bool _saving = false;
+
+  final TextEditingController _tagsController = TextEditingController();
+  final TextEditingController _visitDateController = TextEditingController();
+  final TextEditingController _visitMemoController = TextEditingController();
+  final TextEditingController _eventDateController = TextEditingController();
+  final TextEditingController _eventTitleController = TextEditingController();
+  final TextEditingController _eventNoteController = TextEditingController();
+
+  String _tagCategory = 'topic';
+  String _visitType = 'store';
+  String _eventType = 'birthday';
 
   @override
   void initState() {
@@ -58,6 +70,196 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         _error = e;
         _loading = false;
       });
+    }
+  }
+
+  @override
+  void dispose() {
+    _tagsController.dispose();
+    _visitDateController.dispose();
+    _visitMemoController.dispose();
+    _eventDateController.dispose();
+    _eventTitleController.dispose();
+    _eventNoteController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveTags() async {
+    final detail = _detail;
+    if (detail == null) {
+      return;
+    }
+    final raw = _tagsController.text.trim();
+    if (raw.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('タグを1つ以上入力してね')),
+      );
+      return;
+    }
+    final values = raw
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    if (values.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('タグを1つ以上入力してね')),
+      );
+      return;
+    }
+
+    try {
+      setState(() {
+        _saving = true;
+      });
+      await widget.apiClient.replaceCustomerTags(
+        detail.customer.customerId,
+        ReplaceCustomerTagsInput(
+          tags: values
+              .map((value) => CustomerTagInput(category: _tagCategory, value: value))
+              .toList(),
+        ),
+      );
+      _tagsController.clear();
+      await _loadDetail();
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('タグを更新しました')),
+      );
+    } on ApiError catch (e) {
+      if (!mounted) {
+        return;
+      }
+      await showAppErrorDialog(
+        context: context,
+        title: 'タグ更新に失敗したよ',
+        message: '入力内容を確認して、もう一度ためしてね。',
+        errorCode: e.errorCode,
+        detail: e.message,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _addVisitLog() async {
+    final detail = _detail;
+    if (detail == null) {
+      return;
+    }
+    final visitedOn = _visitDateController.text.trim();
+    if (visitedOn.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('来店日を入力してね（YYYY-MM-DD）')),
+      );
+      return;
+    }
+
+    try {
+      setState(() {
+        _saving = true;
+      });
+      await widget.apiClient.createCustomerVisitLog(
+        detail.customer.customerId,
+        CreateVisitLogInput(
+          visitedOn: visitedOn,
+          visitType: _visitType,
+          memoShort: _visitMemoController.text.trim().isEmpty
+              ? null
+              : _visitMemoController.text.trim(),
+        ),
+      );
+      _visitDateController.clear();
+      _visitMemoController.clear();
+      await _loadDetail();
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('来店ログを追加しました')),
+      );
+    } on ApiError catch (e) {
+      if (!mounted) {
+        return;
+      }
+      await showAppErrorDialog(
+        context: context,
+        title: '来店ログ追加に失敗したよ',
+        message: '日付形式と入力内容を確認してね。',
+        errorCode: e.errorCode,
+        detail: e.message,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _addEvent() async {
+    final detail = _detail;
+    if (detail == null) {
+      return;
+    }
+    final eventDate = _eventDateController.text.trim();
+    final title = _eventTitleController.text.trim();
+    if (eventDate.isEmpty || title.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('イベント日とタイトルを入力してね')),
+      );
+      return;
+    }
+
+    try {
+      setState(() {
+        _saving = true;
+      });
+      await widget.apiClient.createCustomerEvent(
+        detail.customer.customerId,
+        CreateCustomerEventInput(
+          eventType: _eventType,
+          eventDate: eventDate,
+          title: title,
+          note: _eventNoteController.text.trim().isEmpty
+              ? null
+              : _eventNoteController.text.trim(),
+        ),
+      );
+      _eventDateController.clear();
+      _eventTitleController.clear();
+      _eventNoteController.clear();
+      await _loadDetail();
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('イベントを追加しました')),
+      );
+    } on ApiError catch (e) {
+      if (!mounted) {
+        return;
+      }
+      await showAppErrorDialog(
+        context: context,
+        title: 'イベント追加に失敗したよ',
+        message: '日付形式と入力内容を確認してね。',
+        errorCode: e.errorCode,
+        detail: e.message,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+        });
+      }
     }
   }
 
@@ -134,6 +336,41 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                 )
                 .toList(),
           ),
+        const SizedBox(height: AppSpacing.sm),
+        DropdownButtonFormField<String>(
+          value: _tagCategory,
+          decoration: const InputDecoration(
+            labelText: 'タグカテゴリ',
+            border: OutlineInputBorder(),
+          ),
+          items: const [
+            DropdownMenuItem(value: 'topic', child: Text('topic')),
+            DropdownMenuItem(value: 'personality', child: Text('personality')),
+            DropdownMenuItem(value: 'event', child: Text('event')),
+            DropdownMenuItem(value: 'relationship', child: Text('relationship')),
+            DropdownMenuItem(value: 'ng', child: Text('ng')),
+          ],
+          onChanged: _saving
+              ? null
+              : (value) {
+                  setState(() {
+                    _tagCategory = value ?? 'topic';
+                  });
+                },
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        TextField(
+          controller: _tagsController,
+          decoration: const InputDecoration(
+            hintText: 'タグをカンマ区切りで入力（例: 誕生日,転職）',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        FilledButton(
+          onPressed: _saving ? null : _saveTags,
+          child: Text(_saving ? '更新中...' : 'タグを更新'),
+        ),
         const SizedBox(height: AppSpacing.lg),
         const AppSectionHeader(title: '直近来店ログ'),
         const SizedBox(height: AppSpacing.sm),
@@ -149,6 +386,49 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               ),
             ),
           ),
+        const SizedBox(height: AppSpacing.sm),
+        TextField(
+          controller: _visitDateController,
+          decoration: const InputDecoration(
+            labelText: '来店日（YYYY-MM-DD）',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        DropdownButtonFormField<String>(
+          value: _visitType,
+          decoration: const InputDecoration(
+            labelText: '来店種別',
+            border: OutlineInputBorder(),
+          ),
+          items: const [
+            DropdownMenuItem(value: 'store', child: Text('store')),
+            DropdownMenuItem(value: 'douhan', child: Text('douhan')),
+            DropdownMenuItem(value: 'after', child: Text('after')),
+            DropdownMenuItem(value: 'other', child: Text('other')),
+          ],
+          onChanged: _saving
+              ? null
+              : (value) {
+                  setState(() {
+                    _visitType = value ?? 'store';
+                  });
+                },
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        TextField(
+          controller: _visitMemoController,
+          decoration: const InputDecoration(
+            labelText: 'メモ（任意）',
+            border: OutlineInputBorder(),
+          ),
+          maxLength: 80,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        FilledButton(
+          onPressed: _saving ? null : _addVisitLog,
+          child: Text(_saving ? '追加中...' : '来店ログを追加'),
+        ),
         const SizedBox(height: AppSpacing.lg),
         const AppSectionHeader(title: 'イベント'),
         const SizedBox(height: AppSpacing.sm),
@@ -164,6 +444,61 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               ),
             ),
           ),
+        const SizedBox(height: AppSpacing.sm),
+        DropdownButtonFormField<String>(
+          value: _eventType,
+          decoration: const InputDecoration(
+            labelText: 'イベント種別',
+            border: OutlineInputBorder(),
+          ),
+          items: const [
+            DropdownMenuItem(value: 'birthday', child: Text('birthday')),
+            DropdownMenuItem(
+              value: 'first_visit_anniversary',
+              child: Text('first_visit_anniversary'),
+            ),
+            DropdownMenuItem(value: 'special_day', child: Text('special_day')),
+            DropdownMenuItem(value: 'custom', child: Text('custom')),
+          ],
+          onChanged: _saving
+              ? null
+              : (value) {
+                  setState(() {
+                    _eventType = value ?? 'birthday';
+                  });
+                },
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        TextField(
+          controller: _eventDateController,
+          decoration: const InputDecoration(
+            labelText: 'イベント日（YYYY-MM-DD）',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        TextField(
+          controller: _eventTitleController,
+          decoration: const InputDecoration(
+            labelText: 'タイトル',
+            border: OutlineInputBorder(),
+          ),
+          maxLength: 80,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        TextField(
+          controller: _eventNoteController,
+          decoration: const InputDecoration(
+            labelText: 'メモ（任意）',
+            border: OutlineInputBorder(),
+          ),
+          maxLength: 80,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        FilledButton(
+          onPressed: _saving ? null : _addEvent,
+          child: Text(_saving ? '追加中...' : 'イベントを追加'),
+        ),
       ],
     );
   }
