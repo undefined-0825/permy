@@ -11,6 +11,8 @@ DEFAULT_SETTINGS: dict[str, object] = {
     "partner_name_usage_pref": "once",
     "ng_tags": [],
     "ng_free_phrases": [],
+    "contact_reminder_threshold_days": [3, 7],
+    "visit_reminder_threshold_days": [14, 30],
 }
 
 
@@ -23,6 +25,16 @@ def with_default_settings(settings: dict | None) -> dict:
     normalized["ng_tags"] = [str(item) for item in normalized.get("ng_tags") or []]
     normalized["ng_free_phrases"] = [
         str(item) for item in normalized.get("ng_free_phrases") or []
+    ]
+    normalized["contact_reminder_threshold_days"] = [
+        int(item)
+        for item in normalized.get("contact_reminder_threshold_days") or [3, 7]
+        if isinstance(item, int) or (isinstance(item, str) and item.isdigit())
+    ]
+    normalized["visit_reminder_threshold_days"] = [
+        int(item)
+        for item in normalized.get("visit_reminder_threshold_days") or [14, 30]
+        if isinstance(item, int) or (isinstance(item, str) and item.isdigit())
     ]
 
     return normalized

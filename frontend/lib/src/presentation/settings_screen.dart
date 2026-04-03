@@ -63,6 +63,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Timer? _autoPersistDebounce;
   ApiError? _error;
   final TextEditingController _ngPhraseController = TextEditingController();
+    final TextEditingController _contactReminderDaysController =
+      TextEditingController();
+    final TextEditingController _visitReminderDaysController =
+      TextEditingController();
   StreamSubscription<BillingProof>? _billingProofSubscription;
 
   // NGタグの定義
@@ -88,6 +92,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _billingProofSubscription?.cancel();
     _autoPersistDebounce?.cancel();
     _ngPhraseController.dispose();
+    _contactReminderDaysController.dispose();
+    _visitReminderDaysController.dispose();
     super.dispose();
   }
 
@@ -121,6 +127,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _customerReminderCount = reminderCount;
         _loading = false;
       });
+      _syncReminderThresholdControllers();
 
       _ensureBillingDatesIfNeeded();
     } on ApiError catch (e) {
@@ -226,7 +233,107 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ?.map((e) => e.toString())
             .toList() ??
         <String>[];
+    normalized['contact_reminder_threshold_days'] =
+        _normalizeReminderThreshold(
+          normalized['contact_reminder_threshold_days'],
+          const [3, 7],
+        );
+    normalized['visit_reminder_threshold_days'] = _normalizeReminderThreshold(
+      normalized['visit_reminder_threshold_days'],
+      const [14, 30],
+    );
     return normalized;
+  }
+
+  List<int> _normalizeReminderThreshold(dynamic raw, List<int> fallback) {
+    final source = raw is List ? raw : fallback;
+    final values = <int>[];
+    for (final item in source) {
+      if (item is int) {
+        values.add(item);
+      } else {
+        final parsed = int.tryParse(item.toString().trim());
+        if (parsed != null) {
+          values.add(parsed);
+        }
+      }
+    }
+
+    final normalized = values
+        .where((value) => value >= 1 && value <= 365)
+        .toSet()
+        .toList()
+      ..sort();
+    if (normalized.isEmpty) {
+      return List<int>.from(fallback);
+    }
+    return normalized;
+  }
+
+  void _syncReminderThresholdControllers() {
+    final contact = (_settings['contact_reminder_threshold_days'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        <String>['3', '7'];
+    final visit = (_settings['visit_reminder_threshold_days'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        <String>['14', '30'];
+
+    _contactReminderDaysController.text = contact.join(',');
+    _visitReminderDaysController.text = visit.join(',');
+  }
+
+  List<int>? _parseThresholdInput(String raw) {
+    final tokens = raw
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    if (tokens.isEmpty) {
+      return null;
+    }
+
+    final values = <int>[];
+    for (final token in tokens) {
+      final parsed = int.tryParse(token);
+      if (parsed == null || parsed < 1 || parsed > 365) {
+        return null;
+      }
+      values.add(parsed);
+    }
+
+    final normalized = values.toSet().toList()..sort();
+    if (normalized.isEmpty) {
+      return null;
+    }
+    return normalized;
+  }
+
+  void _applyReminderThresholdSettings() {
+    final contact = _parseThresholdInput(_contactReminderDaysController.text);
+    final visit = _parseThresholdInput(_visitReminderDaysController.text);
+    if (contact == null || visit == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('閾値は 1-365 の整数をカンマ区切りで入力してね')),
+      );
+      return;
+    }
+
+    _updateSetting(
+      'contact_reminder_threshold_days',
+      contact,
+      autoPersist: false,
+    );
+    _updateSetting(
+      'visit_reminder_threshold_days',
+      visit,
+      autoPersist: false,
+    );
+    _scheduleAutoPersist();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('顧客リマインド閾値を更新しました')),
+    );
   }
 
   void _ensureBillingDatesIfNeeded() {
@@ -440,6 +547,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
+                  if (_isPremiumMember(_settings)) ...[
+                    const AppSectionHeader(title: '顧客リマインド閾値'),
+                    const SizedBox(height: AppSpacing.sm),
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withValues(alpha: 0.75),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          TextField(
+                            controller: _contactReminderDaysController,
+                            decoration: const InputDecoration(
+                              labelText: '連絡なし通知日数（カンマ区切り）',
+                              hintText: '例: 3,7',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          TextField(
+                            controller: _visitReminderDaysController,
+                            decoration: const InputDecoration(
+                              labelText: '来店なし通知日数（カンマ区切り）',
+                              hintText: '例: 14,30',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          AppButton(
+                            text: '顧客リマインド閾値を反映',
+                            onPressed: _applyReminderThresholdSettings,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                  ],
                   const AppSectionHeader(title: '返信案のNG設定'),
                   const SizedBox(height: AppSpacing.sm),
                   _buildNGSetting(),

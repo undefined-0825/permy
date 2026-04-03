@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_db
 from app.errors import err
-from app.models import Customer, CustomerEvent, CustomerTag, CustomerVisitLog
+from app.models import Customer, CustomerEvent, CustomerTag, CustomerVisitLog, UserSettings
 from app.schemas import (
     CustomerCreateRequest,
     CustomerDetailResponse,
@@ -163,6 +163,27 @@ def _build_due_title_for_gap(base_label: str, days: int, customer_name: str) -> 
     return f"{base_label}{days}日: {customer_name} さん"
 
 
+def _load_threshold_days(settings_json: dict | None, key: str, fallback: tuple[int, ...]) -> list[int]:
+    raw = (settings_json or {}).get(key)
+    if not isinstance(raw, list):
+        return list(fallback)
+
+    values: list[int] = []
+    for item in raw:
+        if isinstance(item, bool):
+            continue
+        if isinstance(item, int):
+            values.append(item)
+            continue
+        if isinstance(item, str) and item.strip().isdigit():
+            values.append(int(item.strip()))
+
+    normalized = sorted({value for value in values if 1 <= value <= 365})
+    if not normalized:
+        return list(fallback)
+    return normalized[:6]
+
+
 @router.get("/customers", response_model=list[CustomerResponse])
 async def list_customers(
     q: str | None = Query(default=None, max_length=64),
@@ -254,6 +275,22 @@ async def list_customer_reminders(
         )
     ).scalars().all()
 
+    settings_row = await db.execute(
+        select(UserSettings).where(UserSettings.user_id == auth.user_id)
+    )
+    settings = settings_row.scalar_one_or_none()
+    settings_json = dict(settings.settings_json or {}) if settings else {}
+    contact_days = _load_threshold_days(
+        settings_json,
+        "contact_reminder_threshold_days",
+        (3, 7),
+    )
+    visit_days = _load_threshold_days(
+        settings_json,
+        "visit_reminder_threshold_days",
+        (14, 30),
+    )
+
     customer_by_id = {row.customer_id: row for row in customers}
     if not customer_by_id:
         return []
@@ -300,7 +337,7 @@ async def list_customer_reminders(
     for customer in customers:
         last_contact_date = _to_utc_date(customer.last_contact_at)
         if last_contact_date is not None:
-            for days in (3, 7):
+            for days in contact_days:
                 due_date = last_contact_date + dt.timedelta(days=days)
                 if lookback <= due_date <= horizon:
                     reminders.append(
@@ -320,7 +357,7 @@ async def list_customer_reminders(
 
         last_visit_date = _to_utc_date(customer.last_visit_at)
         if last_visit_date is not None:
-            for days in (14, 30):
+            for days in visit_days:
                 due_date = last_visit_date + dt.timedelta(days=days)
                 if lookback <= due_date <= horizon:
                     reminders.append(

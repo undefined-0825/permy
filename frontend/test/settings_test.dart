@@ -744,6 +744,54 @@ void main() {
       expect(find.byType(CustomerListScreen), findsOneWidget);
     });
 
+    testWidgets('Premium会員時は顧客リマインド閾値を更新できる', (WidgetTester tester) async {
+      final premiumApi = MockApiClient(
+        settingsSnapshot: SettingsSnapshot(
+          settings: {
+            'feature_tier': 'premium',
+            'billing_tier': 'premium_store',
+            'plan': 'premium',
+            'settings_schema_version': 1,
+            'forbidden_type_ids': [],
+            'contact_reminder_threshold_days': [3, 7],
+            'visit_reminder_threshold_days': [14, 30],
+          },
+          etag: 'test-etag-123',
+        ),
+      );
+      final premiumPurchase = MockPurchaseService(mockIsPro: true);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            apiClient: premiumApi,
+            purchaseService: premiumPurchase,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.widgetWithText(TextField, '連絡なし通知日数（カンマ区切り）'),
+        '5,10',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, '来店なし通知日数（カンマ区切り）'),
+        '20,40',
+      );
+      await tapAppButton(tester, '顧客リマインド閾値を反映');
+      await tester.pumpAndSettle();
+
+      expect(
+        premiumApi.lastUpdatedSettings?['contact_reminder_threshold_days'],
+        <int>[5, 10],
+      );
+      expect(
+        premiumApi.lastUpdatedSettings?['visit_reminder_threshold_days'],
+        <int>[20, 40],
+      );
+    });
+
     testWidgets('Free会員時は顧客メモ導線を表示しない', (WidgetTester tester) async {
       final freeApi = MockApiClient(
         settingsSnapshot: SettingsSnapshot(

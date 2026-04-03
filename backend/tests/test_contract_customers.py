@@ -179,5 +179,50 @@ def test_customers_premium_crud_and_search(client):
         reminders_gap = reminders_gap_res.json()
         assert any(item["reminder_type"] == "contact_gap" for item in reminders_gap)
         assert any(item["reminder_type"] == "visit_gap" for item in reminders_gap)
+
+        settings_get_res = client.get(
+            "/api/v1/me/settings",
+            headers=headers,
+        )
+        assert settings_get_res.status_code == 200
+        etag = settings_get_res.headers.get("etag", "")
+        assert etag
+
+        settings_put_res = client.put(
+            "/api/v1/me/settings",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "If-Match": etag,
+            },
+            json={
+                "settings": {
+                    "settings_schema_version": 1,
+                    "contact_reminder_threshold_days": [10],
+                    "visit_reminder_threshold_days": [40],
+                }
+            },
+        )
+        assert settings_put_res.status_code == 200
+
+        custom_threshold_customer = client.post(
+            "/api/v1/customers",
+            headers=headers,
+            json={
+                "display_name": "鈴木さん",
+                "relationship_stage": "regular",
+                "last_contact_at": "2026-04-05T00:00:00+00:00",
+                "last_visit_at": "2026-03-06T00:00:00+00:00",
+            },
+        )
+        assert custom_threshold_customer.status_code == 200
+
+        reminders_custom_res = client.get(
+            "/api/v1/customers/reminders?today=2026-04-15&days_ahead=0",
+            headers=headers,
+        )
+        assert reminders_custom_res.status_code == 200
+        reminders_custom = reminders_custom_res.json()
+        assert any("連絡なし10日" in item["title"] for item in reminders_custom)
+        assert any("来店なし40日" in item["title"] for item in reminders_custom)
     finally:
         settings.app_env = old_app_env
