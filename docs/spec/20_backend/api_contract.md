@@ -395,7 +395,7 @@ Body:
 **Rules**
 - `platform`: `"ios" | "android"`
 - 許可された `product_id` は以下のみ
-  - Android: `permy_pro_monthly`, `permy_premium_monthly`
+  - Android: `permy_pro_monthly`, `permy-premium-monthly`
   - iOS: `com.sukimalab.permy.pro_monthly`, `com.sukimalab.permy.premium_monthly`
 - 現時点の検証は mock mode。`purchase_token` 非空を最低条件として検証する。
 

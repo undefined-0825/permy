@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.db import get_db
-from app.models import User, UserSettings, PlanStatus, UsageDaily
+from app.models import Customer, CustomerEvent, CustomerTag, CustomerVisitLog, User, UserSettings, PlanStatus, UsageDaily
 from app.schemas import AuthAnonymousResponse
 from app.security import create_session, get_auth_context, AuthContext, invalidate_all_sessions
 from app.ratelimit import fixed_window_limit
@@ -71,6 +71,10 @@ async def delete_account(
     user_id = auth.user_id
 
     # 関連データを削除
+    await db.execute(delete(CustomerTag).where(CustomerTag.user_id == user_id))
+    await db.execute(delete(CustomerVisitLog).where(CustomerVisitLog.user_id == user_id))
+    await db.execute(delete(CustomerEvent).where(CustomerEvent.user_id == user_id))
+    await db.execute(delete(Customer).where(Customer.user_id == user_id))
     await db.execute(delete(UserSettings).where(UserSettings.user_id == user_id))
     await db.execute(delete(PlanStatus).where(PlanStatus.user_id == user_id))
     await db.execute(delete(UsageDaily).where(UsageDaily.user_id == user_id))

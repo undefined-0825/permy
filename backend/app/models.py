@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 import uuid
-from sqlalchemy import String, DateTime, JSON, Integer
+from sqlalchemy import String, DateTime, JSON, Integer, Boolean, Date
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -86,4 +86,68 @@ class TelemetryEvent(Base):
     os: Mapped[str] = mapped_column(String(16))
     device_class: Mapped[str] = mapped_column(String(16))
     event_data: Mapped[dict] = mapped_column(JSON, default=dict)  # イベント固有フィールド
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc))
+
+
+class Customer(Base):
+    __tablename__ = "customers"
+
+    customer_id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String(36), index=True)
+    display_name: Mapped[str] = mapped_column(String(80))
+    nickname: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    call_name: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    area_tag: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    age_range: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    job_tag: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    relationship_stage: Mapped[str] = mapped_column(String(32), default="new")
+    visit_frequency_tag: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    drink_style_tag: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    last_visit_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_contact_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    memo_summary: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc))
+    updated_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc))
+
+
+class CustomerTag(Base):
+    __tablename__ = "customer_tags"
+
+    tag_id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String(36), index=True)
+    customer_id: Mapped[str] = mapped_column(String(36), index=True)
+    category: Mapped[str] = mapped_column(String(32))
+    value: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc))
+
+
+class CustomerVisitLog(Base):
+    __tablename__ = "customer_visit_logs"
+
+    visit_log_id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String(36), index=True)
+    customer_id: Mapped[str] = mapped_column(String(36), index=True)
+    visited_on: Mapped[dt.date] = mapped_column(Date)
+    visit_type: Mapped[str] = mapped_column(String(32))
+    stay_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    spend_level: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    drink_amount_tag: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    mood_tag: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    memo_short: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc))
+
+
+class CustomerEvent(Base):
+    __tablename__ = "customer_events"
+
+    event_id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String(36), index=True)
+    customer_id: Mapped[str] = mapped_column(String(36), index=True)
+    event_type: Mapped[str] = mapped_column(String(32))
+    event_date: Mapped[dt.date] = mapped_column(Date)
+    title: Mapped[str] = mapped_column(String(80))
+    note: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    remind_days_before: Mapped[int] = mapped_column(Integer, default=0)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc))

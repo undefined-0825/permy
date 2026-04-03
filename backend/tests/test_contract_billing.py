@@ -100,7 +100,7 @@ def test_billing_verify_android_premium_returns_premium(client):
             headers={"Authorization": f"Bearer {token}"},
             json={
                 "platform": "android",
-                "product_id": "permy_premium_monthly",
+                "product_id": "permy-premium-monthly",
                 "purchase_token": "dummy-token",
             },
         )

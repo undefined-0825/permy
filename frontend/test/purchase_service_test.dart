@@ -95,7 +95,7 @@ void main() {
         queryProductDetailsOverride: (ids) async {
           queriedIds = ids;
           return ProductDetailsResponse(
-            productDetails: <ProductDetails>[_product('permy_premium_monthly')],
+            productDetails: <ProductDetails>[_product('permy-premium-monthly')],
             notFoundIDs: const <String>[],
           );
         },
@@ -103,8 +103,8 @@ void main() {
 
       final products = await service.getProducts(plan: 'premium');
 
-      expect(queriedIds, {'permy_premium_monthly'});
-      expect(products.single.id, 'permy_premium_monthly');
+      expect(queriedIds, {'permy-premium-monthly'});
+      expect(products.single.id, 'permy-premium-monthly');
     });
   });
 }

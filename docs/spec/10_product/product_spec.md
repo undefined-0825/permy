@@ -412,7 +412,7 @@ NightSelf:
   - PurchaseService → BillingProof → Settings画面 → API連携フロー完成
   - 購入成功時に feature_tier/billing_tier を自動更新
   - mock mode で動作確認済み（実ストアサーバ検証は将来実装）
-- Android 商品ID（SSOT）：`permy_pro_monthly` / `permy_premium_monthly`
+- Android 商品ID（SSOT）：`permy_pro_monthly` / `permy-premium-monthly`
 - iOS 商品ID（SSOT）：`com.sukimalab.permy.pro_monthly` / `com.sukimalab.permy.premium_monthly`
 
 

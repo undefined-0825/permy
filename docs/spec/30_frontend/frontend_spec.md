@@ -259,7 +259,7 @@
 ### 8.5.5 注意事項
 - 現時点は mock mode での動作（実ストアサーバ検証は将来実装）
 - 本番環境では `/billing/verify` が 503 を返すため、ストア検証実装後に有効化
-- 商品ID（SSOT）：Android=`permy_pro_monthly`,`permy_premium_monthly` / iOS=`com.sukimalab.permy.pro_monthly`,`com.sukimalab.permy.premium_monthly`
+- 商品ID（SSOT）：Android=`permy_pro_monthly`,`permy-premium-monthly` / iOS=`com.sukimalab.permy.pro_monthly`,`com.sukimalab.permy.premium_monthly`
 
 ---
 

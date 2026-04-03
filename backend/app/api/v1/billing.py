@@ -18,7 +18,7 @@ from app.security import AuthContext, get_auth_context
 router = APIRouter()
 
 _ALLOWED_PRODUCT_IDS = {
-    "android": {"permy_pro_monthly", "permy_premium_monthly"},
+    "android": {"permy_pro_monthly", "permy-premium-monthly"},
     "ios": {"com.sukimalab.permy.pro_monthly", "com.sukimalab.permy.premium_monthly"},
 }
 

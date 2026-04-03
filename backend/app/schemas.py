@@ -186,3 +186,131 @@ class TelemetryEventResponse(BaseModel):
     """POST /api/v1/telemetry/events のレスポンス"""
     received: int
     request_id: str | None = None
+
+
+CustomerAgeRange = Literal["unknown", "20s_early", "20s_late", "30s", "40s", "50s_or_more"]
+CustomerRelationshipStage = Literal["new", "regular", "important", "caution", "inactive"]
+CustomerVisitFrequencyTag = Literal["unknown", "weekly", "biweekly", "monthly", "rare"]
+CustomerDrinkStyleTag = Literal["unknown", "light", "normal", "heavy", "gets_drunk_fast"]
+CustomerTagCategory = Literal[
+    "personality",
+    "topic",
+    "ng",
+    "lifestyle",
+    "relationship",
+    "sales_hint",
+    "event",
+]
+CustomerVisitType = Literal["store", "douhan", "after", "other"]
+CustomerSpendLevel = Literal["unknown", "low", "middle", "high", "very_high"]
+CustomerDrinkAmountTag = Literal["light", "normal", "heavy"]
+CustomerMoodTag = Literal["good", "normal", "bad", "unstable"]
+CustomerEventType = Literal["birthday", "first_visit_anniversary", "last_visit_reminder", "special_day", "custom"]
+
+
+class CustomerBase(BaseModel):
+    display_name: str = Field(..., min_length=1, max_length=80)
+    nickname: str | None = Field(default=None, max_length=80)
+    call_name: str | None = Field(default=None, max_length=80)
+    area_tag: str | None = Field(default=None, max_length=64)
+    age_range: CustomerAgeRange | None = None
+    job_tag: str | None = Field(default=None, max_length=64)
+    relationship_stage: CustomerRelationshipStage = "new"
+    visit_frequency_tag: CustomerVisitFrequencyTag | None = None
+    drink_style_tag: CustomerDrinkStyleTag | None = None
+    last_visit_at: str | None = None
+    last_contact_at: str | None = None
+    memo_summary: str | None = Field(default=None, max_length=120)
+    is_archived: bool = False
+
+
+class CustomerCreateRequest(CustomerBase):
+    pass
+
+
+class CustomerUpdateRequest(BaseModel):
+    display_name: str | None = Field(default=None, min_length=1, max_length=80)
+    nickname: str | None = Field(default=None, max_length=80)
+    call_name: str | None = Field(default=None, max_length=80)
+    area_tag: str | None = Field(default=None, max_length=64)
+    age_range: CustomerAgeRange | None = None
+    job_tag: str | None = Field(default=None, max_length=64)
+    relationship_stage: CustomerRelationshipStage | None = None
+    visit_frequency_tag: CustomerVisitFrequencyTag | None = None
+    drink_style_tag: CustomerDrinkStyleTag | None = None
+    last_visit_at: str | None = None
+    last_contact_at: str | None = None
+    memo_summary: str | None = Field(default=None, max_length=120)
+    is_archived: bool | None = None
+
+
+class CustomerResponse(CustomerBase):
+    customer_id: str
+    created_at: str
+    updated_at: str
+
+
+class CustomerTagItem(BaseModel):
+    category: CustomerTagCategory
+    value: str = Field(..., min_length=1, max_length=64)
+
+
+class CustomerTagReplaceRequest(BaseModel):
+    tags: list[CustomerTagItem] = Field(default_factory=list, max_length=64)
+
+
+class CustomerTagResponse(BaseModel):
+    tag_id: str
+    category: CustomerTagCategory
+    value: str
+
+
+class CustomerVisitLogCreateRequest(BaseModel):
+    visited_on: str
+    visit_type: CustomerVisitType
+    stay_minutes: int | None = Field(default=None, ge=0, le=1440)
+    spend_level: CustomerSpendLevel | None = None
+    drink_amount_tag: CustomerDrinkAmountTag | None = None
+    mood_tag: CustomerMoodTag | None = None
+    memo_short: str | None = Field(default=None, max_length=80)
+
+
+class CustomerVisitLogResponse(BaseModel):
+    visit_log_id: str
+    customer_id: str
+    visited_on: str
+    visit_type: CustomerVisitType
+    stay_minutes: int | None
+    spend_level: CustomerSpendLevel | None
+    drink_amount_tag: CustomerDrinkAmountTag | None
+    mood_tag: CustomerMoodTag | None
+    memo_short: str | None
+    created_at: str
+
+
+class CustomerEventCreateRequest(BaseModel):
+    event_type: CustomerEventType
+    event_date: str
+    title: str = Field(..., min_length=1, max_length=80)
+    note: str | None = Field(default=None, max_length=80)
+    remind_days_before: int = Field(default=0, ge=0, le=365)
+    is_active: bool = True
+
+
+class CustomerEventResponse(BaseModel):
+    event_id: str
+    customer_id: str
+    event_type: CustomerEventType
+    event_date: str
+    title: str
+    note: str | None
+    remind_days_before: int
+    is_active: bool
+    created_at: str
+
+
+class CustomerDetailResponse(BaseModel):
+    customer: CustomerResponse
+    tags: list[CustomerTagResponse]
+    visit_logs: list[CustomerVisitLogResponse]
+    events: list[CustomerEventResponse]

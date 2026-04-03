@@ -41,7 +41,7 @@ class PurchaseService {
 
   // Android Google Play 定期購入ID（SSOT）
   static const String _productIdAndroidPro = 'permy_pro_monthly';
-  static const String _productIdAndroidPremium = 'permy_premium_monthly';
+  static const String _productIdAndroidPremium = 'permy-premium-monthly';
   // iOS App Store 定期購入ID（SSOT）
   static const String _productIdIosPro = 'com.sukimalab.permy.pro_monthly';
   static const String _productIdIosPremium =

@@ -181,7 +181,7 @@
     - `plan`（free/pro/premium）
     - `verified`（bool）
   - 動作:
-    - 許可された product_id かチェック（許可リスト: `com.sukimalab.permy.pro_monthly` / `com.sukimalab.permy.premium_monthly`（iOS）、`permy_pro_monthly` / `permy_premium_monthly`（Android））
+    - 許可された product_id かチェック（許可リスト: `com.sukimalab.permy.pro_monthly` / `com.sukimalab.permy.premium_monthly`（iOS）、`permy_pro_monthly` / `permy-premium-monthly`（Android））
     - purchase_token が存在するかチェック
     - 検証成功時、商品IDに応じて `feature_tier` と `billing_tier` を更新
       - Pro商品: `feature_tier=pro`、`billing_tier=pro_store`
