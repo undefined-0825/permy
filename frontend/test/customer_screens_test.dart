@@ -8,6 +8,7 @@ import 'package:sample_app/src/infrastructure/api_client.dart';
 import 'package:sample_app/src/infrastructure/customer_generate_selection_store.dart';
 import 'package:sample_app/src/presentation/customer_detail_screen.dart';
 import 'package:sample_app/src/presentation/customer_list_screen.dart';
+import 'package:sample_app/src/presentation/customer_search_results_screen.dart';
 
 class MockCustomerApiClient implements AppApiClient {
   MockCustomerApiClient({
@@ -341,6 +342,35 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
     await tester.pumpAndSettle();
     expect(apiClient.listCallCount, 2);
+  });
+
+  testWidgets('検索アイコンで顧客検索結果専用画面へ遷移できる', (tester) async {
+    final apiClient = MockCustomerApiClient(
+      initialCustomers: [
+        CustomerSummary(
+          customerId: 'c1',
+          displayName: '山田さん',
+          relationshipStage: 'regular',
+          memoSummary: '終電前に帰る',
+          lastVisitAt: null,
+          lastContactAt: null,
+          isArchived: false,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(home: CustomerListScreen(apiClient: apiClient)),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).first, '山田');
+    await tester.tap(find.byIcon(Icons.search).first);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CustomerSearchResultsScreen), findsOneWidget);
+    expect(find.text('顧客検索結果'), findsOneWidget);
+    expect(find.text('山田さん'), findsOneWidget);
   });
 
   testWidgets('関係性チップで一覧を絞り込める', (tester) async {

@@ -15,6 +15,7 @@ import '../infrastructure/api_client.dart';
 import '../infrastructure/customer_generate_selection_store.dart';
 import 'customer_detail_screen.dart';
 import 'customer_form_screen.dart';
+import 'customer_search_results_screen.dart';
 
 class CustomerListScreen extends StatefulWidget {
   const CustomerListScreen({required this.apiClient, super.key});
@@ -262,6 +263,18 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     }
   }
 
+  Future<void> _openSearchResultsScreen() async {
+    final query = _searchController.text.trim();
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CustomerSearchResultsScreen(
+          apiClient: widget.apiClient,
+          initialQuery: query,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
@@ -285,12 +298,12 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     isDense: true,
                   ),
                   onChanged: _onSearchChanged,
-                  onSubmitted: (_) => _loadCustomers(),
+                  onSubmitted: (_) => _openSearchResultsScreen(),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
               IconButton(
-                onPressed: _loading ? null : _loadCustomers,
+                onPressed: _loading ? null : _openSearchResultsScreen,
                 icon: const Icon(Icons.search),
               ),
             ],
