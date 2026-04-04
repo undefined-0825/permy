@@ -92,11 +92,11 @@
 
 アプリのバージョン情報と更新判定情報を返す。
 
-### Request
+### Request（2.0 GET /version）
 
 - 認証不要
 
-### Response 200
+### Response 200（2.0 GET /version）
 
 ```json
 {
@@ -111,13 +111,13 @@
 }
 ```
 
-#### Notes
+#### Notes（2.0 GET /version）
 
 - `latest_version`: 任意更新の判定に使用する。
 - `min_supported_version`: 強制更新の判定に使用する。
 - `android_store_url` / `ios_store_url`: ストア誘導先。未設定時は空文字を許容。
 
-### Errors
+### Errors（2.0 GET /version）
 
 - `500 INTERNAL_ERROR`
 
@@ -127,11 +127,11 @@
 
 匿名ユーザーとして開始し、トークンを発行する。
 
-### Request
+### Request（2.1 POST /auth/anonymous）
 
 Body: `{}`（空JSONでよい）
 
-### Response 200
+### Response 200（2.1 POST /auth/anonymous）
 
 ```json
 {
@@ -140,7 +140,7 @@ Body: `{}`（空JSONでよい）
 }
 ```
 
-### Errors
+### Errors（2.1 POST /auth/anonymous）
 
 - `500 INTERNAL_ERROR`
 
@@ -150,13 +150,13 @@ Body: `{}`（空JSONでよい）
 
 ユーザー設定を取得する。本文を含む設定は不可（別Specで制約）。
 
-### Request
+### Request（2.2 GET /me/settings）
 
 Headers:
 
 - `Authorization: Bearer <token>`
 
-### Response 200
+### Response 200（2.2 GET /me/settings）
 
 Headers:
 
@@ -181,7 +181,7 @@ Body:
 サーバが `AuthContext`（`users` テーブル）の最新値で **必ず上書き** して返す。  
 フロントエンドはこれらの値を唯一の正として扱い、ローカルキャッシュより優先すること。
 
-### Errors
+### Errors（2.2 GET /me/settings）
 
 - `401 AUTH_INVALID`
 - `500 INTERNAL_ERROR`
@@ -192,7 +192,7 @@ Body:
 
 ユーザー設定を更新する。楽観ロック必須。
 
-### Request
+### Request（2.3 PUT /me/settings）
 
 Headers:
 
@@ -211,7 +211,7 @@ Body:
 }
 ```
 
-### Response 200
+### Response 200（2.3 PUT /me/settings）
 
 Headers:
 
@@ -229,7 +229,7 @@ Body:
 }
 ```
 
-### Errors
+### Errors（2.3 PUT /me/settings）
 
 - `400 VALIDATION_ERROR`
 - `401 AUTH_INVALID`
@@ -244,7 +244,7 @@ Body:
 
 診断回答（7問）を受け取り、タイプ判定と生成用パラメータを返す。
 
-### Request
+### Request（2.3.1 POST /me/diagnosis）
 
 Headers:
 
@@ -266,7 +266,7 @@ Body:
 }
 ```
 
-### Response 200
+### Response 200（2.3.1 POST /me/diagnosis）
 
 ```json
 {
@@ -281,7 +281,7 @@ Body:
 }
 ```
 
-### Errors
+### Errors（2.3.1 POST /me/diagnosis）
 
 - `400 VALIDATION_ERROR`
 - `401 AUTH_INVALID`
@@ -293,7 +293,7 @@ Body:
 
 返信案（A/B/C）を生成して返す。
 
-### Request
+### Request（2.4 POST /generate）
 
 Headers:
 
@@ -310,14 +310,14 @@ Body:
 }
 ```
 
-#### Notes
+#### Notes（2.4 POST /generate）
 
 - `history_text` は入力本文。サーバは保存しない（ログにも残さない）。
 - `combo_id`: 0..5（コンボID、有料プランは2以上利用可能）
 - `tuning`: 有料プランのみ利用可能（nullable）
 - 生成スタイルは `/me/settings` 内の診断派生パラメータ（`persona_goal_primary` など）を利用してよい。
 
-### Response 200
+### Response 200（2.4 POST /generate）
 
 ```json
 {
@@ -349,14 +349,14 @@ Body:
 }
 ```
 
-#### Response フィールド説明
+#### Response フィールド説明（2.4 POST /generate）
 
 - `followup`: 設定不足があれば返す（nullable）。なければ `null`
 - `daily`: 日次制限情報（limit/used/remaining）
 - `model_hint`: 使用モデルのヒント（nullable）
 - `meta_pro`: Pro/Premium専用情報（Freeでは常に `null`）
 
-### Errors
+### Errors（2.4 POST /generate）
 
 - `400 VALIDATION_ERROR`
 - `401 AUTH_INVALID`
@@ -374,7 +374,7 @@ Body:
 
 移行コード（12桁）を発行する。
 
-### Request
+### Request（2.5 POST /migration/start）
 
 Headers:
 
@@ -386,7 +386,7 @@ Body:
 {}
 ```
 
-### Response 200
+### Response 200（2.5 POST /migration/start）
 
 ```json
 {
@@ -395,7 +395,7 @@ Body:
 }
 ```
 
-### Errors
+### Errors（2.5 POST /migration/start）
 
 - `401 AUTH_INVALID`
 - `429 RATE_LIMITED`
@@ -407,7 +407,7 @@ Body:
 
 移行コードを消費して、別端末でユーザーを引き継ぐ。認証不要（新端末から呼ばれるため）。
 
-### Request
+### Request（2.6 POST /migration/complete）
 
 Body:
 
@@ -417,7 +417,7 @@ Body:
 }
 ```
 
-### Response 200
+### Response 200（2.6 POST /migration/complete）
 
 ```json
 {
@@ -426,7 +426,7 @@ Body:
 }
 ```
 
-### Errors
+### Errors（2.6 POST /migration/complete）
 
 - `400 VALIDATION_ERROR`
 - `400 MIGRATION_CODE_USED`
@@ -441,7 +441,7 @@ Body:
 
 ストア購入の検証結果を反映する。
 
-### Request
+### Request（2.6.1 POST /billing/verify）
 
 Headers:
 
@@ -457,7 +457,7 @@ Body:
 }
 ```
 
-#### Rules
+#### Rules（2.6.1 POST /billing/verify）
 
 - `platform`: `"ios" | "android"`
 - 許可された `product_id` は以下のみ
@@ -465,7 +465,7 @@ Body:
   - iOS: `com.sukimalab.permy.pro_monthly`, `com.sukimalab.permy.premium_monthly`
 - 現時点の検証は mock mode。`purchase_token` 非空を最低条件として検証する。
 
-### Response 200
+### Response 200（2.6.1 POST /billing/verify）
 
 ```json
 {
@@ -474,7 +474,7 @@ Body:
 }
 ```
 
-### Errors
+### Errors（2.6.1 POST /billing/verify）
 
 - `400 BILLING_PRODUCT_INVALID`
 - `400 BILLING_RECEIPT_INVALID`
@@ -488,7 +488,7 @@ Body:
 
 クライアントから複数のテレメトリイベントをバッチ送信する。
 
-### Request
+### Request（2.7 POST /telemetry/events）
 
 Headers:
 
@@ -513,7 +513,7 @@ Body:
 }
 ```
 
-#### Notes
+#### Notes（2.7 POST /telemetry/events）
 
 - `events`: 1..100 イベントをバッチ送信可能
 - 本文/生成文は含めない（privacy-first）
@@ -537,7 +537,7 @@ Body:
 
 詳細スキーマは `telemetry_schema.md` 参照。
 
-### Response 200
+### Response 200（2.7 POST /telemetry/events）
 
 ```json
 {
@@ -546,7 +546,7 @@ Body:
 }
 ```
 
-### Errors
+### Errors（2.7 POST /telemetry/events）
 
 - `400 VALIDATION_ERROR`
 - `401 AUTH_INVALID`
