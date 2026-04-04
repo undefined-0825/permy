@@ -22,7 +22,6 @@ import 'package:sample_app/src/presentation/persona_diagnosis_result_screen.dart
 import 'package:sample_app/src/presentation/privacy_policy_screen.dart';
 import 'package:sample_app/src/presentation/settings_screen.dart';
 import 'package:sample_app/src/presentation/terms_of_service_screen.dart';
-import 'package:sample_app/src/presentation/customer_list_screen.dart';
 
 // Mock Purchase Service
 class MockPurchaseService extends PurchaseService {
@@ -684,7 +683,7 @@ void main() {
       expect(find.text('2. 基本の使い方'), findsOneWidget);
     });
 
-    testWidgets('Premium会員時は顧客メモ導線を表示し遷移できる', (WidgetTester tester) async {
+    testWidgets('顧客メモ導線はSettingsに表示しない（Generateへ移管）', (WidgetTester tester) async {
       final premiumApi = MockApiClient(
         settingsSnapshot: SettingsSnapshot(
           settings: {
@@ -760,11 +759,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await expandAdvancedSettings(tester);
-      expect(find.widgetWithText(AppListItem, '顧客メモ'), findsOneWidget);
-      expect(find.text('2件'), findsOneWidget);
-
-      await tapAppListItem(tester, '顧客メモ');
-      expect(find.byType(CustomerListScreen), findsOneWidget);
+      expect(find.widgetWithText(AppListItem, '顧客メモ'), findsNothing);
     });
 
     testWidgets('Premium会員時は顧客リマインド閾値を更新できる', (WidgetTester tester) async {
@@ -815,7 +810,7 @@ void main() {
       );
     });
 
-    testWidgets('Free会員時は顧客メモ導線を表示しない', (WidgetTester tester) async {
+    testWidgets('Free会員時もSettingsに顧客メモ導線は表示しない', (WidgetTester tester) async {
       final freeApi = MockApiClient(
         settingsSnapshot: SettingsSnapshot(
           settings: {

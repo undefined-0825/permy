@@ -26,6 +26,7 @@ import '../infrastructure/share_receiver.dart';
 import '../infrastructure/telemetry_queue.dart';
 import 'premium_comp_hidden_screen.dart';
 import 'pro_upgrade_screen.dart';
+import 'customer_list_screen.dart';
 import 'settings_screen.dart';
 import 'widgets/line_name_dialog.dart';
 import 'widgets/top_brand_header.dart';
@@ -422,6 +423,40 @@ class _GenerateScreenState extends State<GenerateScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.white.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const AppSectionHeader(title: '顧客メモ'),
+                            ListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text('顧客管理を開く', style: AppTextStyles.body),
+                              subtitle: Text(
+                                _isPremiumActive()
+                                    ? '顧客情報とリマインドを確認できるよ'
+                                    : 'Premiumで顧客管理とリマインド機能が使えるよ',
+                                style: AppTextStyles.meta,
+                              ),
+                              trailing: const Icon(
+                                Icons.chevron_right,
+                                color: AppColors.metaText,
+                              ),
+                              onTap: _openCustomerMemoFromGenerate,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
                       if (!hasSharedText) ...[
                         const _SharePromptHero(),
                         const SizedBox(height: AppSpacing.xl),
@@ -936,6 +971,63 @@ class _GenerateScreenState extends State<GenerateScreen>
       return 'Pro';
     }
     return 'Free';
+  }
+
+  bool _isPremiumActive() =>
+      widget.purchaseService.currentPlan == 'premium' || _plan == 'premium';
+
+  Future<void> _openCustomerMemoFromGenerate() async {
+    if (_isPremiumActive()) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => CustomerListScreen(apiClient: widget.apiClient),
+        ),
+      );
+      return;
+    }
+
+    final approved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('顧客メモはPremium機能だよ'),
+        content: const Text('顧客情報の管理やリマインドはPremiumで使えるよ。\nこのままPremiumに変更する？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('あとで'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Premiumに変更'),
+          ),
+        ],
+      ),
+    );
+    if (approved != true || !mounted) {
+      return;
+    }
+
+    try {
+      final available = await widget.purchaseService.isAvailable();
+      if (!available) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('ストアが利用できません')));
+        return;
+      }
+
+      await widget.purchaseService.purchase(plan: 'premium');
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Premium購入処理を開始しました')));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Premium購入の開始に失敗したよ')),
+      );
+    }
   }
 
   Future<void> _copyCandidate(Candidate candidate) async {

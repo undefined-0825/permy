@@ -402,6 +402,45 @@ void main() {
     expect(find.text('現在のペルソナ情報'), findsOneWidget);
   });
 
+  testWidgets('Generate画面の最上部に顧客メモ導線を表示する', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: _FakeApiClient(),
+          shareReceiver: _FakeShareInput(null),
+          telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('顧客メモ'), findsOneWidget);
+    expect(find.text('顧客管理を開く'), findsOneWidget);
+  });
+
+  testWidgets('非Premiumで顧客メモ導線タップ時は課金ダイアログを表示する', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GenerateScreen(
+          apiClient: _FakeApiClient(),
+          shareReceiver: _FakeShareInput(null),
+          telemetryQueue: _FakeTelemetryQueue(),
+          purchaseService: _FakePurchaseService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('顧客管理を開く'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('顧客メモはPremium機能だよ'), findsOneWidget);
+    expect(find.text('Premiumに変更'), findsOneWidget);
+  });
+
   testWidgets('Generate画面でお客様との関係を変更できる', (WidgetTester tester) async {
     final apiClient = _FakeApiClient();
 
@@ -957,7 +996,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(DropdownButton<int>));
+    final dropdownFinder = find.byType(DropdownButton<int>);
+    await tester.ensureVisible(dropdownFinder);
+    await tester.tap(dropdownFinder);
     await tester.pumpAndSettle();
 
     expect(find.text('Pro'), findsWidgets);
