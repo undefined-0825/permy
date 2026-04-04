@@ -4,6 +4,7 @@ Project: ペルミィ (Permy) Purpose:
 売れるUXと高いユーザビリティを両立し、AI（Copilot等）でも解釈可能なUI設計を定義する。
 
 ## Spec参照順（MUST）
+
 1. `docs/spec/00_world/world_concept.md`
 2. `docs/spec/10_product/product_spec.md`
 3. `docs/spec/40_design/permy_design_system_spec.md`
@@ -11,6 +12,7 @@ Project: ペルミィ (Permy) Purpose:
 5. `docs/spec/31_frontend_impl/frontend_impl.md`
 
 ## 運用方針（MUST）
+
 - 今後のUI設計・実装の洗練は、本Spec（`permy_design_system_spec.md`）を唯一のベースとして進める。
 - 画面ごとの個別判断でデザインルールを増やさず、必要な変更は本Specへ集約してから反映する。
 

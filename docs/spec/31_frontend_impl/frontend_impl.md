@@ -4,6 +4,7 @@
 設計は `frontend.*`、バックエンド契約は `api_contract.*` と `error_codes.*` を正とする。
 
 ## Spec参照順（MUST）
+
 1. `docs/spec/00_world/world_concept.md`
 2. `docs/spec/10_product/product_spec.md`
 3. `docs/spec/40_design/permy_design_system_spec.md`
@@ -11,12 +12,14 @@
 5. `docs/spec/31_frontend_impl/frontend_impl.md`
 
 ## 参照前提（MUST）
+
 - frontend実装前に、`docs/spec/40_design/permy_design_system_spec.md` を必ず事前参照する。
 - 実装時のUI判断（余白、配色、タイポ、コンポーネント形状、画面ブロック構成）はデザインシステム準拠で行う。
 
 ---
 
 ## 0. 実装の大原則（MUST）
+
 1) **入力は共有受信のみ**：貼り付け欄を作らない  
 2) **本文非保存**：共有txt本文/生成本文を端末永続化しない（DB/ファイル/キャッシュ/ログ禁止）  
 3) **API整合**：`/api/v1` 契約・error_code分岐・ETag/If-Match・Idempotency-Key を厳守  
@@ -26,19 +29,23 @@
 ---
 
 ## 1. Flutter アーキテクチャ（推奨）
+
 ### 1.1 レイヤ
+
 - `presentation`：Widget / Screen / UI State
 - `application`：UseCase（Generate/Settings/Migration/Auth）
 - `domain`：Model（Settings, Candidate, ApiErrorなど）
 - `infrastructure`：API client, storage, platform channels
 
 ### 1.2 状態管理
+
 - 既存方針に合わせる（Riverpod/Bloc等の選択はプロジェクト標準に従う）
 - 必須条件：画面遷移・ローディング・エラー表示・リトライを一貫して扱えること
 
 ---
 
 ## 2. ディレクトリ構成（例）
+
 ```
 lib/
   main.dart
@@ -97,7 +104,9 @@ ios/
 ---
 
 ## 3. 本文非保存（MUST）— 実装ルール
+
 ### 3.1 禁止事項
+
 - 共有txt本文/生成本文を以下へ保存禁止：
   - SharedPreferences / Hive / SQLite / ファイル
   - 画像キャッシュ/ログ
@@ -105,26 +114,32 @@ ios/
 - `print()` で本文を出力禁止
 
 ### 3.2 許可
+
 - メモリ上（state）のみ保持：Generate画面表示〜コピー完了まで
 - 画面離脱/アプリ中断で破棄（`dispose` / state reset）
 
 ### 3.3 スクリーンの方針
+
 - txt本文は全量表示しない（必要なら短縮プレビュー）
 - A/B/Cは表示するが、履歴として保存しない
 
 ---
 
 ## 4. API クライアント（/api/v1）
+
 ### 4.0 API 契約
+
 - Base Path: `/api/v1`（`api_contract.md` を正）
 - **OpenAPI 3.1.0 仕様**: `docs/api/openapi.json`（コード生成に利用可）
 - エラーコードは `error_codes.md` に従う
 
 ### 4.1 Base URL
+
 - `API_BASE_URL` は差し替え可能（flavor/env）
 - `/api/v1` を固定
 
 ### 4.2 認証（Bearer token）
+
 - tokenは `SecureTokenStore`（Keychain/Keystore）に保存
 - 起動時（Splash）に token がなければ `POST /auth/anonymous`
 - 401 `AUTH_INVALID`：
@@ -132,22 +147,26 @@ ios/
   - それでも失敗ならエラー表示
 
 ### 4.3 リクエストヘッダ
+
 - `Authorization: Bearer <token>`
 - `Content-Type: application/json`
 - `Idempotency-Key`（/generateのみ必須）
 - `If-Match`（/me/settings PUTのみ必須）
 
 ### 4.4 レスポンスの扱い
+
 - `meta.plan` は `free|pro|premium` の3値のみ。UI上は free/pro/premiumとして扱う（billing_tierは露出しない）。
 - エラーは `error_code` を最優先で分岐。
 
 ### 4.4.1 Settings ETagのフォールバック（MUST）
+
 - `GET /me/settings` の `etag` は **`response.headers['etag']` を第一優先**で読む。
 - ヘッダが欠落している場合は **`response.body.etag` をフォールバック**として採用する。
 - `etag` が最終的に空のままなら `PUT /me/settings` を実行しない（`If-Match` 空送信禁止）。
 - 上記ケースでは `VALIDATION_FAILED` を再送で増幅させず、再取得またはリトライ導線を表示する。
 
 ### 4.5 起動時アップデート判定（MUST）
+
 - 起動時に端末のアプリバージョンを取得する（`package_info_plus`）。
 - `GET /api/v1/version` を呼び、以下で判定する。
   - `installed_version < min_supported_version` の場合：**強制更新**ダイアログを表示
@@ -158,6 +177,7 @@ ios/
 - `version` API失敗時は起動を継続する（更新判定失敗でブロックしない）。
 
 #### 4.5.1 UI要件
+
 - 強制更新時：
   - ダイアログを閉じられない（ただしストアURL未設定時は閉じるを許可）。
   - ボタンは「ストアを開く」を表示。
@@ -166,6 +186,7 @@ ios/
   - 「ストアを開く」で外部アプリ遷移（`url_launcher`）する。
 
 #### 4.5.2 Telemetry連携
+
 - `app_opened.app_version` は固定値ではなく端末実バージョンを送信する。
 - `os` は実行環境で判定する（`android` / `ios`）。
 
@@ -174,6 +195,7 @@ ios/
 ## 5. バージョン更新画面（UpdateNoticeScreen）実装
 
 ### 5.1 画面設計
+
 `UpdateNoticeScreen` ウィジェット：
 - **目的**: バージョンアップの必須/任意を通知し、Google Play へ誘導する。
 - **特性**:
@@ -186,6 +208,7 @@ ios/
     - `releaseNoteBody: String` — リリースノート本文（デフォルト: `新しいバージョンが利用できます`）
 
 ### 5.2 UI レイアウト（スタイル原則）
+
 - **AppScaffold** で Padding 自動適用（`AppSpacing.md`）
 - **Title**: `AppTextStyles.primaryTitle` でフォント統一
 - **Version号**: `AppTextStyles.meta` 表示
@@ -194,6 +217,7 @@ ios/
 - **垂直スぺーシング**: `AppSpacing.lg` / `AppSpacing.xl`
 
 ### 5.3 実装クラス
+
 ```dart
 class UpdateNoticeScreen extends StatelessWidget {
   const UpdateNoticeScreen({
@@ -230,6 +254,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 ```
 
 ### 5.4 起動フロー との統合
+
 - `app.dart` の `_checkForAppUpdate()` から `Navigator.push()` で遷移
 - 遷移前に `AppVersionInfo` をパースし、引数を構成
 - `releaseNoteTitle`, `releaseNoteBody` は API response から取得
@@ -237,7 +262,9 @@ class UpdateNoticeScreen extends StatelessWidget {
 ---
 
 ## 6. エラー処理（error_codes.* 整合）
+
 ### 5.1 UIメッセージ（例：実装側の責務）
+
 - `RATE_LIMITED`：一定時間待って再試行（リトライボタン）
 - `DAILY_LIMIT_EXCEEDED`：本日は上限到達（次回案内）
 - `PLAN_REQUIRED`：ロック表示＋説明（課金導線は別Spec）
@@ -249,10 +276,12 @@ class UpdateNoticeScreen extends StatelessWidget {
 ※文言は別Specを正。ここでは「分岐」と「復帰導線」を固定する。
 
 ### 5.2 実装
+
 - API層で `ApiError(errorCode, httpStatus)` に正規化
 - Presentation層は errorCodeでUIを選ぶ
 
 ### 5.3 生成画面のエラー表示（MUST）
+
 - 生成失敗時の通知は、ボタン下の小さな文言ではなく **メッセージボックス（AlertDialog）** で表示する。
 - メッセージボックスには以下を必ず表示する。
   - ユーザー向け要約メッセージ
@@ -263,13 +292,16 @@ class UpdateNoticeScreen extends StatelessWidget {
 ---
 
 ## 6. 共有受信（Android/iOS）実装（最重要）
+
 ### 6.1 共通（MethodChannel）
+
 - Channel名例：`permy/share_receiver`
 - メソッド例：
   - `getInitialSharedText`（起動時の共有）
   - `onSharedText`（ランタイムの共有イベント）
 
 ### 6.2 Android
+
 - `MainActivity` で Intent を受ける
   - `ACTION_SEND`, `ACTION_VIEW`, `ACTION_SEND_MULTIPLE`
 - `Uri` を stream で読み取り
@@ -277,6 +309,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 - 例外ログに本文が混入しないように注意
 
 ### 6.3 iOS
+
 - Share Extension を実装（.txt受領）
 - Main App起動へ橋渡し（URL Scheme / Universal Link）
 - App Groupを使う場合：
@@ -284,6 +317,7 @@ class UpdateNoticeScreen extends StatelessWidget {
   - 平文の永続保存は禁止（実装で削除を担保）
 
 ### 6.3.1 LINE名判定フロー（MUST）
+
 - 共有されたトーク履歴が2名トークの場合、送信者名2件を抽出する（Android/iOSのLINE履歴形式に対応）。
 - ローカルに保存済みの「ユーザー自身のLINE名」が抽出結果に含まれる場合は、その値を `my_line_name` として `/api/v1/generate` に付与する。
 - 保存済みLINE名が未設定、または抽出結果に含まれない場合は、ラジオボタン付きダイアログ「きみはどっち？」を表示してユーザーに選択させる。
@@ -319,6 +353,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 - 過剰な可愛さを避け、信頼感と機能性のバランスを重視
 
 ### 6.5 アセット管理ルール（MUST）
+
 - 画像アセットは「存在確認」だけでなく「実体確認」まで行う（空ファイル・プレースホルダー禁止）。
 - 差し替え直後は最低限次を確認する：
   - ファイルサイズが異常に小さくない（例：数十バイトは異常）
@@ -327,6 +362,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 - 一時プレースホルダーを置いた場合は、その場で TODO を残し、完了前に必ず実アセットへ置換する。
 
 ### 6.6 AppBar設計ルール（MUST）
+
 - 戻る導線が必要な画面では、デフォルト戻る動作を壊す実装を禁止する。
 - `AppBar.leading` をカスタムアイコンで上書きする場合は、戻るボタン消失リスクを必ず検証する。
 - ロゴ/アイコン追加は原則として `title` 側で構成し、戻る導線と共存させる。
@@ -336,11 +372,13 @@ class UpdateNoticeScreen extends StatelessWidget {
   - タイトルは可読性を優先し、過度な装飾を避ける
 
 ### 6.7 背景画像時の可読性ルール（MUST）
+
 - 背景画像を使う場合、テキスト可読性を損なわないことを最優先とする。
 - 明度差が不足する場合は、ColorFilter / オーバーレイ / 文字色統一のいずれかで補正する。
 - 見出し・本文・ボタンラベルの最低可読状態を、実機またはエミュレータで確認する。
 
 ### 6.8 UI実装完了チェック（MUST）
+
 画面改修の完了宣言前に、以下を満たすこと。
 
 1. 画像アセットが実体ファイルであり、対象画面で表示確認済み
@@ -352,18 +390,22 @@ class UpdateNoticeScreen extends StatelessWidget {
 ---
 
 ## 7. 画面実装（MVP）
+
 ### 7.1 Splash
+
 - tokenロード
 - 未所持なら anonymous auth
 - 初回判定（onboardingフラグのみ保持可：本文ではない）
 - 共有受信テキストがある場合はGenerateへ遷移し、stateに流し込む
 
 ### 7.2 Onboarding
+
 - LINEトーク履歴送信→共有→Permyの手順
 - プライバシー短文コピー（固定文言は別Spec）
 - 完了でGenerateへ
 
 ### 7.2.1 Persona Diagnosis（導入時）
+
 - 初回導入は **7問固定**（True 2問 + Night 5問）
 - 設問ID/重み/判定は `docs/spec/10_product/persona_scoring_spec.md` を正とする
 - 回答完了後に `POST /me/diagnosis` を呼び、判定結果と派生パラメータを取得
@@ -540,6 +582,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 - **Phase 2（今後）**：タイプ別詳細説明の展開（モーダルまたは専用詳細導線）
 
 ### 7.3 Generate（メイン）
+
 - sharedText state（メモリのみ）
 - settings state（GET/PUT同期）
 - レイアウトは「上部固定（ペルソナ要約+combo）/中央CTA/下部Expanded結果エリア」を基本とする
@@ -556,6 +599,7 @@ class UpdateNoticeScreen extends StatelessWidget {
   - Generate 画面復帰時に settings を再取得し、`candidate_tap_action` を最新値へ更新する
 
 #### 7.3.1 生成前調整（_ProAwareDropdown / MUST）
+
 返信案の調整カード内に以下5ずつの `_ProAwareDropdown` を配置する。
 
 | 項目 | state変数 | settingsキー | Free値（デフォルト） |
@@ -573,6 +617,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 
 
 #### 7.3.1 Generate 画面のエラーハンドリング
+
 - **エラー発生箇所**：`/generate` 呼び出し失敗時
 - **エラー表示**：_ErrorBanner ウィジェット（の背景色：淡赤、text：赤文字）
 - **メッセージング**：`error_code` に基づいて以下を返す（`error_codes.md` を正とする）：
@@ -587,6 +632,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 - **Retry 導線**：エラー表示後、ユーザーは「生成」ボタンを再度タップして retry。自動リトライは行わない（ユーザーの明示的操作）
 
 ### 7.3.2 Persona Diagnosis Result Screen（新規画面）
+
 - **目的**：診断されたペルソナを詳細表示。Settings から タップエントリーポイント
 - **表示内容**（読み取り専用）：
   1) 普段の自分：True Self（5タイプ：Stability/Independence/Approval/Realism/Romance）
@@ -597,11 +643,13 @@ class UpdateNoticeScreen extends StatelessWidget {
 - **遷移**：Settings から「ペルソナ欄」をタップで表示、BackボタンまたはAppBar戻るで Settings に復帰
 
 ### 7.4 Settings
+
 - **GET `/me/settings`** → ETag 保持、初期化時に呼び出し
 - **PUT `/me/settings`**（If-Match必須）
 - **409 `ETAG_MISMATCH`**：再取得 → ユーザーへ「設定が更新されました。再読込してください。」表示 → 自動リロード
 
 #### 7.4.1 Settings 画面の UI 構成
+
 **セクション別**：
 1) **ペルソナ**：
    - 行1：「普段の属性」= `true_self_type` 値
@@ -648,6 +696,7 @@ class UpdateNoticeScreen extends StatelessWidget {
   - 保存ボタンは設置しない（変更は自動保存）
 
 #### 7.4.2 再診断フロー（詳細）
+
 1. Settings 画面の「再診断する」ボタンをタップ
 2. DiagnosisScreen（7問）が MaterialPageRoute で push される
 3. ユーザーが全問回答 → `onCompleted` callback 発火
@@ -658,15 +707,18 @@ class UpdateNoticeScreen extends StatelessWidget {
 8. 画面表示が新しいペルソナ値で即座に更新される
 
 ### 7.5 Migration
+
 - issue：コード表示＋共有（コードは本文ではない）
 - consume：コード入力→token更新
 - 各エラーコードに沿う導線
 
 ### 7.6 About/Privacy
+
 - 本文非保存/送信はユーザー の説明（固定文言は別Spec）
 - 連絡先（必要なら）
 
 ### 7.7 固定UI文言（MUST）
+
 **PersonaDiagnosisResultScreen**
 - AppBar 標題：「あなたのペルソナ」
 - セクション標題：
@@ -693,17 +745,21 @@ class UpdateNoticeScreen extends StatelessWidget {
 ---
 
 ## 8. Followup（聞き返し）実装（MUST）
+
 ### 8.1 ポリシー
+
 - `GenerateResponse.followup` が返された場合、A/B/C の下に質問UIを表示
 - 質問は1つだけ（不足1点に絞る）
 - A/B/C は仮で出した上で、不足1点を聞く（離脱防止）
 
 ### 8.2 UI表示
+
 - `followup.question` を表示（例：「お客様との関係を教えてね」）
 - `followup.choices` を選択肢として表示（1〜3個のボタン）
 - ユーザーが選択肢をタップ
 
 ### 8.3 選択後の処理
+
 1. 選択した `choice.id` を `followup.key` に応じて settings に反映
    - `relationship_type` → `settings.relationship_type = choice.id`
    - `reply_length_pref` → `settings.reply_length_pref = choice.id`
@@ -713,6 +769,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 4. 再生成中は既存の生成中UIを使い、更新後のA/B/Cへ置き換える
 
 ### 8.4 許可リスト（MUST）
+
 - `relationship_type`
 - `reply_length_pref`
 - `ng_tags`
@@ -723,6 +780,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 ---
 
 ## 8.5 診断派生パラメータ（生成連携 / MUST）
+
 - 以下キーは `settings` 同期対象として扱う
   - `persona_goal_primary`
   - `persona_goal_secondary`
@@ -734,12 +792,15 @@ class UpdateNoticeScreen extends StatelessWidget {
 ---
 
 ## 9. Telemetry（テレメトリ）実装（MUST）
+
 ### 9.1 ポリシー
+
 - 本文/生成文は送信しない（privacy-first）
 - イベントは `POST /api/v1/telemetry/events` へバッチ送信（1〜100イベント）
 - サーバ側で `user_id_hash`（HMAC-SHA256）、`server_time_utc`、`hour_bucket_utc`、`dow_utc` を自動付与
 
 ### 9.2 イベントタイプ（5種）
+
 1. **generate_requested**: 生成リクエスト開始時
    - `daily_used`, `daily_remaining`, `has_ng_setting`, `persona_version`
 2. **generate_succeeded**: 生成成功時
@@ -751,6 +812,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 5. **app_opened**: アプリ起動時（任意）
 
 ### 9.3 送信タイミング
+
 - イベント発生時にローカルキューに追加
 - 以下のタイミングでバッチ送信：
   - キューが10イベント溜まったら
@@ -758,6 +820,7 @@ class UpdateNoticeScreen extends StatelessWidget {
   - 最大100イベントまで一度に送信
 
 ### 9.4 実装例
+
 ```dart
 class TelemetryEvent {
   final String eventName;
@@ -785,6 +848,7 @@ await apiClient.post('/api/v1/telemetry/events', {
 ```
 
 ### 9.5 エラー処理
+
 - Telemetry 送信失敗は **ユーザー体験を妨げない**
 - 失敗したイベントは再送キューに保持（最大100件、古いものから破棄）
 - 次回送信時にリトライ
@@ -794,12 +858,14 @@ await apiClient.post('/api/v1/telemetry/events', {
 ---
 
 ## 10. セキュアストレージ
+
 - tokenのみを Secure Storage に保存
 - onboarding完了フラグ等、本文でない軽微データは SharedPreferences可
 
 ---
 
 ## 11. ロギング（本文ゼロ）
+
 - ログに出してよい：
   - endpoint, status, error_code, latency, request_id
 - ログに出してはいけない：
@@ -808,17 +874,21 @@ await apiClient.post('/api/v1/telemetry/events', {
 ---
 
 ## 12. テスト
+
 ### 12.1 ユニット
+
 - ApiError正規化（error_codeごとの分岐）
 - Settings ETag処理
 - Idempotency-Key付与（/generate）
 
 ### 12.2 結合（手動中心）
+
 - 共有受信（Android/iOS） → Generateへ自動遷移
 - 生成 → A/B/C → コピー → 0.4秒フィードバック
 - エラー（429/503/403/409）を意図的に発生させて復帰導線確認
 
 ### 12.3 実装で発生した失敗の再発防止（MUST）
+
 - **遷移テストは導線ごとに1本以上**を追加する。
   - 最低対象：Settings → 再診断 / 端末移行 / About / 診断結果
 - 同一文言が複数表示される可能性があるUIでは、`find.text(..., findsOneWidget)` 前提に依存しない。
@@ -832,6 +902,7 @@ await apiClient.post('/api/v1/telemetry/events', {
 ---
 
 ## 13. 受け入れ基準（実装）
+
 - 共有受信以外の本文入力導線がない（貼り付け欄なし）
 - 本文が端末に残らない（ファイル/DB/ログなし）
 - `/api/v1` 契約に整合（header/ETag/Idempotency/エラー分岐）
@@ -840,7 +911,9 @@ await apiClient.post('/api/v1/telemetry/events', {
 ---
 
 ## 14. 開発・実行手順（MUST / Development Guide）
+
 ### 14.1 エミュレータ起動（初回または停止状態時）
+
 ```bash
 # 1. 利用可能なエミュレータを確認
 flutter emulators
@@ -853,6 +926,7 @@ Start-Sleep -Seconds 60  # PowerShell例
 ```
 
 ### 14.2 Flutter run（アプリ実行 / 重要）
+
 ```bash
 # 【必ず実行】1. frontend フォルダに移動
 Set-Location c:\dev\permy\frontend
@@ -874,6 +948,7 @@ flutter run -d <device_id>
 ### 14.3 よくあるエラーと対処（MUST）
 
 #### ❌ Error: No pubspec.yaml file found
+
 ```
 This command should be run from the root of your Flutter project.
 ```
@@ -885,6 +960,7 @@ cd c:\dev\permy\frontend
 ```
 
 #### ❌ Device not found / エミュレータが認識されない
+
 ```
 No emulators were detected. You can create one using 'flutter emulators --create'
 ```
@@ -903,6 +979,7 @@ flutter devices --device-timeout 20
 ```
 
 #### ❌ flutter run が終了する（Exit Code: 1）
+
 Flutterビルドが失敗している（詳細ログ確認が必要）  
 **対処**:
 ```bash
@@ -917,6 +994,7 @@ flutter run -d emulator-5554 --verbose
 ```
 
 #### ❌ `Could not find device or driver connected`
+
 **原因**: cd コマンドでディレクトリ移動していない（PowerShell の `Set-Location` と `cd` の使い分けが混在）  
 **対処**:
 - **推奨**: `Set-Location` を使用（PowerShell標準）
@@ -929,6 +1007,7 @@ flutter run -d emulator-5554 --verbose
   ```
 
 ### 14.4 手順チェックリスト（毎回実行前に確認 / MUST）
+
 ```
 □ flutter emulators --launch <id> を実行し、60秒待機した
 □ Set-Location c:\dev\permy\frontend を実行
@@ -939,6 +1018,7 @@ flutter run -d emulator-5554 --verbose
 ```
 
 ### 14.5 開発中の Hot Reload / Hot Restart
+
 ```bash
 # 実行中、コンソールで以下キーを入力可能
 r     # Hot Reload（状態保持、コード変更反映）
@@ -947,6 +1027,7 @@ q     # アプリ終了
 ```
 
 ### 14.6 起動/再起動ツール（MUST）
+
 以下の運用ツールは `c:\dev\permy\tools` を正とする。手順の省略や独自バッチ乱立を避け、再現性を固定する。
 
 1. `start_frontend.ps1`（通常起動）

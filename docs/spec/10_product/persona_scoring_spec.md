@@ -6,6 +6,7 @@
 ---
 
 ## 0. 前提（MUST）
+
 - 本診断は導入部として **7問固定**（True 2問 + Night 5問）
 - 回答方式は単一選択（1問ごとに1回答）
 - 選択肢数は3〜5択
@@ -15,7 +16,9 @@
 ---
 
 ## 1. タイプ軸（再掲）
+
 ### 1.1 本当の私（TrueSelfType）
+
 - `Stability`（安定重視タイプ）
 - `Independence`（自立タイプ）
 - `Approval`（承認欲求タイプ）
@@ -23,6 +26,7 @@
 - `Romance`（ロマンタイプ）
 
 ### 1.2 夜の私（NightSelfType）
+
 - `VisitPush`（来店重視タイプ）
 - `Heal`（癒し系タイプ）
 - `LittleDevil`（小悪魔系タイプ）
@@ -32,10 +36,13 @@
 ---
 
 ## 2. 設問定義（7問固定 / MUST）
+
 > 文言はUI copybookに合わせて軽微修正可。IDと選択肢IDは固定。
 
 ### 2.1 True（2問）
+
 #### Q1 `true_priority`
+
 **設問文:** 「普段いちばん大切にしているもの？」
 - A `life_balance`（ライフバランス）
 - B `future_stability`（将来の安定）
@@ -44,6 +51,7 @@
 - E `self_autonomy`（自分の価値観・自由）
 
 #### Q2 `true_decision_axis`
+
 **設問文:** 「迷った時はどうする？」
 - A `low_stress`（無理が少ない方にする）
 - B `long_term_return`（長期的に得な方にする）
@@ -51,7 +59,9 @@
 - D `pace_control`（自分のペースを守れる方にする）
 
 ### 2.2 Night（5問）
+
 #### Q3 `night_goal_primary`
+
 **設問文:** 「夜職のLINE返信で一番達成したいことは？」
 - A `next_visit`（次回来店の約束）
 - B `relationship_keep`（お客様との関係を維持する）
@@ -59,6 +69,7 @@
 - D `long_term_growth`（長期で太く育成したい）
 
 #### Q4 `night_temperature`
+
 **設問文:** 「返信の温度感は？」
 - A `calm_safe`（安心感を重視する）
 - B `sweet_light`（軽く甘めに攻めてみる）
@@ -66,6 +77,7 @@
 - D `adaptive`（相手に合わせる）
 
 #### Q5 `night_game_tolerance`
+
 **設問文:** 「お客様との駆け引きは？」
 - A `avoid_game`（ほぼ使わない）
 - B `light_game`（少しなら使う）
@@ -73,6 +85,7 @@
 - D `active_game`（積極的に使う）
 
 #### Q6 `night_customer_allocation`
+
 **設問文:** 「お客様との関係をどうしたい？」
 - A `wide_touchpoints`（幅広く接点を増やす）
 - B `care_existing`（今ある関係を丁寧に維持したい）
@@ -80,6 +93,7 @@
 - D `dynamic_balance`（状況で配分を切り替える）
 
 #### Q7 `night_risk_response`
+
 **設問文:** 「お客様とトラブル。どうする？」
 - A `firefighting_safe`（まずは火消しして安全を確保）
 - B `soft_distance`（柔らかく距離を保つ）
@@ -89,9 +103,11 @@
 ---
 
 ## 3. 重みテーブル（MUST）
+
 > 各選択肢ごとに加点する。未回答は0点。
 
 ### 3.1 True重み
+
 | Question | Choice | Stability | Independence | Approval | Realism | Romance |
 |---|---|---:|---:|---:|---:|---:|
 | Q1 | life_balance | 3 | 1 | 0 | 1 | 0 |
@@ -105,6 +121,7 @@
 | Q2 | pace_control | 1 | 3 | 0 | 1 | 0 |
 
 ### 3.2 Night重み
+
 | Question | Choice | VisitPush | Heal | LittleDevil | BigClient | Balance |
 |---|---|---:|---:|---:|---:|---:|
 | Q3 | next_visit | 3 | 0 | 1 | 2 | 1 |
@@ -131,25 +148,31 @@
 ---
 
 ## 4. 最終判定アルゴリズム（MUST）
+
 ### 4.1 集計
+
 1) Q1〜Q2でTrue5タイプを加点集計  
 2) Q3〜Q7でNight5タイプを加点集計
 
 ### 4.2 型判定
+
 - `true_self_type`: Trueスコア最大タイプ
 - `night_self_type`: Nightスコア最大タイプ
 
 ### 4.3 同点処理（固定）
+
 - True同点優先順: `Stability > Realism > Independence > Approval > Romance`
 - Night同点優先順: `Balance > BigClient > VisitPush > Heal > LittleDevil`
 
 ### 4.4 信頼度（任意）
+
 - `persona_confidence = top1_score - top2_score`
 - 0〜1は「暫定判定」として扱ってよい
 
 ---
 
 ## 5. 生成向け派生パラメータ（MUST）
+
 診断完了時に以下を算出し `settings_json` に保持する。
 
 - `persona_goal_primary: string`
@@ -160,6 +183,7 @@
 - `style_risk_guard: int`（0..100）
 
 ### 5.1 算出規則
+
 - `persona_goal_primary`
   - Q3を主キーに決定
   - ただしQ7が`firefighting_safe`で、かつNightの`Balance`または`Heal`が1位なら `firefighting` を優先
@@ -175,18 +199,22 @@
 ---
 
 ## 6. API連携（MUST）
+
 ### 6.1 診断入力
+
 - `POST /api/v1/me/diagnosis`（新設）
   - request: `answers`（Q1..Q7のchoice_id配列）
   - response: `true_self_type`, `night_self_type`, 派生パラメータ
 
 ### 6.2 設定保存
+
 - サーバは診断結果を `settings_json` に反映
 - 反映時は `settings_schema_version` と `persona_version` を更新
 
 ---
 
 ## 7. バージョン管理（MUST）
+
 - 本仕様バージョンキー: `persona_version`
 - 初版: `persona_version = 3`
 - 設問/重み/同点規則の変更は `persona_version` をインクリメント
@@ -194,6 +222,7 @@
 ---
 
 ## 8. 受け入れ基準（MUST）
+
 - 7問すべて回答で判定が一意に決まる
 - 同一回答集合は常に同一タイプへ決定される
 - 診断結果と派生パラメータが `/generate` の出力傾向に反映される

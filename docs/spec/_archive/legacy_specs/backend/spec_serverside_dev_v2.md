@@ -1,4 +1,5 @@
 # spec_serverside_dev_v2.md
+
 （サーバサイド実装：ローカル開発環境構築・検証手順 / Windows + PowerShell）
 
 このドキュメントは、`spec_serverside_dev_v1.md` の派生として、**実際に動作確認が取れた「正しい環境構築」**を固定する。
@@ -11,6 +12,7 @@
 ---
 
 ## 1. 前提
+
 - Python 3.11+（例：`Python311`）
 - 本プロジェクト配置（例）：`C:\dev\talk_assist\backend`
 - 以降のコマンドは PowerShell 前提（cmd.exe と混ぜない）
@@ -18,6 +20,7 @@
 ---
 
 ## 2. よくあるハマり（結論）
+
 - PowerShell では `source` や `deactivate` は使えない（bash文法）。
 - PowerShell の `curl` は別名（Invoke-WebRequest）なので **`curl.exe`** を明示する。
 - SQLite の `DATABASE_URL=sqlite+aiosqlite:///./permy.db` は **カレントディレクトリ依存**。`backend` 直下で実行する。
@@ -29,6 +32,7 @@
 ---
 
 ## 3. venv 作成（クリーン構築）
+
 **ImportError等が出たら、まず `.venv` を作り直す。**
 
 ```powershell
@@ -56,6 +60,7 @@ pip freeze | findstr /i openai
 ---
 
 ## 4. DB 初期化（SQLite）
+
 症状：
 - `sqlite3.OperationalError: no such table: users`
 
@@ -88,9 +93,11 @@ python -c "from app.db import Base; import app.models; print(sorted(Base.metadat
 ---
 
 ## 5. Redisなしモード（当面運用）
+
 Docker/redis-cli が無い環境向けに、メモリRedisモードで起動する。
 
 ### 5.1 起動スクリプト（推奨）
+
 `start_radius_memory.ps1`（backend直下）
 
 ```powershell
@@ -106,6 +113,7 @@ uvicorn app.main:app --host 127.0.0.1 --port 8000
 ---
 
 ## 6. OpenAI 接続（鍵の競合に注意）
+
 `.env`（backend直下）に設定：
 
 ```text
@@ -115,6 +123,7 @@ OPENAI_MODEL=gpt-5.2
 ```
 
 ### 6.1 「サーバが読んでいるキー」を検証（重要）
+
 意図と異なるキーを読んで 401 になることがある。**末尾4桁で確認**する。
 
 ```powershell
@@ -131,18 +140,22 @@ Remove-Item Env:OPENAI_API_KEY -ErrorAction SilentlyContinue
 ---
 
 ## 7. 疎通確認（推奨手順）
+
 ### 7.1 health
+
 ```powershell
 curl.exe http://127.0.0.1:8000/health
 ```
 
 ### 7.2 token取得（再起動したら毎回）
+
 ```powershell
 $r = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/auth/anonymous"
 $token = $r.access_token
 ```
 
 ### 7.3 generate（PowerShellのJSON崩れ対策：ファイル経由が最強）
+
 PowerShellで変数を `curl.exe --data-binary` に渡すと崩れる場合があるため、**body.jsonに出して渡す**。
 
 ```powershell
@@ -159,24 +172,31 @@ curl.exe -s -X POST "http://127.0.0.1:8000/generate" `
 ---
 
 ## 8. トラブルシュート（症状→対策）
+
 ### 8.1 `No time zone found with key Asia/Tokyo`
+
 - 対策：`pip install tzdata`（requirementsにも追加推奨）
 
 ### 8.2 `no such table: users`
+
 - 対策：`init_db.py` に `import app.models` を追加し、`permy.db` を作り直す
 
 ### 8.3 `AI_UPSTREAM_ERROR ImportError ... ResponseReasoningSummaryDoneEvent`
+
 - 対策：`.venv` を作り直し、`openai==1.99.0` に固定（混在除去が最短）
 
 ### 8.4 `AuthenticationError 401 Incorrect API key`
+
 - 対策：`.env` のキー確認 + **環境変数競合除去** + prefix/len/tailで検証
 
 ### 8.5 PowerShellで `curl -X` が効かない
+
 - 対策：PowerShellの `curl` は alias。**`curl.exe`** を明示する。
 
 ---
 
 ## 9. 運用上の注意（メモリRedis）
+
 - `REDIS_DISABLED=true` の間：
   - 再起動でセッションが消える（トークンは毎回取り直し）
   - レート制限/移行/冪等は「開発用の簡易動作」になる

@@ -1,4 +1,5 @@
 # docs/spec/21_backend_impl/acceptance_tests_backend.md — Backend受け入れテスト（MUST）
+
 **Last Updated (JST):** 2026-03-03 10:10:00 +0900
 
 > 目的：Copilot実装が **仕様どおり**であることを、手戻りなく検証するための受け入れ基準。  
@@ -7,6 +8,7 @@
 ---
 
 ## 0. 前提（MUST）
+
 - 参照起点：`docs/ssot/SSOT.md`
 - 中核仕様：`docs/spec/10_product/product_spec.md`
 - プライバシー/ログ：`docs/spec/01_rules/privacy_logging.md`
@@ -18,10 +20,13 @@
 ---
 
 ## 1. テスト環境（MUST）
+
 ### 1.1 実行者
+
 - テスト実行は **開発者（ちょび）** が行う。AIが勝手に実行した前提で報告しない。
 
 ### 1.2 OPENAI_DISABLED（重要）
+
 - 受け入れテストは2系統：
   - **A: OPENAI_DISABLED=true**（OpenAIを叩かずに動作確認）
   - **B: OPENAI_DISABLED=false**（必要に応じた手動ライブ確認。回数上限付き）
@@ -30,6 +35,7 @@
 ---
 
 ## 2. API一覧（受け入れ対象 / MUST）
+
 - `POST /api/v1/auth/anonymous`
 - `GET /api/v1/me/settings`
 - `PUT /api/v1/me/settings`
@@ -43,23 +49,28 @@
 ---
 
 ## 3. 受け入れ基準（共通 / MUST）
+
 ### 3.1 本文ゼロ（最重要）
+
 - いかなるAPIでも、サーバの永続ストレージ（DB/ファイル）に以下を保存しない：
   - トーク履歴txt本文
   - 生成文（返信案）本文
 - いかなるログにも本文を出力しない（例外なし）。
 
 ### 3.2 エラー形式
+
 - エラーは `error_code` と人間向け `message`（本文なし）を返す。
 - スタックトレース/内部例外情報をクライアントに返さない。
 
 ### 3.3 レート制限/日次上限
+
 - Free/Pro/Premiumの日次上限は **サーバ側**で必ず判定。
 - レート制限（短期）は **サーバ側**で必ず判定（429等）。
 
 ---
 
 ## 4. テストデータ（MUST）
+
 - テスト用txtは **個人情報を含まないダミー**のみ。
 - Gitにコミットしない（.gitignoreで除外）。
 - 例：`dummy_chat.txt`（数十行の会話、個人情報なし）。
@@ -67,11 +78,13 @@
 ---
 
 ## 5. テストケース（MUST）
+
 表記：**Given / When / Then**
 
 ---
 
 ### TC-01 匿名認証（auth/anonymous）正常
+
 **Given**
 - token未所持
 
@@ -86,6 +99,7 @@
 ---
 
 ### TC-02 settings 取得（初回）正常
+
 **Given**
 - TC-01のtoken
 
@@ -101,6 +115,7 @@
 ---
 
 ### TC-03 settings 更新（正常）
+
 **Given**
 - token
 - `settings_json` に以下キーを含む（product_spec参照）：
@@ -123,6 +138,7 @@
 ---
 
 ### TC-04 settings バリデーション（enum不正）
+
 **Given**
 - token
 - `true_self_type="UnknownX"` など不正値
@@ -137,6 +153,7 @@
 ---
 
 ### TC-05 generate（OPENAI_DISABLED=true）— モック応答での正常系
+
 **Given**
 - OPENAI_DISABLED=true
 - token
@@ -158,6 +175,7 @@
 ---
 
 ### TC-06 generate（日次上限：Free）
+
 **Given**
 - plan=free
 - daily_limit=3
@@ -175,6 +193,7 @@
 ---
 
 ### TC-07 generate（日次上限：Pro）
+
 **Given**
 - plan=pro
 - daily_limit=100
@@ -189,6 +208,7 @@
 ---
 
 ### TC-08 generate（followup：不足時の聞き返し）
+
 **Given**
 - token
 - settings の重要キーが欠けている、または入力が不足（例：relationship_type 未設定）
@@ -207,6 +227,7 @@
 ---
 
 ### TC-09 generate（NG：禁止フレーズ適用）
+
 **Given**
 - settings の `ng_free_phrases` に「会いたい」等が設定されている
 - 入力txtに該当しそうな文脈がある
@@ -221,6 +242,7 @@
 ---
 
 ### TC-10 generate（NG：危険ゲートSTOP）
+
 **Given**
 - 入力txtに危険内容（自傷他害、違法勧誘等）が含まれる（ダミーで再現）
 
@@ -236,6 +258,7 @@
 ---
 
 ### TC-11 テレメトリ（本文ゼロ）
+
 **Given**
 - `POST /telemetry` が存在する
 - event_name=generate_succeeded 等
@@ -252,6 +275,7 @@
 ---
 
 ### TC-12 migration（移行コード12桁・1回限り）
+
 **Given**
 - migration APIが存在する
 
@@ -267,15 +291,18 @@
 ---
 
 ## 6. 実行コマンド例（PowerShell）
+
 > 実際のhost/portはローカルに合わせる
 
 ### 6.1 token取得
+
 ```powershell
 $base="http://127.0.0.1:8000"
 $token = (curl -s -X POST "$base/api/v1/auth/anonymous" | ConvertFrom-Json).access_token
 ```
 
 ### 6.2 settings取得/更新
+
 ```powershell
 curl -s -H "Authorization: Bearer $token" "$base/api/v1/me/settings"
 
@@ -294,6 +321,7 @@ curl -s -X PUT -H "Authorization: Bearer $token" -H "Content-Type: application/j
 ```
 
 ### 6.3 generate
+
 ```powershell
 $txt = Get-Content .\dummy_chat.txt -Raw
 $g = @{ text = $txt; combo = 0 } | ConvertTo-Json -Depth 5
@@ -304,6 +332,7 @@ curl -s -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/
 ---
 
 ## 7. 合格条件（MUST）
+
 - TC-01〜TC-10 がすべて満たされる（telemetry/migration は存在時のみ）
 - 受け入れ中に **本文がログや永続化に混入していない**ことが確認できる
 - CIでOpenAI呼び出しが発生しない（OPENAI_DISABLED=true）
@@ -311,6 +340,7 @@ curl -s -X POST -H "Authorization: Bearer $token" -H "Content-Type: application/
 ---
 
 ## 8. 未確定 / 確認事項（最大3点）
+
 1) `/generate` の日次上限超過のHTTPステータス（429/403）のSSOT確定が必要。  
 2) `telemetry` の送信方式（push/pull）がbackend_specに未記載なら確定が必要。  
 3) migration APIのエンドポイント名が未確定なら確定が必要。  

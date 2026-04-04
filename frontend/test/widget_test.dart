@@ -419,9 +419,7 @@ void main() {
     expect(find.text('顧客管理を開く'), findsOneWidget);
   });
 
-  testWidgets('非Premiumで顧客メモ導線タップ時は課金ダイアログを表示する', (
-    WidgetTester tester,
-  ) async {
+  testWidgets('非Premiumで顧客メモ導線タップ時は課金ダイアログを表示する', (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: GenerateScreen(

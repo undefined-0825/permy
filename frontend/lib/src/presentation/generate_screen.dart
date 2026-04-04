@@ -198,42 +198,57 @@ class _GenerateScreenState extends State<GenerateScreen>
       'style',
       'mood',
     };
-    final tags = detail.tags
-        .map(
-          (tag) => <String, String>{
-            'category': tag.category,
-            'value': compact(tag.value, maxChars: 18),
-          },
-        )
-        .where((tag) => (tag['value'] ?? '').isNotEmpty)
-        .toList()
-      ..sort((a, b) {
-        final aPreferred = preferredCategories.contains(a['category']);
-        final bPreferred = preferredCategories.contains(b['category']);
-        if (aPreferred == bPreferred) {
-          return 0;
-        }
-        return aPreferred ? -1 : 1;
-      });
+    final tags =
+        detail.tags
+            .map(
+              (tag) => <String, String>{
+                'category': tag.category,
+                'value': compact(tag.value, maxChars: 18),
+              },
+            )
+            .where((tag) => (tag['value'] ?? '').isNotEmpty)
+            .toList()
+          ..sort((a, b) {
+            final aPreferred = preferredCategories.contains(a['category']);
+            final bPreferred = preferredCategories.contains(b['category']);
+            if (aPreferred == bPreferred) {
+              return 0;
+            }
+            return aPreferred ? -1 : 1;
+          });
 
-    final visitSummaries = detail.visitLogs.take(3).map((log) {
-      final chunks = <String>[log.visitedOn, log.visitType];
-      if (log.moodTag != null && log.moodTag!.trim().isNotEmpty) {
-        chunks.add(compact(log.moodTag, maxChars: 16));
-      }
-      if (log.memoShort != null && log.memoShort!.trim().isNotEmpty) {
-        chunks.add(compact(log.memoShort, maxChars: 24));
-      }
-      return compact(chunks.join(' '), maxChars: 44);
-    }).where((item) => item.isNotEmpty).take(1).toList();
+    final visitSummaries = detail.visitLogs
+        .take(3)
+        .map((log) {
+          final chunks = <String>[log.visitedOn, log.visitType];
+          if (log.moodTag != null && log.moodTag!.trim().isNotEmpty) {
+            chunks.add(compact(log.moodTag, maxChars: 16));
+          }
+          if (log.memoShort != null && log.memoShort!.trim().isNotEmpty) {
+            chunks.add(compact(log.memoShort, maxChars: 24));
+          }
+          return compact(chunks.join(' '), maxChars: 44);
+        })
+        .where((item) => item.isNotEmpty)
+        .take(1)
+        .toList();
 
-    final eventSummaries = detail.events.take(3).map((event) {
-      final chunks = <String>[event.eventDate, event.eventType, event.title];
-      if (event.note != null && event.note!.trim().isNotEmpty) {
-        chunks.add(compact(event.note, maxChars: 24));
-      }
-      return compact(chunks.join(' '), maxChars: 44);
-    }).where((item) => item.isNotEmpty).take(1).toList();
+    final eventSummaries = detail.events
+        .take(3)
+        .map((event) {
+          final chunks = <String>[
+            event.eventDate,
+            event.eventType,
+            event.title,
+          ];
+          if (event.note != null && event.note!.trim().isNotEmpty) {
+            chunks.add(compact(event.note, maxChars: 24));
+          }
+          return compact(chunks.join(' '), maxChars: 44);
+        })
+        .where((item) => item.isNotEmpty)
+        .take(1)
+        .toList();
 
     return <String, dynamic>{
       'customer_id': detail.customer.customerId,
@@ -440,7 +455,10 @@ class _GenerateScreenState extends State<GenerateScreen>
                             ListTile(
                               dense: true,
                               contentPadding: EdgeInsets.zero,
-                              title: const Text('顧客管理を開く', style: AppTextStyles.body),
+                              title: const Text(
+                                '顧客管理を開く',
+                                style: AppTextStyles.body,
+                              ),
                               subtitle: Text(
                                 _isPremiumActive()
                                     ? '顧客情報とリマインドを確認できるよ'
@@ -685,9 +703,7 @@ class _GenerateScreenState extends State<GenerateScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('比較生成を実行する？'),
-        content: const Text(
-          '同じ履歴で「顧客あり」と「顧客なし」を比較します。\n生成回数を2回消費します。',
-        ),
+        content: const Text('同じ履歴で「顧客あり」と「顧客なし」を比較します。\n生成回数を2回消費します。'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -1024,9 +1040,9 @@ class _GenerateScreenState extends State<GenerateScreen>
       ).showSnackBar(const SnackBar(content: Text('Premium購入処理を開始しました')));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Premium購入の開始に失敗したよ')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Premium購入の開始に失敗したよ')));
     }
   }
 

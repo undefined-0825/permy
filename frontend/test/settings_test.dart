@@ -683,7 +683,9 @@ void main() {
       expect(find.text('2. 基本の使い方'), findsOneWidget);
     });
 
-    testWidgets('顧客メモ導線はSettingsに表示しない（Generateへ移管）', (WidgetTester tester) async {
+    testWidgets('顧客メモ導線はSettingsに表示しない（Generateへ移管）', (
+      WidgetTester tester,
+    ) async {
       final premiumApi = MockApiClient(
         settingsSnapshot: SettingsSnapshot(
           settings: {

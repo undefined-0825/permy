@@ -1,10 +1,12 @@
 # 【Spec】ペルミィ - サーバサイド設計・構築統合仕様書（最終版 v4）
+
 **Version:** v4 (Full Integrated SSOT)  
 **Last Updated (JST):** 2026-03-01 13:05:00 +0900
 
 ---
 
 ## 0. 位置づけと運用ルール（MUST）
+
 - **SSOT階層**: 1. spec_rule, 2. 最新プロダクトSpec, 3. 本サーバサイド統合Spec。
 - **設計思想**: Android/iOS共通I/Fのクロスプラットフォーム前提。端末依存を排除する。
 - **禁止事項**: 会話本文（入力/履歴/生成結果）および移行コード平文の保存・ログ出力は、いかなる理由があっても厳禁とする。
@@ -12,6 +14,7 @@
 ---
 
 ## 1. 認証・識別・セッション（MUST）
+
 - **匿名認証**: `POST /auth/anonymous` にて `user_id` と `access_token` (Opaque) を発行。
 - **Bearerトークン**: `Authorization: Bearer <opaque_token>` 必須。
 - **有効期限**: 30日間固定（セッションRedis TTLは14日間）。
@@ -22,6 +25,7 @@
 ## 2. ストレージ・データ構造（MUST）
 
 ### 2.1 Redis（セッション/レート/移行/冪等）
+
 - **sess:{token}**: `{user_id, exp}`
 - **rl:{route}:{scope}:{key}:{window}**: カウンタ
 - **mig:code:{code}**: `{from_user_id, ticket_id, exp, used}`
@@ -30,6 +34,7 @@
 - **idem:gen:{user_id}:{key}**: 冪等性（24時間保持）
 
 ### 2.2 RDB（PostgreSQL / 開発時SQLite）
+
 - **users**: `user_id` (UUID), `plan` (free/pro)。
 - **user_settings**: `settings_json` (JSONB), `etag` (sha256), `updated_at`。
 - **usage_daily**: `user_id`, `date` (YYYY-MM-DD), `generate_count`。
@@ -39,22 +44,26 @@
 ## 3. API詳細仕様（MUST）
 
 ### 3.1 /generate（生成API）
+
 - **入力上限**: 20,000文字（Unicodeコードポイント数でカウント）。超過は `422`。要約・切り詰め禁止。
 - **日次制限**: JST 00:00リセット。Free 3回 / Pro 100回。成功時のみ加算。
 - **冪等性**: `Idempotency-Key` 必須。24時間保持。
 - **安全ゲート**: 軽量ルールベースの事前チェック。明確NG時はAIへ送らず安全案(A/B/C)を回答。
 
 ### 3.2 /me/settings（設定API）
+
 - **競合制御**: `GET`で `ETag` 返却。`PUT`は `If-Match` 必須。不一致は `409`。
 - **スキーマ**: `settings_schema_version` 必須。未知フィールドは保存・返却を許容。
 
 ### 3.3 /migration（アカウント移行）
+
 - **仕様**: 移行コード12桁。有効期限10分。移行チケット寿命15分。
 - **制限**: IP単位 5回/min。コード失敗10回でそのコードを無効化（1時間ロック）。
 
 ---
 
 ## 4. レート制限（初期値）
+
 - **匿名認証**: IP単位 10回/10min。デバイス単位（可能なら） 3回/10min。
 - **生成**: 瞬間制限 5回/min。
 - **移行開始**: user_id単位 3回/day。IP単位 10回/day。
@@ -64,16 +73,19 @@
 ## 5. ローカル開発・検証（Windows / PowerShell環境）
 
 ### 5.1 環境構築（MUST）
+
 - **Python**: 3.11+。
 - **依存**: `pip install tzdata` (WindowsのJST対応)。
 - **DB初期化**: `app/scripts/init_db.py` 内で **`import app.models` を必須**とする（Metadata空実行防止）。
 - **Redis代替**: 当面は `REDIS_DISABLED=true` によるメモリ内運用を許容。
 
 ### 5.2 検証コマンド（PowerShell）
+
 - `curl.exe` を明示（エイリアス回避）。
 - JSON崩れ防止のため `ConvertTo-Json -Depth 10` を使用し、`--data-binary "@body.json"` で送信する。
 
 ### 5.3 疎通順序
+
 1. `/health` (ok:true)
 2. `/auth/anonymous` (token取得)
 3. `GET /me/settings` (ETag取得)
@@ -83,32 +95,39 @@
 ---
 
 ## 6. リポジトリ・衛生（MUST）
+
 - **Git**: `.env`, `.venv`, `permy.db`, `body.json` はコミット禁止。
 - **改行**: `.gitattributes` で固定し、OS差による差分嵐を防止する。
 
 ---
 
 # 付録A: 追加で明記する決定事項（MUST）
+
 **Added (JST):** 2026-03-01 14:20:00 +0900
 
 ## A-1. 匿名開始（アカウント登録なし）
+
 - 本プロダクトは **アカウント登録（メール/電話番号/パスワード等）を提供しない**。
 - 認証は `POST /auth/anonymous` のみで開始し、Bearerで以後のAPIにアクセスする。
 
 ## A-2. 移行方式（QR廃止を明記）
+
 - 端末移行のQRコード方式は廃止。
 - 12桁移行コード方式（期限/1回限り/レート制限）を唯一の方式とする。
 
 ---
 
 # 付録B: 課金に伴う今後の課題（未確定 / MUSTではない）
+
 **Added (JST):** 2026-03-01 15:25:00 +0900
 
 ## B-1. バックエンド常設（Azure等）
+
 - バックエンドのホスティングをAzure等へ移す方針は **未確定**。
 - ただし、Android/iPhoneの購読課金（Pro）を正しく運用する場合、サーバ常設＋購入検証が必要になる可能性が高いため、今後の課題として記載する。
 
 ## B-2. 追加で必要になり得るAPI（将来）
+
 - `POST /billing/verify`（購入トークン/レシート検証）
 - `GET /me/plan`（購読状態の参照）
 ※未確定。実装前にSSOTで確定する。

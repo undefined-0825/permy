@@ -8,10 +8,12 @@
 ## 1. 準備（開発フェーズ）
 
 ### 1.1 バージョン番号の決定
+
 - 既存バージョン（最新）を確認：`git tag` または `backend/app/config.py` の `app_version` を見る。
 - 新バージョンを **セマンティック バージョニング** に従い決定（例: `1.0.0` → `1.1.0`）。
 
 ### 1.2 リリースノート作成
+
 - **フォーマット**:
   - `title`（見出し・1 行）: 例「v1.1.0 アップデート」
   - `body`（本文・4096 文字上限）: 例「・新機能 A\n・バグ修正 B\n・パフォーマンス向上」
@@ -19,6 +21,7 @@
 - 社内スプレッドシート / Notion などで草稿作成 → レビュー → 確定。
 
 ### 1.3 変更リストの確認
+
 - `git log <prev_version>..HEAD` でコミット一覧を確認。
 - バグ修正・機能追加を抽出し、ユーザー向けメッセージに要約。
 
@@ -27,6 +30,7 @@
 ## 2. コンフィグ・ファイル更新
 
 ### 2.1 バックエンド設定（config.py）
+
 ```python
 # backend/app/config.py
 
@@ -42,6 +46,7 @@ app_ios_store_url: str = ""  # iOS ストアURL未設定の例。公開時は Ap
   - `installed_version < app_version` → 任意更新（リリースノート表示）
 
 ### 2.2 フロントエンド設定（pubspec.yaml）
+
 ```yaml
 version: 1.1.0+1  # version+buildNumber（iOS/Android 両対応）
 ```
@@ -78,6 +83,7 @@ WHERE version = '1.1.0';
 ```
 
 ### 3.3 登録タイミング
+
 1. テスト環境（staging）でリリースノート表示確認 → OK
 2. 本番デプロイ前に本番 DB へ INSERT
 3. サーバー再起動 / デプロイスクリプト実行
@@ -88,6 +94,7 @@ WHERE version = '1.1.0';
 ## 4. バックエンド・ビルド & デプロイ
 
 ### 4.1 ローカル確認
+
 ```bash
 cd c:\dev\permy\backend
 
@@ -99,6 +106,7 @@ uvicorn app.main:app --reload
 ```
 
 ### 4.2 Git タグ & コミット
+
 ```bash
 git add backend/app/config.py
 git commit -m "バージョン 1.1.0 へアップデート"
@@ -108,6 +116,7 @@ git push origin v1.1.0
 ```
 
 ### 4.3 Render デプロイ（本番 or staging）
+
 1. **Render Dashboard** にログイン
 2. Permy バックエンドサービスを選択
 3. 環境変数確認:
@@ -135,9 +144,11 @@ git push origin v1.1.0
 ## 5. フロントエンド・ビルド & デプロイ
 
 ### 5.1 バージョン番号確認
+
 `pubspec.yaml` の `version: X.Y.Z+N` を確認（バックエンドと同じ `X.Y.Z`）。
 
 ### 5.2 ローカルテスト
+
 ```bash
 cd c:\dev\permy\frontend
 
@@ -155,6 +166,7 @@ flutter run -d <device_id> \
 - 「バージョンアップする」ボタン → Google Play 遷移確認
 
 ### 5.3 Android 向けビルド
+
 ```bash
 flutter build apk --release
 # または aab (Google Play)
@@ -168,6 +180,7 @@ flutter build appbundle --release
 4. 公開
 
 ### 5.4 iOS 向けビルド
+
 ```bash
 flutter build ios --release
 # または
@@ -220,6 +233,7 @@ flutter build ipa --release
 ## 7. ロールバック手順（緊急時）
 
 ### 7.1 バックエンド・ロールバック
+
 ```bash
 # 旧バージョンのコミットに戻す
 git revert <新バージョンコミットハッシュ>
@@ -232,6 +246,7 @@ git checkout <旧バージョンハッシュ>
 ```
 
 ### 7.2 フロント・ロールバック
+
 - Google Play Console から旧バージョン APK を再度公開
 - または、段階的ロールアウトを停止
 - ユーザーは前バージョン APK をダウンロード可能な状態に
@@ -241,11 +256,13 @@ git checkout <旧バージョンハッシュ>
 ## 8. リリース後・運用フェーズ
 
 ### 8.1 定期監視
+
 - `GET /api/v1/version` 応答確認（日次）
 - エラーログ監視（DB アクセス失敗等）
 - ユーザー報告のバグ・クラッシュ収集
 
 ### 8.2 次リリースへの記録
+
 - 本リリースの経験（問題・所要時間等）を内部ドキュメント or Notion へ記録
 - 継続的改善に反映
 

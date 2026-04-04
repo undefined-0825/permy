@@ -1,15 +1,18 @@
 # 【Spec】ペルミィ - フロントエンド実装統合Spec（SSOT v1）
+
 **Version:** v1  
 **Last Updated (JST):** 2026-03-01 14:00:00 +0900
 
 ---
 
 ## 0. 位置づけ（SSOT階層）
+
 本ファイルはフロントエンド「実装」における唯一の正（SSOT）である。設計Spec（spec_frontend_v1.md）を実装へ落とす際の具体規約・ファイル構成・実装タスクを定義する。
 
 ---
 
 ## 1. 推奨ディレクトリ構成（MUST）
+
 - `lib/`
   - `main.dart`
   - `app.dart`（Router/Theme）
@@ -32,12 +35,15 @@
 ---
 
 ## 2. APIクライアント規約（MUST）
+
 ### 2.1 共通ヘッダ
+
 - `Authorization: Bearer <token>`
 - `Content-Type: application/json`
 - `Idempotency-Key: <uuid>`（/generateのみ必須）
 
 ### 2.2 リトライ方針
+
 - 401: token再取得→1回だけリトライ
 - 409（settings競合）: GETで再取得→ユーザーへ「更新競合」表示（自動マージ禁止）
 - 422（入力超過）: UIで即時エラー（ユーザーにトリム設定/見直し案内）
@@ -45,6 +51,7 @@
 ---
 
 ## 3. テキスト取り込み実装（MUST）
+
 - OS共有（Android: Intent ACTION_SEND / iOS: Share Extension相当）で txt URI を受領
 - txt読み込みはストリームで行い、メモリ爆発を避ける
 - トリム関数（SSOT）:
@@ -55,6 +62,7 @@
 ---
 
 ## 4. 状態管理（MUST）
+
 - `GenerateState`: idle / editing / loading / done / error
 - `SettingsState`: loaded(etag, json), saving, conflict, error
 - `PlanState`: free/pro（サーバのusers.planに同期。未取得時はfree扱い）
@@ -62,6 +70,7 @@
 ---
 
 ## 5. MainGenerate 画面の実装仕様（MUST）
+
 - 入力欄:
   - 「トーク履歴取り込み」ボタン（共有から）
   - プレビュー領域（保存しない。再起動で消えてよい）
@@ -78,6 +87,7 @@
 ---
 
 ## 6. 設定（/me/settings）同期実装（MUST）
+
 - 起動時に `GET /me/settings`
 - 編集後に `PUT /me/settings`（If-MatchにETag必須）
 - 成功時はETag更新、ローカル保存更新
@@ -88,12 +98,14 @@
 ---
 
 ## 7. ログ/解析（HARD）
+
 - 会話本文・生成本文をログ出力禁止（print/analytics含む）
 - クラッシュレポート導入時も、送信ペイロードから本文を除外する仕組みが必須
 
 ---
 
 ## 8. 実装タスク（優先度順）
+
 P0（配布に必須）
 1. anonymous auth + token保存 + interceptor
 2. /me/settings GET/PUT（ETag/If-Match）
@@ -109,6 +121,7 @@ P1（品質）
 ---
 
 ## 9. 受け入れ基準（MUST）
+
 - 会話本文/生成本文が端末に永続化されない（再起動で消える）
 - Freeで1日3回、Proで1日100回の制限がUX的に破綻しない（残回数表示は任意）
 - 生成中ロックが正しく機能し、二重送信でも多重カウントされない（Idempotency-Key）
@@ -116,12 +129,15 @@ P1（品質）
 ---
 
 # 付録A: 追加で明記する決定事項（MUST）
+
 **Added (JST):** 2026-03-01 14:20:00 +0900
 
 ## A-1. アカウント登録画面は作らない
+
 - 本アプリは **匿名開始** のため、ログイン/アカウント登録ページ（メール/電話番号/パスワード等）を実装しない。
 - 起動時にバックグラウンドで `POST /auth/anonymous` を実行し、トークンをSecure Storageへ保存して利用する。
 
 ## A-2. 移行方式（QR廃止）
+
 - 端末移行は **12桁移行コード** のみ。
 - QRコード方式は実装しない。

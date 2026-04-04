@@ -37,9 +37,9 @@ python -m app.main
 
 ### OpenAPI Specification
 
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-- **OpenAPI JSON**: http://localhost:8000/api/v1/openapi.json
+- **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+- **OpenAPI JSON**: [http://localhost:8000/api/v1/openapi.json](http://localhost:8000/api/v1/openapi.json)
 - **静的ファイル**: [docs/api/openapi.json](../docs/api/openapi.json)
 
 ### OpenAPI スキーマの更新
@@ -84,7 +84,7 @@ pytest
 
 ## プロジェクト構成
 
-```
+```text
 backend/
   app/
     main.py              # FastAPI アプリケーション

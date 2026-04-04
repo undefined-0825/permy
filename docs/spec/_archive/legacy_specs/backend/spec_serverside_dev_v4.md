@@ -1,4 +1,5 @@
 # spec_serverside_dev_v4.md
+
 （サーバサイド構築：ローカル開発環境構築・検証手順 / Windows + PowerShell）
 
 本ファイルは `spec_serverside_dev_v3.md` を拡張し、**現在のフォルダ構成・主要ファイル一覧**と、
@@ -12,11 +13,13 @@
 ---
 
 ## 0. SSOT参照順
+
 rule → product spec → serverside spec → serverside_dev
 
 ---
 
 ## 1. 前提
+
 - Python 3.11+
 - 配置例：`C:\dev\talk_assist\backend`
 - 以降のコマンドは PowerShell 前提（cmd/bashと混ぜない）
@@ -24,6 +27,7 @@ rule → product spec → serverside spec → serverside_dev
 ---
 
 ## 2. 現在のフォルダ構成（実例）
+
 ```
 backend/
   app/
@@ -61,29 +65,37 @@ backend/
 ---
 
 ## 3. 構築で確定した重要事項（再発防止）
+
 ### 3.1 PowerShell注意
+
 - PowerShell の `curl` は alias → **`curl.exe` を使う**
 - cmdの継続 `^` はPowerShellでは使わない（` を使う or 1行）
 
 ### 3.2 tzdata必須（Windows）
+
 - `ZoneInfo("Asia/Tokyo")` で落ちる → `pip install tzdata`
 
 ### 3.3 DB初期化（空DB事故）
+
 - `app/scripts/init_db.py` に `import app.models` が無いと `create_all()` が空実行になる
 - `permy.db` はカレントディレクトリ依存 → 必ず `backend` 直下で初期化
 
 ### 3.4 OpenAIキー競合
+
 - `.env` と環境変数 `OPENAI_API_KEY` が競合しやすい
 - prefix/len/tailでサーバが読んでるキーを検証し、環境変数が犯人なら消す
 
 ### 3.5 OpenAI SDKの混在対策
+
 - ImportErrorが出たら、**.venv作り直し**が最短
 - 依存固定：`openai==1.99.0` を確認（1つだけ）
 
 ---
 
 ## 4. 起動方法（構築チャットの最終確定）
+
 ### 4.1 起動スクリプト（推奨）
+
 `start_radius_memory.ps1`
 ```powershell
 cd C:\dev\talk_assist\backend
@@ -95,13 +107,16 @@ uvicorn app.main:app --host 127.0.0.1 --port 8000
 ---
 
 ## 5. 疎通（構築観点の正解）
+
 ### 5.1 token取得
+
 ```powershell
 $r = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/auth/anonymous"
 $token = $r.access_token
 ```
 
 ### 5.2 settings更新→generate（ファイル経由でJSON崩れ回避）
+
 ```powershell
 $base = "http://127.0.0.1:8000"
 $r = Invoke-RestMethod -Method Post -Uri "$base/auth/anonymous"
@@ -140,6 +155,7 @@ curl.exe -s -X POST "$base/generate" `
 ---
 
 ## 6. 実装チャットへの引き継ぎ（構築スコープ）
+
 - ここまでで「OpenAI接続まで含めたローカル疎通」が通ることを確認済み
 - Redis未導入（メモリ運用）で進行中。再起動でtoken無効になる前提
 - 実装チャットでは、**コード改修・品質チューニング・安全制御**等を扱う（本チャットでは扱わない）
