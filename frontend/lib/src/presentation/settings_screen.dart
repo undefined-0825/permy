@@ -1377,39 +1377,18 @@ class _InfoLinkTile extends StatelessWidget {
   const _InfoLinkTile({
     required this.label,
     required this.onTap,
-    this.badgeCount,
   });
 
   final String label;
   final VoidCallback onTap;
-  final int? badgeCount;
 
   @override
   Widget build(BuildContext context) {
-    final showBadge = (badgeCount ?? 0) > 0;
     return AppListItem(
       title: label,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (showBadge)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.xs,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.buttonBackground,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-              ),
-              child: Text(
-                '${badgeCount!}件',
-                style: AppTextStyles.small.copyWith(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
           const SizedBox(width: AppSpacing.xs),
           const Icon(Icons.chevron_right, color: AppColors.metaText),
         ],

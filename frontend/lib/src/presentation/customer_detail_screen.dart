@@ -501,7 +501,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           ),
         const SizedBox(height: AppSpacing.sm),
         DropdownButtonFormField<String>(
-          value: _tagCategory,
+          initialValue: _tagCategory,
           decoration: const InputDecoration(
             labelText: 'タグカテゴリ',
             border: OutlineInputBorder(),
@@ -564,7 +564,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         ),
         const SizedBox(height: AppSpacing.xs),
         DropdownButtonFormField<String>(
-          value: _visitType,
+          initialValue: _visitType,
           decoration: const InputDecoration(
             labelText: '来店種別',
             border: OutlineInputBorder(),
@@ -640,7 +640,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               ),
         const SizedBox(height: AppSpacing.sm),
         DropdownButtonFormField<String>(
-          value: _eventType,
+          initialValue: _eventType,
           decoration: const InputDecoration(
             labelText: 'イベント種別',
             border: OutlineInputBorder(),

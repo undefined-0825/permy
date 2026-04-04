@@ -157,7 +157,7 @@ class _CustomerSearchResultsScreenState
 
     return ListView.separated(
       itemCount: _customers.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.xs),
+      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.xs),
       itemBuilder: (context, index) {
         final customer = _customers[index];
         return AppListItem(

@@ -150,7 +150,7 @@ class _CustomerEditScreenState extends State<CustomerEditScreen> {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 DropdownButtonFormField<String>(
-                  value: _relationshipStage,
+                  initialValue: _relationshipStage,
                   decoration: const InputDecoration(
                     labelText: '関係性',
                     border: OutlineInputBorder(),

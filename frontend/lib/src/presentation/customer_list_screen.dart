@@ -122,7 +122,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     if (value < 0) {
       return '${-value}日超過';
     }
-    return 'あと${value}日';
+    return 'あと$value日';
   }
 
   Widget _buildReminderSection() {
@@ -367,7 +367,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
 
     return ListView.separated(
       itemCount: visible.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.xs),
+      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.xs),
       itemBuilder: (context, index) {
         final customer = visible[index];
         final subtitle = [
