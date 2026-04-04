@@ -197,6 +197,7 @@ ios/
 ### 5.1 画面設計
 
 `UpdateNoticeScreen` ウィジェット：
+
 - **目的**: バージョンアップの必須/任意を通知し、Google Play へ誘導する。
 - **特性**:
   - 強制更新時：`PopScope(canPop: false)` で戻る不可。ボタン必須。
@@ -328,6 +329,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 ### 6.4 色定義とテーマ（MUST）
 
 **カラーパレット（world_concept.md 準拠）**：
+
 - **通常時背景**：淡いピンク系グラデーション
   - `Color(0xFFE8D4F8)` 淡いパープル（グラデーション開始色）
   - `Color(0xFFFCE4EC)` 淡いピンク（グラデーション終了色）
@@ -343,11 +345,13 @@ class UpdateNoticeScreen extends StatelessWidget {
 - **無効化状態**：`Colors.grey.shade300`
 
 **適用ルール**：
+
 - 診断画面・生成画面・Settings等、全画面で統一使用
 - UIテーマ定義は `lib/core/theme/app_theme.dart` を正とし、画面側の配色・余白・タイポは `permy_design_system_spec.md` 準拠で継続的に洗練する
 - Material Design 3 準拠、ColorScheme 活用を推奨
 
 **デザイン意図（world_concept 参照）**：
+
 - 淡いピンク：ユーザーの緊張を和らげ、安心感を提供
 - 黒への反転：NightSelf（分身稼働）モードへの視覚的切り替え
 - 過剰な可愛さを避け、信頼感と機能性のバランスを重視
@@ -415,10 +419,12 @@ class UpdateNoticeScreen extends StatelessWidget {
 #### 7.2.1.1 Diagnosis Screen UI（デザインリニューアル版）
 
 **全体構造**：
+
 - Scaffold body に Container を配置、decoration で背景設定
 - SafeArea 内に Column（上部ヘッダー + 質問エリア + エラー表示 + ボタン）
 
 **背景**：
+
 - **現在実装**：LinearGradient（topCenter → bottomCenter）
   - 開始色：`Color(0xFFE8D4F8)` 淡いパープル
   - 終了色：`Color(0xFFFCE4EC)` 淡いピンク
@@ -426,6 +432,7 @@ class UpdateNoticeScreen extends StatelessWidget {
   - 現在はコメントアウト、画像準備後に有効化
 
 **上部ヘッダー**（SafeArea内、padding 16-12-16-12）：
+
 - Row構成：ペルミィアイコン + SizedBox(12) + 進捗表示
 - **ペルミィアイコン**（プレースホルダー、後で画像差し替え）：
   - Container 48x48、黒背景（Colors.black87）、borderRadius 24
@@ -435,6 +442,7 @@ class UpdateNoticeScreen extends StatelessWidget {
   - fontSize 18、fontWeight bold、color black87
 
 **質問表示エリア**（Expanded + SingleChildScrollView）：
+
 - **ページング動作**：
   - 状態変数 `_currentQuestionIndex`（0〜6）で現在問を管理
   - 「次へ」ボタンタップで `_currentQuestionIndex++`、最終問は送信
@@ -449,6 +457,7 @@ class UpdateNoticeScreen extends StatelessWidget {
   - 各選択肢を `_ChoiceCard` ウィジェットで表示
 
 **選択肢カード** (`_ChoiceCard`)：
+
 - **構造**：Padding(bottom: 12) > InkWell > Container
 - **InkWell**：onTap で選択、borderRadius 16
 - **Container**：
@@ -458,16 +467,20 @@ class UpdateNoticeScreen extends StatelessWidget {
   - boxShadow：黒10%、blurRadius 8、offset (0,2)
 - **内部レイアウト**（Row）：
   1. **画像プレースホルダー**（80x80、borderRadius 12）：
+
      - Container、背景 `Colors.pink.shade50`
      - Icon(Icons.image_outlined, size: 40, color: pink.shade200)
      - 後でキャラクター画像（Image.asset）に差し替え可能
   2. SizedBox(width: 16)
   3. **選択肢テキスト**（Expanded）：
+
      - fontSize 14、fontWeight w500、color black87、height 1.4
   4. **チェックマーク**（選択時のみ表示）：
+
      - Icon(Icons.check_circle, color: 0xFFFF69B4, size: 28)
 
 **エラー表示**（ボタン上部、ペルミィトーン統一）：
+
 - if (_error != null) で条件表示
 - Padding(horizontal: 16)
 - Text：赤文字（Colors.red）、fontWeight bold、textAlign center
@@ -481,6 +494,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 - エラー発生後、ユーザーは「完了」ボタン（"この内容で進む"）を再度タップして retry。呼び出し側（Settings）で retry 後の結果判定を担当
 
 **次へボタン**（下部固定）：
+
 - Padding(all: 16) 内に SizedBox(width: double.infinity, height: 56)
 - **ElevatedButton**：
   - onPressed：`_canProceed && !_saving ? _handleNext : null`
@@ -507,6 +521,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 6. 送信失敗 → エラーメッセージ表示
 
 **段階的実装の注記**：
+
 - **Phase 1（完了）**：グラデーション背景、プレースホルダー配置、UI構造実装
 - **Phase 2（今後）**：
   - 背景画像有効化（DecorationImage コメントアウト解除）
@@ -518,11 +533,13 @@ class UpdateNoticeScreen extends StatelessWidget {
 **目的**：7問完了後、ユーザーの診断結果（True Self / Night Self / Style Scores）をその場で表示する中間ステップ。Settings へ遷移する前の確認・理解ステップ。
 
 **全体構造**：
+
 - 既存の Question Slider と同じ CustomScrollView + SliverAppBar + SliverToBoxAdapter 構成
 - AppBar の progress 表示：「完了」と表示（数字ではなく文字列）
 - 戻るボタン：Result Slide → Question Slider に戻る（`_diagnosisResult = null` で遷移）
 
 **状態管理**：
+
 - 新規フィールド：`DiagnosisResult? _diagnosisResult`
 - null = Question Slider 表示、not null = Result Slide 表示
 - API呼び出し成功時に `_diagnosisResult` を更新、UI再構築
@@ -531,9 +548,11 @@ class UpdateNoticeScreen extends StatelessWidget {
 
 **表示コンテンツ**：
 1. **タイトル**：
+
   - Text「きみのペルソナはこれだよ」
    - fontSize 20、fontWeight bold、textAlign center、padding top 24
 2. **Result Sections ×2**：
+
    - **普段の自分（True Self）**：
      - Label：「普段の自分」（fontSize 12、fontWeight w500、gray）
      - Value：`diagnosis.trueSelfType`（例：「Stability」、fontSize 18、bold、black87）
@@ -547,6 +566,7 @@ class UpdateNoticeScreen extends StatelessWidget {
      - border：`Color(0xFFFFB3C1)` ピンク width 1
      - margin bottom 16
 3. **Style Scores Section**：
+
    - Label：「スタイルスコア」（fontSize 14、fontWeight w600、color gray）
    - 3 行表示：
      - 主張度（Assertiveness）：`diagnosis.styleAssertiveness`（0-100）
@@ -558,12 +578,14 @@ class UpdateNoticeScreen extends StatelessWidget {
      - 右：「N%」表示（fontSize 12、fontWeight w500、gray）
    - Section 全体は Result Sections と同じ Container スタイル
 4. **ボタン**（下部固定）：
+
   - 「さっそく使ってみる」（Primary スタイル）
    - onPressed：`_onResultConfirmed()`
   - 初回診断では `pop(true)` 後に Generate へ遷移
   - 再診断（Settings起点）では `pop(true)` 後に Settings 側で再読込を実行
 
 **ナビゲーションフロー**：
+
 - Question Slide（0-6）
   - 最終問の選択後に自動送信
   - `POST /me/diagnosis` 実行
@@ -574,10 +596,12 @@ class UpdateNoticeScreen extends StatelessWidget {
   - 「さっそく使ってみる」：`pop(true)`（起点画面側で遷移を継続）
 
 **実装ポイント**：
+
 - API から取得した `DiagnosisResult` をそのまま UI 表示に利用（不要な変換をしない）
 - Result Slide は DiagnosisScreen 内で完結し、別画面 push は行わない
 
 **段階的実装の注記**：
+
 - **Phase 1（完了 2026-03-07）**：Result Slide UI 実装、表示・遷移・テスト確認
 - **Phase 2（今後）**：タイプ別詳細説明の展開（モーダルまたは専用詳細導線）
 
@@ -638,6 +662,7 @@ class UpdateNoticeScreen extends StatelessWidget {
   1) 普段の自分：True Self（5タイプ：Stability/Independence/Approval/Realism/Romance）
   2) 夜の私：Night Self（5タイプ：VisitPush/Heal/LittleDevil/BigClient/Balance）
   3) ペルソナパラメータ（主張度/温かみ/リスク回避）：0-100の LinearProgressIndicator
+
 - **各タイプの説明文**：固定テキスト（詳細は後述）
 - **保存**：なし（読み取り専用、スクロール可）
 - **遷移**：Settings から「ペルソナ欄」をタップで表示、BackボタンまたはAppBar戻るで Settings に復帰
@@ -652,17 +677,20 @@ class UpdateNoticeScreen extends StatelessWidget {
 
 **セクション別**：
 1) **ペルソナ**：
+
    - 行1：「普段の属性」= `true_self_type` 値
    - 行2：「夜の属性」= `night_self_type` 値
    - 背景色：診断済み時は淡青 `Colors.blue.shade50`（否、診断待機表示）
    - 動作：タップで PersonaDiagnosisResultScreen へ遷移（診断済み時のみ）
 
 2) **ペルソナ再診断**：
+
    - ボタン：「再診断する」
    - 遷移：DiagnosisScreen（7問固定、全類型への回答）
    - 完了後：自動リロード + SnackBar「再診断を反映しました」
 
 3) **返信案のタップ**：
+
    - SegmentedButton（`candidate_tap_action`）：
      - `copy` = 「コピー」（デフォルト）
      - `share` = 「共有」
@@ -670,6 +698,7 @@ class UpdateNoticeScreen extends StatelessWidget {
    - 変更は自動保存し、Generate画面側で復帰時に再読込する
 
 4) **デフォルトの返信スタイル**：
+
   - SegmentedButton（`combo_id`）：
     - 0=「来店約束」（combo_id: 0 / デフォルト）
     - 1=「休眠復活」（combo_id: 1）
@@ -678,11 +707,13 @@ class UpdateNoticeScreen extends StatelessWidget {
 > 返信の長さ/改行設定/絵文字の量/リアクション/相手の呼び方の5項目はSettings画面では設定しない。Generate画面の調整カードで変更する（7.3.1参照）。Settings画面には「Generate画面で送信前に変更できるよ」案内文を表示する。
 
 5) **返信案のNG設定**：
+
   - NGタグ（複数選択）を選択可能
   - 禁止フレーズ（自由入力、最大10件）を管理
   - `ng_tags` / `ng_free_phrases` を settings と同期
 
 6) **サポート・規約・その他設定**：
+
   - アコーディオン形式で表示
   - アコーディオン内はリンク行（`AppListItem`）に統一し、以下を表示：
     - 利用規約 / プライバシーポリシー / ヘルプ（使い方） / このアプリについて / オープンソースライセンス
@@ -692,6 +723,7 @@ class UpdateNoticeScreen extends StatelessWidget {
     - このアプリについて → AboutPrivacyScreen
 
 7) **自動反映ステータス**：
+
   - 画面下部に「変更は自動で反映されます」を表示
   - 保存ボタンは設置しない（変更は自動保存）
 
@@ -720,6 +752,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 ### 7.7 固定UI文言（MUST）
 
 **PersonaDiagnosisResultScreen**
+
 - AppBar 標題：「あなたのペルソナ」
 - セクション標題：
   - 「普段の自分」（True Self セクション）
@@ -729,6 +762,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 - 説明文：「これらのペルソナは、あなたの返信スタイルを決める大事な指標。ときどき見返して、「今のぼくはこう考えてるんだ」って確認してみてね。」
 
 **True Self（5タイプ）説明文**
+
 - Stability：「バランスを大事にする。無理のない生活を心がけ、まずは安定から。」
 - Independence：「自分のペースを守る。誰かに縛られず、自分の判断を信じる。」
 - Approval：「人の評価を大事にする。信頼を集めることが喜び。その分相手との距離が近い。」
@@ -736,6 +770,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 - Romance：「感情を大事にする。気持ちが満たされることが優先。その直感は案外正しい。」
 
 **Night Self（5タイプ）説明文**
+
 - VisitPush：「次のお約束を大事にする。関係を続けることが目標。その誠実さが信頼を呼ぶ。」
 - Heal：「相手を癒したい。そっと寄り添うのが得意。その優しさが人を呼ぶ。」
 - LittleDevil：「駆け引きを楽しむ。軽やかなテンポが自分らしい。その遊び心が魅力。」
@@ -761,6 +796,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 ### 8.3 選択後の処理
 
 1. 選択した `choice.id` を `followup.key` に応じて settings に反映
+
    - `relationship_type` → `settings.relationship_type = choice.id`
    - `reply_length_pref` → `settings.reply_length_pref = choice.id`
    - など
@@ -802,12 +838,16 @@ class UpdateNoticeScreen extends StatelessWidget {
 ### 9.2 イベントタイプ（5種）
 
 1. **generate_requested**: 生成リクエスト開始時
+
    - `daily_used`, `daily_remaining`, `has_ng_setting`, `persona_version`
 2. **generate_succeeded**: 生成成功時
+
    - `latency_ms`, `ng_gate_triggered`, `followup_returned`
 3. **generate_failed**: 生成失敗時
+
    - `latency_ms` (optional), `error_code`
 4. **candidate_copied**: 候補コピー時
+
    - `candidate_id`: "A" | "B" | "C"
 5. **app_opened**: アプリ起動時（任意）
 
@@ -997,10 +1037,12 @@ flutter run -d emulator-5554 --verbose
 
 **原因**: cd コマンドでディレクトリ移動していない（PowerShell の `Set-Location` と `cd` の使い分けが混在）  
 **対処**:
+
 - **推奨**: `Set-Location` を使用（PowerShell標準）
   ```powershell
   Set-Location c:\dev\permy\frontend
   ```
+
 - **代替**: `cd` + フルパスを使用
   ```powershell
   cd 'c:\dev\permy\frontend'  # パスに空白があれば quotes で囲む
@@ -1031,6 +1073,7 @@ q     # アプリ終了
 以下の運用ツールは `c:\dev\permy\tools` を正とする。手順の省略や独自バッチ乱立を避け、再現性を固定する。
 
 1. `start_frontend.ps1`（通常起動）
+
   - 目的：既に起動済みのエミュレータへ `flutter run` する。
   - 代表例：
     ```powershell
@@ -1038,18 +1081,22 @@ q     # アプリ終了
     ```
 
 2. `start_permy_clean.ps1`（クリーン起動）
+
   - 目的：エミュレータ起動、`flutter clean`、`pub get`、`flutter run` を一括で行う。
   - 代表例（ローカルBackend接続）：
     ```powershell
     powershell -ExecutionPolicy Bypass -File .\tools\start_permy_clean.ps1 -UseLocalBackend
     ```
+
   - 備考：`-UseLocalBackend` は `API_BASE_URL=http://10.0.2.2:8000` を使う。
 
 3. `hot_restart_frontend.ps1` / `hot_restart_frontend.bat`（再起動補助）
+
   - 目的：エミュレータ再起動なしで、アプリ反映を1コマンド化する。
   - 実行順：
     1) `flutter attach` に `R` を送って Hot Restart を試行
     2) 失敗時のみ、`adb force-stop` + `am/monkey` でアプリプロセスを再起動
+
   - 代表例：
     ```powershell
     powershell -ExecutionPolicy Bypass -File .\tools\hot_restart_frontend.ps1
@@ -1059,6 +1106,7 @@ q     # アプリ終了
     ```
 
 4. 運用原則（MUST）
+
   - 文言/UI確認では、原則としてエミュレータ再起動を行わない。
   - `device offline` などOS側異常時のみ、エミュレータ再起動を許可する。
   - スクリプト追加・変更時は、`-CheckOnly` のような事前確認モードを優先して用意する。

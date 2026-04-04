@@ -55,6 +55,7 @@ pip freeze | findstr /i openai
 ```
 
 期待：
+
 - `openai==1.99.0` が **1行だけ**
 - `...\.venv\Lib\site-packages\openai\__init__.py`
 
@@ -63,9 +64,11 @@ pip freeze | findstr /i openai
 ## 4. DB 初期化（SQLite）
 
 症状：
+
 - `sqlite3.OperationalError: no such table: users`
 
 原因：
+
 - `init_db.py` がモデルを import しておらず、`create_all()` が空実行になる。
 
 対策：`app\scripts\init_db.py` に **必ず** 1行追加
@@ -109,6 +112,7 @@ uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
 注意：
+
 - メモリRedisのため **再起動するとセッショントークンは無効**（毎回`/auth/anonymous`が必要）
 
 ---
@@ -210,6 +214,7 @@ curl.exe -s -X POST "http://127.0.0.1:8000/generate" `
 ### 10.1 本チャット（serverside_dev）のスコープ
 
 本チャットは「サーバサイド構築」専用とする。対象は以下に限定する。
+
 - ローカル環境構築、依存導入、venv、起動、疎通確認
 - .env運用、OpenAI接続、キー競合対策、PowerShell運用
 - SQLite初期化、カレントディレクトリ問題、tzdata等のOS依存
@@ -225,9 +230,11 @@ SSOT階層は以下：
 rule → product spec → serverside spec → serverside_impl_dev
 
 実装Specファイルのプレフィックス：
+
 - `spec_serverside_impl_dev_`
 
 version運用：
+
 - `spec_serverside_impl_dev_v1.md`, `v2...`（既存versionの上書き禁止）
 
 ### 10.3 混在防止

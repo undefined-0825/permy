@@ -41,6 +41,7 @@ app_ios_store_url: str = ""  # iOS ストアURL未設定の例。公開時は Ap
 ```
 
 **判定ロジック:**
+
 - ユーザーが `app_version` より古いバージョンを使用している場合：
   - `installed_version < min_supported_version` → 強制更新
   - `installed_version < app_version` → 任意更新（リリースノート表示）
@@ -60,6 +61,7 @@ version: 1.1.0+1  # version+buildNumber（iOS/Android 両対応）
 ### 3.1 本番 DB への INSERT（DBA / TL 対応）
 
 **分類**:
+
 - **開発環境** : `./init_db_simple.py` で初期化済み（SQLite）
 - **ステージング**: 手動 INSERT（Postgres）
 - **本番**: 手動 INSERT（Postgres）
@@ -120,6 +122,7 @@ git push origin v1.1.0
 1. **Render Dashboard** にログイン
 2. Permy バックエンドサービスを選択
 3. 環境変数確認:
+
    - `APP_VERSION=1.1.0`
    - `APP_MIN_SUPPORTED_VERSION=1.0.0`
    - `DATABASE_URL` (本番接続先)
@@ -161,6 +164,7 @@ flutter run -d <device_id> \
 ```
 
 **画面確認：**
+
 - 起動時に `/api/v1/version` を呼び出し
 - リリースノートが表示されるか確認
 - 「バージョンアップする」ボタン → Google Play 遷移確認
@@ -201,19 +205,23 @@ flutter build ipa --release
 ### 6.1 シナリオ① : 任意アップデート（ユーザー端末 1.0.0 → サーバー 1.1.0）
 
 **前提:**
+
 - `min_supported_version = 1.0.0`（1.0.0 はまだ利用可）
 - `latest_version = 1.1.0`
 
 **期待動作:**
+
 - 起動時に任意更新通知画面表示 → 「あとで」か「バージョンアップする」選択可能
 - 「バージョンアップする」→ Google Play 再度
 
 ### 6.2 シナリオ② : 強制アップデート（ユーザー端末 0.9.0 → サーバー 1.1.0、min_supported_version=1.0.0）
 
 **前提:**
+
 - `min_supported_version = 1.0.0`（0.9.0 は利用不可）
 
 **期待動作:**
+
 - 起動時に強制更新通知画面表示
 - 戻る不可（PopScope canPop=false）
 - 必ず Google Play へ誘導

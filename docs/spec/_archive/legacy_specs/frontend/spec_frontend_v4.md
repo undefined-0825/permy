@@ -59,6 +59,7 @@
 ### 4.1 端末保存「許可」
 
 以下は端末に保存してよい（UIの利便性目的）。サーバの `/me/settings` と同期する。
+
 - `true_self_type`
 - `night_self_type`
 - `persona_version`（現在は2）

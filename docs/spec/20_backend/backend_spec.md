@@ -39,6 +39,7 @@
 ### 2.2 差し替え境界（固定するもの / 首振りするもの）
 
 **固定（外部契約）**
+
 - ` /api/v1/* ` のエンドポイント体系
 - 認証方式（匿名起点のBearer token）
 - レート制限・日次回数制限の意味論（HTTP 429 等）
@@ -47,6 +48,7 @@
 - 返却JSONスキーマ（OpenAPI）
 
 **首振り（内部実装）**
+
 - LLMプロバイダ（OpenAI→他）
 - データストア（SQLite→Postgres、Redis導入等）
 - 同期処理→非同期（キュー/ワーカー）への移行
@@ -106,6 +108,7 @@
   - `free`：無料
 
 **ルール（MUST）**
+
 - 機能解放・Pro専用機能の判定は **feature_tierのみ** で行う（`free` か、それ以外か）。
 - 課金由来の差分（売上/分析/返金対応など）は **billing_tierのみ** で区別する。
 - APIレスポンスの `plan` は3値とし、`feature_tier=pro` は `plan=pro`、`feature_tier=premium` は `plan=premium` として扱う。

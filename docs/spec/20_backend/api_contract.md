@@ -159,6 +159,7 @@ Headers:
 ### Response 200
 
 Headers:
+
 - `ETag: "<opaque-etag>"`
 
 Body:
@@ -521,12 +522,16 @@ Body:
 ### イベントタイプ（5種）
 
 1. **generate_requested**: 生成リクエスト開始
+
    - `daily_used`, `daily_remaining`, `has_ng_setting`, `persona_version`
 2. **generate_succeeded**: 生成成功
+
    - `latency_ms`, `ng_gate_triggered`, `followup_returned`
 3. **generate_failed**: 生成失敗
+
    - `latency_ms` (optional), `error_code`
 4. **candidate_copied**: 候補コピー
+
    - `candidate_id`: "A" | "B" | "C"
 5. **app_opened**: アプリ起動
 

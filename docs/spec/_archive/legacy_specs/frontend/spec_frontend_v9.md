@@ -59,6 +59,7 @@
 ### 4.1 端末保存「許可」
 
 以下は端末に保存してよい（UIの利便性目的）。サーバの `/me/settings` と同期する。
+
 - `true_self_type`
 - `night_self_type`
 - `persona_version`（現在は2）
@@ -325,6 +326,7 @@ enum class NightSelfType {
   1) NightSelfType Q1〜Q3（各3択）
   2) RealSelfType Q1〜Q3（各3択）
   3) 集計 → 結果表示（Night×Real）
+
 - スコアリングは product Spec の AB-4 をSSOTとして実装する（+2/+1）。
 - 同点時は「追加設問（決選）」画面を表示する（内容は今後確定）。暫定として:
   - 同点タイプが2〜3の時だけ表示

@@ -622,6 +622,7 @@ NightSelf:
 #### 17.6.2 検索対象
 
 検索対象は本文ではなく、以下の構造化項目のみとする。
+
 - `display_name`
 - `nickname`
 - `call_name`

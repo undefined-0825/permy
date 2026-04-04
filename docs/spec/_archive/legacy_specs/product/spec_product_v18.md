@@ -62,12 +62,14 @@
 ### 2.2 診断結果画像（SSOT）
 
 命名規則: `true_` / `night_` + 型名のスネークケース + `.png`。
+
 - **True**: `true_stability.png`, `true_independence.png`, `true_approval.png`, `true_realism.png`, `true_romance.png`
 - **Night**: `night_visit_push.png`, `night_heal.png`, `night_little_devil.png`, `night_big_client.png`, `night_flow.png`
 
 ### 2.3 データ保存（settings.json / SSOT）
 
 場所: `/me/settings`。以下のキーを必ず保持する。
+
 - `true_self_type`: TrueSelfType文字列
 - `night_self_type`: NightSelfType文字列
 - `persona_version`: int (現在は 2)
@@ -335,6 +337,7 @@ enum class NightSelfType {
   }
 }
 ```
+
 - `followup` は不要なら `null`。
 - `key` は settings のフィールド名（例: `relationship_type` / `reply_length_pref` 等）。
 - ユーザー選択後は `settings_snapshot` を更新して **次の生成**を行う（自動再生成はしない）。

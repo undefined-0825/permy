@@ -161,6 +161,7 @@ backend/
 ### 7.1 データ
 
 `users` に以下を保持：
+
 - `feature_tier`: `free|pro|premium`
 - `billing_tier`: `free|pro_store|premium_store|premium_comp`
 
@@ -379,6 +380,7 @@ backend/
 ### 15.2 関数実装チェックリスト（Acceptance Criteria）
 
 すべての関数実装は以下をチェック：
+
 - [ ] すべての条件分岐で **明示的な return 文** を記述（末尾の暗黙 `None` return を避ける）
 - [ ] グローバル変数と local 変数の名前競合がないか確認
 - [ ] Pylance の「unbound local variable」警告がないか確認
@@ -493,6 +495,7 @@ backend/
 ### 16.1 DB モデル
 
 `AppReleaseNote` テーブル：
+
 - `version: str` (PK) — セマンティックバージョン（例: `1.2.3`）
 - `title: str` (255 char) — リリースノート見出し（例: `v1.2.3 アップデート`）
 - `body: str` (4096 char) — リリースノート本文（テキスト）
@@ -506,6 +509,7 @@ backend/
   1. 環境変数 `APP_VERSION` / `APP_MIN_SUPPORTED_VERSION` / `APP_ANDROID_STORE_URL` / `APP_IOS_STORE_URL` をロード
   2. DB から `version = APP_VERSION` の `AppReleaseNote` を検索
   3. 見つかれば title/body を返す。見つからなければ空文字列
+
 - **出力** (JSON):
   ```json
   {
@@ -517,6 +521,7 @@ backend/
     "release_note_body": "・新機能A追加\n・バグ修正"
   }
   ```
+
 - **キャッシング** (推奨):
   - 設定値（`latest_version` など）は config から直接読みで変化なし
   - DB クエリ結果（title/body）は短 TTL（例：300秒）でメモリ/Redis キャッシュ可（オプション）

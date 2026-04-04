@@ -25,6 +25,7 @@
 
 - 例: `spec_backend_impl_v1.md`, `spec_backend_impl_v2.md` ... が存在する場合、
   **vが最大のファイルが最新版**。
+
 - 参照・実装・Copilot投入前に必ず最新版を解決し、上記の優先順位で読む。
 
 ---

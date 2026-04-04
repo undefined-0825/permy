@@ -205,6 +205,7 @@ enum class NightSelfType {
   }
 }
 ```
+
 - `followup` は不要なら `null`。
 - `key` は settings のフィールド名（例: `relationship_type` / `reply_length_pref` 等）。
 - ユーザー選択後は `settings_snapshot` を更新して **次の生成**を行う（自動再生成はしない）。

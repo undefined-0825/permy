@@ -62,12 +62,14 @@
 ### 2.2 診断結果画像（SSOT）
 
 命名規則: `true_` / `night_` + 型名のスネークケース + `.png`。
+
 - **True**: `true_stability.png`, `true_independence.png`, `true_approval.png`, `true_realism.png`, `true_romance.png`
 - **Night**: `night_visit_push.png`, `night_heal.png`, `night_little_devil.png`, `night_big_client.png`, `night_flow.png`
 
 ### 2.3 データ保存（settings.json / SSOT）
 
 場所: `/me/settings`。以下のキーを必ず保持する。
+
 - `true_self_type`: TrueSelfType文字列
 - `night_self_type`: NightSelfType文字列
 - `persona_version`: int (現在は 2)
@@ -335,6 +337,7 @@ enum class NightSelfType {
   }
 }
 ```
+
 - `followup` は不要なら `null`。
 - `key` は settings のフィールド名（例: `relationship_type` / `reply_length_pref` 等）。
 - ユーザー選択後は `settings_snapshot` を更新して **次の生成**を行う（自動再生成はしない）。
@@ -383,16 +386,19 @@ enum class NightSelfType {
 ### NightSelfType（Q1〜Q3）
 
 **Q1. 接客で一番「私、輝いてる！」と思う瞬間は？**
+
 - A: 圧倒的なレスポンスと愛嬌で、お客様を喜ばせているとき → `MamePush(+2)`, `Balance(+1)`
 - B: 深い話を聞いて、お客様がリラックスして満足そうにしているとき → `Heal(+2)`, `BigClient(+1)`
 - C: わがままを聞いてもらったり、お客様をドキドキさせているとき → `LittleDevil(+2)`, `BigClient(+1)`
 
 **Q2. 理想的な売上の作り方はどっち？**
+
 - A: たくさんのお客様に呼ばれて、毎日コンスタントに指名がほしい → `MamePush(+2)`, `Balance(+1)`
 - B: 特定の数名から大きな支援（シャンパン等）をガツンと受けたい → `BigClient(+2)`, `LittleDevil(+1)`
 - C: お酒も売上もそこそこに、ストレスなく細く長く続けたい → `Heal(+2)`, `Balance(+1)`
 
 **Q3. お休みの日にお客様からLINEが。あなたの対応は？**
+
 - A: 即レス！日常の何気ない会話で距離をグッと詰める → `MamePush(+2)`, `BigClient(+1)`
 - B: あえて少し時間を置いてから、思わせぶりな返信で焦らす → `LittleDevil(+2)`, `Balance(+1)`
 - C: 基本は返さない。お店に来てくれた時に全力で癒やす → `Heal(+2)`
@@ -400,16 +406,19 @@ enum class NightSelfType {
 ### RealSelfType（Q1〜Q3）
 
 **Q1. 目標金額を達成！自分へのご褒美はどうする？**
+
 - A: 将来のためにしっかり貯金。残った分で美味しいものを食べる → `Stability(+2)`, `Realism(+1)`
 - B: ずっと欲しかったハイブランドのバッグや靴を買いに行く！ → `Approval(+2)`, `Romance(+1)`
 - C: 誰にも頼らず自分の力で稼いだ証として、投資や自分磨きに使う → `Independence(+2)`, `Realism(+1)`
 
 **Q2. ぶっちゃけ、今の仕事はいつまで続けるつもり？**
+
 - A: 目標額が貯まるまで。効率よく稼いで次のステップへ行きたい → `Realism(+2)`, `Independence(+1)`
 - B: 素敵な出会いやドラマチックな展開があれば、流れに身を任せたい → `Romance(+2)`, `Approval(+1)`
 - C: 今の生活リズムを壊したくないし、必要とされる限りは安定して続けたい → `Stability(+2)`, `Approval(+1)`
 
 **Q3. SNS（インスタやX）での自分、どう見られたい？**
+
 - A: 「センスがいい」「可愛い」と、みんなに注目されてチヤホヤされたい → `Approval(+2)`, `Romance(+1)`
 - B: 自立した一人の女性として、あるいは仕事のプロとして尊敬されたい → `Independence(+2)`, `Realism(+1)`
 - C: 特に着飾らず、身近な友達やパートナーと平穏に繋がっていればいい → `Stability(+2)`
@@ -460,6 +469,7 @@ enum class NightSelfType {
 
 2) **呼称（呼び方）の動的判定**  
 履歴から相手への呼び方を推測する。  
+
 - 履歴内の第三者名（同僚/他キャスト等）との混同は **致命的NG**。  
 - 判定不能な場合は **名前を呼ばない**。fileciteturn38file0L11-L15  
 
@@ -484,6 +494,7 @@ enum class NightSelfType {
 ## AB-7. 生成パターン（A/B/Cの役割 / MUST）
 
 A/B/Cは以下の意図で固定する。fileciteturn38file0L116-L120
+
 - **A: 現状維持案**（心地よいラリー継続）
 - **B: 来店誘導案**（会いたくなる理由＋来店促進）
 - **C: 感情フック案**（独占欲/承認欲求刺激）

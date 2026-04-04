@@ -44,6 +44,7 @@
 #### Q1 `true_priority`
 
 **設問文:** 「普段いちばん大切にしているもの？」
+
 - A `life_balance`（ライフバランス）
 - B `future_stability`（将来の安定）
 - C `partner_time`（パートナーとの時間）
@@ -53,6 +54,7 @@
 #### Q2 `true_decision_axis`
 
 **設問文:** 「迷った時はどうする？」
+
 - A `low_stress`（無理が少ない方にする）
 - B `long_term_return`（長期的に得な方にする）
 - C `emotional_satisfaction`（気持ちが満たされる方にする）
@@ -63,6 +65,7 @@
 #### Q3 `night_goal_primary`
 
 **設問文:** 「夜職のLINE返信で一番達成したいことは？」
+
 - A `next_visit`（次回来店の約束）
 - B `relationship_keep`（お客様との関係を維持する）
 - C `special_distance`（特別感を出して距離を縮める）
@@ -71,6 +74,7 @@
 #### Q4 `night_temperature`
 
 **設問文:** 「返信の温度感は？」
+
 - A `calm_safe`（安心感を重視する）
 - B `sweet_light`（軽く甘めに攻めてみる）
 - C `clear_proposal`（自分の考えをはっきり伝える）
@@ -79,6 +83,7 @@
 #### Q5 `night_game_tolerance`
 
 **設問文:** 「お客様との駆け引きは？」
+
 - A `avoid_game`（ほぼ使わない）
 - B `light_game`（少しなら使う）
 - C `adaptive_game`（状況次第で使う）
@@ -87,6 +92,7 @@
 #### Q6 `night_customer_allocation`
 
 **設問文:** 「お客様との関係をどうしたい？」
+
 - A `wide_touchpoints`（幅広く接点を増やす）
 - B `care_existing`（今ある関係を丁寧に維持したい）
 - C `focus_key_clients`（重要なお客を大切にする）
@@ -95,6 +101,7 @@
 #### Q7 `night_risk_response`
 
 **設問文:** 「お客様とトラブル。どうする？」
+
 - A `firefighting_safe`（まずは火消しして安全を確保）
 - B `soft_distance`（柔らかく距離を保つ）
 - C `recover_initiative`（主導権を握って解決）

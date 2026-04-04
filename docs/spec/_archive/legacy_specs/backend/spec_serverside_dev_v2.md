@@ -54,6 +54,7 @@ pip freeze | findstr /i openai
 ```
 
 期待：
+
 - `openai==1.99.0` が **1行だけ**
 - `...\.venv\Lib\site-packages\openai\__init__.py`
 
@@ -62,9 +63,11 @@ pip freeze | findstr /i openai
 ## 4. DB 初期化（SQLite）
 
 症状：
+
 - `sqlite3.OperationalError: no such table: users`
 
 原因：
+
 - `init_db.py` がモデルを import しておらず、`create_all()` が空実行になる。
 
 対策：`app\scripts\init_db.py` に **必ず** 1行追加
@@ -108,6 +111,7 @@ uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
 注意：
+
 - メモリRedisのため **再起動するとセッショントークンは無効**（毎回`/auth/anonymous`が必要）
 
 ---
