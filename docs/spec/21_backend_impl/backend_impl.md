@@ -411,6 +411,7 @@ backend/
 - Agent からサーバーをバックグラウンド起動できるが、**確実な再起動制御はできない**
 - コード修正後の HTTP テスト実行前には、**必ずユーザーがターミナルで手動に再起動** する必要がある
 - 推奨再起動方法：
+
   ```powershell
   # ターミナルで実行
   cd c:\dev\permy
@@ -511,6 +512,7 @@ backend/
   3. 見つかれば title/body を返す。見つからなければ空文字列
 
 - **出力** (JSON):
+
   ```json
   {
     "latest_version": "1.2.3",
@@ -530,10 +532,12 @@ backend/
 
 1. `app/config.py` で `APP_VERSION` → 新バージョン，`APP_MIN_SUPPORTED_VERSION` / URL を更新
 2. DB 管理者が `AppReleaseNote` へ INSERT：
+
    ```sql
    INSERT INTO app_release_notes (version, title, body, released_at)
    VALUES ('1.2.3', 'v1.2.3 アップデート', '・新機能\n・修正', NOW());
    ```
+
 3. サーバー再起動（デプロイ自動 or 手動）
 4. フロント側は起動時に `/api/v1/version` を呼び出し、バージョン確認・通知表示
 
