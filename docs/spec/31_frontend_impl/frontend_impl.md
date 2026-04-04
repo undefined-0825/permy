@@ -677,30 +677,30 @@ class UpdateNoticeScreen extends StatelessWidget {
 
 #### 7.4.1 Settings 画面の UI 構成
 
-**セクション別**：
+##### セクション別
 
-1) **ペルソナ**：
+##### ペルソナ
 
-   - 行1：「普段の属性」= `true_self_type` 値
-   - 行2：「夜の属性」= `night_self_type` 値
-   - 背景色：診断済み時は淡青 `Colors.blue.shade50`（否、診断待機表示）
-   - 動作：タップで PersonaDiagnosisResultScreen へ遷移（診断済み時のみ）
+- 行1：「普段の属性」= `true_self_type` 値
+- 行2：「夜の属性」= `night_self_type` 値
+- 背景色：診断済み時は淡青 `Colors.blue.shade50`（否、診断待機表示）
+- 動作：タップで PersonaDiagnosisResultScreen へ遷移（診断済み時のみ）
 
-2) **ペルソナ再診断**：
+##### ペルソナ再診断
 
-   - ボタン：「再診断する」
-   - 遷移：DiagnosisScreen（7問固定、全類型への回答）
-   - 完了後：自動リロード + SnackBar「再診断を反映しました」
+- ボタン：「再診断する」
+- 遷移：DiagnosisScreen（7問固定、全類型への回答）
+- 完了後：自動リロード + SnackBar「再診断を反映しました」
 
-3) **返信案のタップ**：
+##### 返信案のタップ
 
-   - SegmentedButton（`candidate_tap_action`）：
-     - `copy` = 「コピー」（デフォルト）
-     - `share` = 「共有」
-   - UIサイズは「再診断する」ボタンと同程度の高さを維持する
-   - 変更は自動保存し、Generate画面側で復帰時に再読込する
+- SegmentedButton（`candidate_tap_action`）：
+  - `copy` = 「コピー」（デフォルト）
+  - `share` = 「共有」
+- UIサイズは「再診断する」ボタンと同程度の高さを維持する
+- 変更は自動保存し、Generate画面側で復帰時に再読込する
 
-4) **デフォルトの返信スタイル**：
+##### デフォルトの返信スタイル
 
 - SegmentedButton（`combo_id`）：
   - 0=「来店約束」（combo_id: 0 / デフォルト）
@@ -709,13 +709,13 @@ class UpdateNoticeScreen extends StatelessWidget {
 
 > 返信の長さ/改行設定/絵文字の量/リアクション/相手の呼び方の5項目はSettings画面では設定しない。Generate画面の調整カードで変更する（7.3.1参照）。Settings画面には「Generate画面で送信前に変更できるよ」案内文を表示する。
 
-5) **返信案のNG設定**：
+##### 返信案のNG設定
 
 - NGタグ（複数選択）を選択可能
 - 禁止フレーズ（自由入力、最大10件）を管理
 - `ng_tags` / `ng_free_phrases` を settings と同期
 
-6) **サポート・規約・その他設定**：
+##### サポート・規約・その他設定
 
 - アコーディオン形式で表示
 - アコーディオン内はリンク行（`AppListItem`）に統一し、以下を表示：
@@ -725,7 +725,7 @@ class UpdateNoticeScreen extends StatelessWidget {
   - 端末移行の設定 → MigrationScreen
   - このアプリについて → AboutPrivacyScreen
 
-7) **自動反映ステータス**：
+##### 自動反映ステータス
 
 - 画面下部に「変更は自動で反映されます」を表示
 - 保存ボタンは設置しない（変更は自動保存）
@@ -1120,7 +1120,7 @@ q     # アプリ終了
     .\tools\hot_restart_frontend.bat
     ```
 
-4. 運用原則（MUST）
+1. 運用原則（MUST）
 
 - 文言/UI確認では、原則としてエミュレータ再起動を行わない。
 - `device offline` などOS側異常時のみ、エミュレータ再起動を許可する。
