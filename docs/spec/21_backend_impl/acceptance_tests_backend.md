@@ -85,15 +85,15 @@
 
 ### TC-01 匿名認証（auth/anonymous）正常
 
-**Given**
+#### TC-01 Given
 
 - token未所持
 
-**When**
+#### TC-01 When
 
 - `POST /api/v1/auth/anonymous`
 
-**Then**
+#### TC-01 Then
 
 - 200
 - `access_token` が返る
@@ -103,15 +103,15 @@
 
 ### TC-02 settings 取得（初回）正常
 
-**Given**
+#### TC-02 Given
 
 - TC-01のtoken
 
-**When**
+#### TC-02 When
 
 - `GET /api/v1/me/settings`
 
-**Then**
+#### TC-02 Then
 
 - 200
 - `settings_json` が返る（デフォルト値含む）
@@ -122,7 +122,7 @@
 
 ### TC-03 settings 更新（正常）
 
-**Given**
+#### TC-03 Given
 
 - token
 - `settings_json` に以下キーを含む（product_spec参照）：
@@ -133,11 +133,11 @@
   - ng_tags
   - ng_free_phrases（上限10）
 
-**When**
+#### TC-03 When
 
 - `PUT /api/v1/me/settings`（上書き）
 
-**Then**
+#### TC-03 Then
 
 - 200
 - 直後に `GET /me/settings` で同じ値が取得できる
@@ -148,16 +148,16 @@
 
 ### TC-04 settings バリデーション（enum不正）
 
-**Given**
+#### TC-04 Given
 
 - token
 - `true_self_type="UnknownX"` など不正値
 
-**When**
+#### TC-04 When
 
 - `PUT /me/settings`
 
-**Then**
+#### TC-04 Then
 
 - 422（または400）
 - エラーコードが返る（本文なし）
@@ -166,18 +166,18 @@
 
 ### TC-05 generate（OPENAI_DISABLED=true）— モック応答での正常系
 
-**Given**
+#### TC-05 Given
 
 - OPENAI_DISABLED=true
 - token
 - `.txt` 内容（dummy）
 - settings が一通り入っている
 
-**When**
+#### TC-05 When
 
 - `POST /api/v1/generate`
 
-**Then**
+#### TC-05 Then
 
 - 200
 - `candidates` に A/B/C が必ず存在（本文は返るが保存しない）
@@ -191,17 +191,17 @@
 
 ### TC-06 generate（日次上限：Free）
 
-**Given**
+#### TC-06 Given
 
 - plan=free
 - daily_limit=3
 - 既に3回成功済み（テスト用に状態を作る）
 
-**When**
+#### TC-06 When
 
 - 4回目の `POST /generate`
 
-**Then**
+#### TC-06 Then
 
 - 429 または 403（backend_spec準拠）
 - エラーコード：`DAILY_LIMIT_EXCEEDED` 相当
@@ -212,17 +212,17 @@
 
 ### TC-07 generate（日次上限：Pro）
 
-**Given**
+#### TC-07 Given
 
 - plan=pro
 - daily_limit=100
 - 既に100回成功済み
 
-**When**
+#### TC-07 When
 
 - 101回目の `POST /generate`
 
-**Then**
+#### TC-07 Then
 
 - TC-06同様に拒否される
 
@@ -230,16 +230,16 @@
 
 ### TC-08 generate（followup：不足時の聞き返し）
 
-**Given**
+#### TC-08 Given
 
 - token
 - settings の重要キーが欠けている、または入力が不足（例：relationship_type 未設定）
 
-**When**
+#### TC-08 When
 
 - `POST /generate`
 
-**Then**
+#### TC-08 Then
 
 - 200
 - A/B/Cは返す（仮案）
@@ -252,16 +252,16 @@
 
 ### TC-09 generate（NG：禁止フレーズ適用）
 
-**Given**
+#### TC-09 Given
 
 - settings の `ng_free_phrases` に「会いたい」等が設定されている
 - 入力txtに該当しそうな文脈がある
 
-**When**
+#### TC-09 When
 
 - `POST /generate`
 
-**Then**
+#### TC-09 Then
 
 - A/B/Cに `ng_free_phrases` がそのまま含まれない
 - `meta` にNG適用が分かるフラグ（例：`ng_applied=true`）があれば望ましい（backend_impl側）
@@ -270,15 +270,15 @@
 
 ### TC-10 generate（NG：危険ゲートSTOP）
 
-**Given**
+#### TC-10 Given
 
 - 入力txtに危険内容（自傷他害、違法勧誘等）が含まれる（ダミーで再現）
 
-**When**
+#### TC-10 When
 
 - `POST /generate`
 
-**Then**
+#### TC-10 Then
 
 - 400/422/403（backend_specに合わせる）
 - エラーコードが返る
@@ -289,16 +289,16 @@
 
 ### TC-11 テレメトリ（本文ゼロ）
 
-**Given**
+#### TC-11 Given
 
 - `POST /telemetry` が存在する
 - event_name=generate_succeeded 等
 
-**When**
+#### TC-11 When
 
 - telemetry送信
 
-**Then**
+#### TC-11 Then
 
 - 200
 - 受け付けるフィールドは `telemetry_schema.md` の範囲
@@ -309,15 +309,15 @@
 
 ### TC-12 migration（移行コード12桁・1回限り）
 
-**Given**
+#### TC-12 Given
 
 - migration APIが存在する
 
-**When**
+#### TC-12 When
 
 - issue → claim
 
-**Then**
+#### TC-12 Then
 
 - 12桁
 - 期限切れで拒否

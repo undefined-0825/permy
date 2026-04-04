@@ -60,7 +60,7 @@
 
 - `plan`: `"free" | "pro" | "premium"`
 
-**ルール**
+#### ルール
 
 - 機能判定はバックエンド内部では `feature_tier` を持ち、外部契約でも `plan` は3値で返す。
 - `feature_tier=pro` は `plan="pro"`、`feature_tier=premium` は `plan="premium"` として返す。
@@ -111,7 +111,7 @@
 }
 ```
 
-**Notes**
+#### Notes
 
 - `latest_version`: 任意更新の判定に使用する。
 - `min_supported_version`: 強制更新の判定に使用する。
@@ -310,7 +310,7 @@ Body:
 }
 ```
 
-**Notes**
+#### Notes
 
 - `history_text` は入力本文。サーバは保存しない（ログにも残さない）。
 - `combo_id`: 0..5（コンボID、有料プランは2以上利用可能）
@@ -349,7 +349,7 @@ Body:
 }
 ```
 
-**Response フィールド説明**
+#### Response フィールド説明
 
 - `followup`: 設定不足があれば返す（nullable）。なければ `null`
 - `daily`: 日次制限情報（limit/used/remaining）
@@ -457,7 +457,7 @@ Body:
 }
 ```
 
-**Rules**
+#### Rules
 
 - `platform`: `"ios" | "android"`
 - 許可された `product_id` は以下のみ
@@ -513,7 +513,7 @@ Body:
 }
 ```
 
-**Notes**
+#### Notes
 
 - `events`: 1..100 イベントをバッチ送信可能
 - 本文/生成文は含めない（privacy-first）
