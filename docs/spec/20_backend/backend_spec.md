@@ -100,7 +100,7 @@
 - **feature_tier（機能判定）**: `free` | `pro` | `premium`
   - `free`：無料ユーザー
   - `pro`：Pro相当（課金Pro + 永続無料を含む）
--  - `premium`：Premium相当（課金Premium + 永続無料を含む）
+  - `premium`：Premium相当（課金Premium + 永続無料を含む）
 - **billing_tier（課金区別）**: `free` | `pro_store` | `premium_store` | `premium_comp`
   - `pro_store`：ストア課金Pro
   - `premium_store`：ストア課金Premium

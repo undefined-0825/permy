@@ -9,11 +9,11 @@
 
 ## 0. Spec参照順（MUST）
 
-- 1. `docs/spec/00_world/world_concept.md`
-- 2. `docs/spec/10_product/product_spec.md`
-- 3. `docs/spec/40_design/permy_design_system_spec.md`
-- 4. `docs/spec/30_frontend/frontend_spec.md`
-- 5. `docs/spec/31_frontend_impl/frontend_impl.md`
+1. `docs/spec/00_world/world_concept.md`
+2. `docs/spec/10_product/product_spec.md`
+3. `docs/spec/40_design/permy_design_system_spec.md`
+4. `docs/spec/30_frontend/frontend_spec.md`
+5. `docs/spec/31_frontend_impl/frontend_impl.md`
 
 ## 0.1 参照優先順位（MUST）
 

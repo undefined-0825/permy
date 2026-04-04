@@ -46,7 +46,7 @@
 
 ## 2. ディレクトリ構成（例）
 
-```
+```text
 lib/
   main.dart
   app.dart
@@ -513,6 +513,7 @@ class UpdateNoticeScreen extends StatelessWidget {
       - それ以外：「次へ」
 
 **動作フロー**：
+
 1. 初期表示：_currentQuestionIndex = 0、質問1を表示
 2. ユーザーが選択肢タップ → _answers[questionId] = choiceId、UI更新
 3. 選択後に自動で次問へ遷移（最終問以外）
@@ -547,11 +548,13 @@ class UpdateNoticeScreen extends StatelessWidget {
   - CircularProgressIndicator + 文言「きみのペルソナを作っているよ・・・」
 
 **表示コンテンツ**：
+
 1. **タイトル**：
 
-  - Text「きみのペルソナはこれだよ」
-   - fontSize 20、fontWeight bold、textAlign center、padding top 24
-2. **Result Sections ×2**：
+- Text「きみのペルソナはこれだよ」
+- fontSize 20、fontWeight bold、textAlign center、padding top 24
+
+1. **Result Sections ×2**：
 
    - **普段の自分（True Self）**：
      - Label：「普段の自分」（fontSize 12、fontWeight w500、gray）
@@ -565,7 +568,7 @@ class UpdateNoticeScreen extends StatelessWidget {
      - padding 16、borderRadius 12、背景 white
      - border：`Color(0xFFFFB3C1)` ピンク width 1
      - margin bottom 16
-3. **Style Scores Section**：
+2. **Style Scores Section**：
 
    - Label：「スタイルスコア」（fontSize 14、fontWeight w600、color gray）
    - 3 行表示：
@@ -577,12 +580,12 @@ class UpdateNoticeScreen extends StatelessWidget {
      - 中：LinearProgressIndicator（minHeight 8、borderRadius 4、backgroundColor = `Colors.grey.shade100`）
      - 右：「N%」表示（fontSize 12、fontWeight w500、gray）
    - Section 全体は Result Sections と同じ Container スタイル
-4. **ボタン**（下部固定）：
+3. **ボタン**（下部固定）：
 
-  - 「さっそく使ってみる」（Primary スタイル）
-   - onPressed：`_onResultConfirmed()`
-  - 初回診断では `pop(true)` 後に Generate へ遷移
-  - 再診断（Settings起点）では `pop(true)` 後に Settings 側で再読込を実行
+- 「さっそく使ってみる」（Primary スタイル）
+- onPressed：`_onResultConfirmed()`
+- 初回診断では `pop(true)` 後に Generate へ遷移
+- 再診断（Settings起点）では `pop(true)` 後に Settings 側で再読込を実行
 
 **ナビゲーションフロー**：
 
@@ -639,7 +642,6 @@ class UpdateNoticeScreen extends StatelessWidget {
 - 読み込み時は有料プラン状態（Pro/Premium）を判定し、FreeならFree値にフォールバック正規化してからstateにセットする。
 - 有料判定ロジック: `widget.purchaseService.isPro || _plan == 'pro' || _plan == 'premium'`。
 
-
 #### 7.3.1 Generate 画面のエラーハンドリング
 
 - **エラー発生箇所**：`/generate` 呼び出し失敗時
@@ -676,6 +678,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 #### 7.4.1 Settings 画面の UI 構成
 
 **セクション別**：
+
 1) **ペルソナ**：
 
    - 行1：「普段の属性」= `true_self_type` 値
@@ -699,33 +702,33 @@ class UpdateNoticeScreen extends StatelessWidget {
 
 4) **デフォルトの返信スタイル**：
 
-  - SegmentedButton（`combo_id`）：
-    - 0=「来店約束」（combo_id: 0 / デフォルト）
-    - 1=「休眠復活」（combo_id: 1）
-   - `combo_id` を settings で管理
+- SegmentedButton（`combo_id`）：
+  - 0=「来店約束」（combo_id: 0 / デフォルト）
+  - 1=「休眠復活」（combo_id: 1）
+- `combo_id` を settings で管理
 
 > 返信の長さ/改行設定/絵文字の量/リアクション/相手の呼び方の5項目はSettings画面では設定しない。Generate画面の調整カードで変更する（7.3.1参照）。Settings画面には「Generate画面で送信前に変更できるよ」案内文を表示する。
 
 5) **返信案のNG設定**：
 
-  - NGタグ（複数選択）を選択可能
-  - 禁止フレーズ（自由入力、最大10件）を管理
-  - `ng_tags` / `ng_free_phrases` を settings と同期
+- NGタグ（複数選択）を選択可能
+- 禁止フレーズ（自由入力、最大10件）を管理
+- `ng_tags` / `ng_free_phrases` を settings と同期
 
 6) **サポート・規約・その他設定**：
 
-  - アコーディオン形式で表示
-  - アコーディオン内はリンク行（`AppListItem`）に統一し、以下を表示：
-    - 利用規約 / プライバシーポリシー / ヘルプ（使い方） / このアプリについて / オープンソースライセンス
-    - 端末移行の設定 / 購入を復元 / サブスクリプション管理 / アカウントを削除する
-  - 遷移先：
-    - 端末移行の設定 → MigrationScreen
-    - このアプリについて → AboutPrivacyScreen
+- アコーディオン形式で表示
+- アコーディオン内はリンク行（`AppListItem`）に統一し、以下を表示：
+  - 利用規約 / プライバシーポリシー / ヘルプ（使い方） / このアプリについて / オープンソースライセンス
+  - 端末移行の設定 / 購入を復元 / サブスクリプション管理 / アカウントを削除する
+- 遷移先：
+  - 端末移行の設定 → MigrationScreen
+  - このアプリについて → AboutPrivacyScreen
 
 7) **自動反映ステータス**：
 
-  - 画面下部に「変更は自動で反映されます」を表示
-  - 保存ボタンは設置しない（変更は自動保存）
+- 画面下部に「変更は自動で反映されます」を表示
+- 保存ボタンは設置しない（変更は自動保存）
 
 #### 7.4.2 再診断フロー（詳細）
 
@@ -751,7 +754,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 
 ### 7.7 固定UI文言（MUST）
 
-**PersonaDiagnosisResultScreen**
+#### PersonaDiagnosisResultScreen
 
 - AppBar 標題：「あなたのペルソナ」
 - セクション標題：
@@ -761,7 +764,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 - 各スコア行ラベル：「主張度」「温かみ」「リスク回避」
 - 説明文：「これらのペルソナは、あなたの返信スタイルを決める大事な指標。ときどき見返して、「今のぼくはこう考えてるんだ」って確認してみてね。」
 
-**True Self（5タイプ）説明文**
+#### True Self（5タイプ）説明文
 
 - Stability：「バランスを大事にする。無理のない生活を心がけ、まずは安定から。」
 - Independence：「自分のペースを守る。誰かに縛られず、自分の判断を信じる。」
@@ -769,7 +772,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 - Realism：「現実的に考える。長期的な得を見える人。堅実さが武器。」
 - Romance：「感情を大事にする。気持ちが満たされることが優先。その直感は案外正しい。」
 
-**Night Self（5タイプ）説明文**
+#### Night Self（5タイプ）説明文
 
 - VisitPush：「次のお約束を大事にする。関係を続けることが目標。その誠実さが信頼を呼ぶ。」
 - Heal：「相手を癒したい。そっと寄り添うのが得意。その優しさが人を呼ぶ。」
@@ -948,6 +951,7 @@ await apiClient.post('/api/v1/telemetry/events', {
 - `/api/v1` 契約に整合（header/ETag/Idempotency/エラー分岐）
 - Safe Area崩れなし（主要端末）
 - コピー体験が明確（0.4秒フィードバック）
+
 ---
 
 ## 14. 開発・実行手順（MUST / Development Guide）
@@ -989,11 +993,13 @@ flutter run -d <device_id>
 
 #### ❌ Error: No pubspec.yaml file found
 
-```
+```text
 This command should be run from the root of your Flutter project.
 ```
+
 **原因**: `frontend` ディレクトリ内にいない（`backend` や `c:\dev\permy` にいる）  
 **対処**:
+
 ```bash
 Set-Location c:\dev\permy\frontend
 cd c:\dev\permy\frontend
@@ -1001,11 +1007,13 @@ cd c:\dev\permy\frontend
 
 #### ❌ Device not found / エミュレータが認識されない
 
-```
+```text
 No emulators were detected. You can create one using 'flutter emulators --create'
 ```
+
 **原因**: エミュレータが起動していない、またはPATHが通っていない  
 **対処**:
+
 ```bash
 # 1. 現在のエミュレータ状況を確認
 flutter emulators
@@ -1022,6 +1030,7 @@ flutter devices --device-timeout 20
 
 Flutterビルドが失敗している（詳細ログ確認が必要）  
 **対処**:
+
 ```bash
 # キャッシュをクリアして再実行
 flutter clean
@@ -1039,18 +1048,20 @@ flutter run -d emulator-5554 --verbose
 **対処**:
 
 - **推奨**: `Set-Location` を使用（PowerShell標準）
+
   ```powershell
   Set-Location c:\dev\permy\frontend
   ```
 
 - **代替**: `cd` + フルパスを使用
+
   ```powershell
   cd 'c:\dev\permy\frontend'  # パスに空白があれば quotes で囲む
   ```
 
 ### 14.4 手順チェックリスト（毎回実行前に確認 / MUST）
 
-```
+```text
 □ flutter emulators --launch <id> を実行し、60秒待機した
 □ Set-Location c:\dev\permy\frontend を実行
 □ Get-Location で `c:\dev\permy\frontend` が出力される
@@ -1074,41 +1085,45 @@ q     # アプリ終了
 
 1. `start_frontend.ps1`（通常起動）
 
-  - 目的：既に起動済みのエミュレータへ `flutter run` する。
-  - 代表例：
+- 目的：既に起動済みのエミュレータへ `flutter run` する。
+- 代表例：
+
     ```powershell
     powershell -ExecutionPolicy Bypass -File .\tools\start_frontend.ps1 -DeviceId emulator-5554
     ```
 
-2. `start_permy_clean.ps1`（クリーン起動）
+1. `start_permy_clean.ps1`（クリーン起動）
 
-  - 目的：エミュレータ起動、`flutter clean`、`pub get`、`flutter run` を一括で行う。
-  - 代表例（ローカルBackend接続）：
+- 目的：エミュレータ起動、`flutter clean`、`pub get`、`flutter run` を一括で行う。
+- 代表例（ローカルBackend接続）：
+
     ```powershell
     powershell -ExecutionPolicy Bypass -File .\tools\start_permy_clean.ps1 -UseLocalBackend
     ```
 
-  - 備考：`-UseLocalBackend` は `API_BASE_URL=http://10.0.2.2:8000` を使う。
+- 備考：`-UseLocalBackend` は `API_BASE_URL=http://10.0.2.2:8000` を使う。
 
-3. `hot_restart_frontend.ps1` / `hot_restart_frontend.bat`（再起動補助）
+1. `hot_restart_frontend.ps1` / `hot_restart_frontend.bat`（再起動補助）
 
-  - 目的：エミュレータ再起動なしで、アプリ反映を1コマンド化する。
-  - 実行順：
+- 目的：エミュレータ再起動なしで、アプリ反映を1コマンド化する。
+- 実行順：
     1) `flutter attach` に `R` を送って Hot Restart を試行
     2) 失敗時のみ、`adb force-stop` + `am/monkey` でアプリプロセスを再起動
 
-  - 代表例：
+- 代表例：
+
     ```powershell
     powershell -ExecutionPolicy Bypass -File .\tools\hot_restart_frontend.ps1
     ```
+
     ```bat
     .\tools\hot_restart_frontend.bat
     ```
 
 4. 運用原則（MUST）
 
-  - 文言/UI確認では、原則としてエミュレータ再起動を行わない。
-  - `device offline` などOS側異常時のみ、エミュレータ再起動を許可する。
-  - スクリプト追加・変更時は、`-CheckOnly` のような事前確認モードを優先して用意する。
+- 文言/UI確認では、原則としてエミュレータ再起動を行わない。
+- `device offline` などOS側異常時のみ、エミュレータ再起動を許可する。
+- スクリプト追加・変更時は、`-CheckOnly` のような事前確認モードを優先して用意する。
 
 ---
