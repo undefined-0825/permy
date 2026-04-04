@@ -627,7 +627,7 @@ class UpdateNoticeScreen extends StatelessWidget {
 返信案の調整カード内に以下5ずつの `_ProAwareDropdown` を配置する。
 
 | 項目 | state変数 | settingsキー | Free値（デフォルト） |
-|------|-----------|-----------|------------|
+| ------ | ----------- | ----------- | ------------ |
 | 返信の長さ | `_replyLengthPref` | `reply_length_pref` | `short` |
 | 改行設定 | `_lineBreakPref` | `line_break_pref` | `few` |
 | 絵文字の量 | `_emojiAmountPref` | `emoji_amount_pref` | `none` |

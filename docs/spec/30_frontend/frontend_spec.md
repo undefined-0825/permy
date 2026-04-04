@@ -223,7 +223,7 @@
 - 履歴共有前（`sharedText` が空）の状態では「ぼくが返信案を考えるよ」ボタンを表示しない。
 
 | 項目 | キー | Free可能値 | Pro専用値 |
-|------|-----|---------|----------|
+| ------ | ----- | --------- | ---------- |
 | 返信の長さ | `reply_length_pref` | `short`（短め） | `standard` / `long` |
 | 改行設定 | `line_break_pref` | `few`（少なめ） | `infer` / `many` |
 | 絵文字の量 | `emoji_amount_pref` | `none`（なし） | `standard` / `many` |

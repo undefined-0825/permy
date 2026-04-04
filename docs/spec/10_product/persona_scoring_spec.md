@@ -116,7 +116,7 @@
 ### 3.1 True重み
 
 | Question | Choice | Stability | Independence | Approval | Realism | Romance |
-|---|---|---:|---:|---:|---:|---:|
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
 | Q1 | life_balance | 3 | 1 | 0 | 1 | 0 |
 | Q1 | future_stability | 2 | 1 | 0 | 3 | 0 |
 | Q1 | partner_time | 1 | 0 | 1 | 0 | 3 |
@@ -130,7 +130,7 @@
 ### 3.2 Night重み
 
 | Question | Choice | VisitPush | Heal | LittleDevil | BigClient | Balance |
-|---|---|---:|---:|---:|---:|---:|
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
 | Q3 | next_visit | 3 | 0 | 1 | 2 | 1 |
 | Q3 | relationship_keep | 1 | 3 | 0 | 1 | 2 |
 | Q3 | special_distance | 1 | 0 | 3 | 1 | 1 |
